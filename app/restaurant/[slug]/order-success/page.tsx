@@ -13,15 +13,46 @@ export default function OrderSuccessPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    // Marquer la commande comme payée
-    async function markPaid() {
+    async function markPaidAndNotify() {
       if (!orderNumber) return
+
       await supabase
         .from('orders')
         .update({ payment_status: 'paid' })
         .eq('order_number', orderNumber)
+
+      // Récupérer les infos de la commande pour l'email
+      const { data: order } = await supabase
+        .from('orders')
+        .select('*, restaurants(name, email)')
+        .eq('order_number', orderNumber)
+        .single()
+
+      if (order) {
+        const { data: items } = await supabase
+          .from('order_items')
+          .select('*')
+          .eq('order_id', order.id)
+
+        try {
+          await fetch('/api/email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customerEmail: order.email,
+              customerName: `${order.first_name} ${order.last_name}`,
+              restaurantEmail: order.restaurants?.email,
+              restaurantName: order.restaurants?.name,
+              orderNumber: order.order_number,
+              items: (items || []).map((i: any) => ({ name: i.product_name, quantity: i.quantity, price: i.price })),
+              total: Number(order.total_price).toFixed(2),
+              pickupTime: order.pickup_time,
+            }),
+          })
+        } catch (_) {}
+      }
     }
-    markPaid()
+    markPaidAndNotify()
     localStorage.removeItem(`cart_${slug}`)
   }, [orderNumber])
 
