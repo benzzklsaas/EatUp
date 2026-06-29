@@ -2,148 +2,361 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 
 export default function LandingPage() {
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
-    <div className="min-h-screen" style={{ background: '#0a0f1e' }}>
+    <div style={{ background: '#050810', minHeight: '100vh', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+
+      {/* Noise texture overlay */}
+      <div style={{ position: 'fixed', inset: 0, opacity: 0.03, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")', pointerEvents: 'none', zIndex: 0 }} />
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4" style={{ background: 'rgba(10,15,30,0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="flex items-center gap-3">
-          <Image src="/LogoEatUp.PNG" alt="EatUp" width={36} height={36} className="rounded-full" />
-          <span className="font-bold text-white text-lg">EatUp</span>
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 32px', height: '64px',
+        background: scrolled ? 'rgba(5,8,16,0.9)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : 'none',
+        transition: 'all 0.3s ease',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Image src="/LogoEatUp.PNG" alt="EatUp" width={32} height={32} style={{ borderRadius: '50%' }} />
+          <span style={{ fontWeight: 800, fontSize: 18, letterSpacing: '-0.5px' }}>EatUp</span>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/auth/login" className="text-sm font-medium px-4 py-2 rounded-xl transition" style={{ color: '#94a3b8' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Link href="/auth/login" style={{ color: '#6b7280', fontSize: 14, fontWeight: 500, padding: '8px 16px', textDecoration: 'none', borderRadius: 10 }}>
             Connexion
           </Link>
-          <Link href="/auth/register" className="text-sm font-bold px-4 py-2 rounded-xl transition" style={{ background: '#3b82f6', color: 'white' }}>
-            Commencer
+          <Link href="/auth/register" style={{
+            background: 'white', color: '#050810', fontSize: 14, fontWeight: 700,
+            padding: '9px 20px', borderRadius: 10, textDecoration: 'none',
+            boxShadow: '0 0 0 1px rgba(255,255,255,0.1)',
+          }}>
+            Démarrer gratuitement
           </Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6 pt-40 pb-24 overflow-hidden">
-        <div style={{ position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <section style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '180px 24px 120px', overflow: 'hidden' }}>
 
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8" style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa' }}>
-          ✨ La solution click & collect pour les restaurants
+        {/* Glows */}
+        <div style={{ position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)', width: 800, height: 800, background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: 200, left: '20%', width: 400, height: 400, background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: 200, right: '20%', width: 400, height: 400, background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
+
+        {/* Badge */}
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          padding: '6px 14px', borderRadius: 100, marginBottom: 32,
+          background: 'rgba(99,102,241,0.1)',
+          border: '1px solid rgba(99,102,241,0.25)',
+          fontSize: 13, fontWeight: 600, color: '#818cf8',
+          letterSpacing: '0.02em',
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#818cf8', display: 'inline-block', boxShadow: '0 0 8px #818cf8' }} />
+          Plateforme click & collect · Ouverture 2026
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight" style={{ letterSpacing: '-2px' }}>
-          Vos clients commandent.<br />
-          <span style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            Vous encaissez.
+        {/* Headline */}
+        <h1 style={{ fontSize: 'clamp(40px, 7vw, 80px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-3px', margin: '0 0 24px', maxWidth: 900 }}>
+          Le restaurant qui commande<br />
+          <span style={{
+            background: 'linear-gradient(135deg, #60a5fa 0%, #818cf8 40%, #a78bfa 70%, #c084fc 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          }}>
+            sans attendre.
           </span>
         </h1>
 
-        <p className="text-lg md:text-xl max-w-xl mb-10" style={{ color: '#64748b', lineHeight: '1.7' }}>
-          EatUp donne à votre restaurant un menu en ligne, un système de commande click & collect et un dashboard tout-en-un — en moins de 5 minutes.
+        <p style={{ fontSize: 18, color: '#4b5563', lineHeight: 1.7, maxWidth: 520, margin: '0 0 48px' }}>
+          Donnez à votre restaurant un menu digital, un système de commande click & collect et un dashboard complet — configuré en 5 minutes.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 items-center">
-          <Link href="/auth/register"
-            className="px-8 py-4 rounded-2xl font-bold text-lg transition-all"
-            style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: 'white', boxShadow: '0 0 40px rgba(59,130,246,0.4)' }}>
-            Créer mon restaurant gratuitement →
+        {/* CTA */}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <Link href="/auth/register" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '14px 28px', borderRadius: 14, textDecoration: 'none',
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            color: 'white', fontWeight: 700, fontSize: 16,
+            boxShadow: '0 0 0 1px rgba(99,102,241,0.5), 0 20px 60px rgba(99,102,241,0.3)',
+          }}>
+            Créer mon restaurant
+            <span style={{ fontSize: 18 }}>→</span>
           </Link>
-          <Link href="/restaurant/crousty-naan"
-            className="px-8 py-4 rounded-2xl font-medium text-lg transition"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#cbd5e1' }}>
-            Voir une démo
+          <Link href="/restaurant/crousty-naan" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '14px 28px', borderRadius: 14, textDecoration: 'none',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            color: '#9ca3af', fontWeight: 600, fontSize: 16,
+          }}>
+            Voir la démo live
           </Link>
         </div>
 
-        <p className="mt-4 text-sm" style={{ color: '#334155' }}>Sans carte bancaire · 19,99€/mois après l'essai</p>
+        <p style={{ marginTop: 20, fontSize: 13, color: '#1f2937' }}>Aucune carte bancaire requise · 19,99€/mois</p>
+
+        {/* Dashboard mockup */}
+        <div style={{
+          marginTop: 80, width: '100%', maxWidth: 900,
+          borderRadius: 20, overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.07)',
+          boxShadow: '0 0 0 1px rgba(99,102,241,0.1), 0 40px 120px rgba(0,0,0,0.8)',
+          background: '#0f172a',
+        }}>
+          {/* Fake browser bar */}
+          <div style={{ background: '#1e293b', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #334155' }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444', opacity: 0.6 }} />
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', opacity: 0.6 }} />
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981', opacity: 0.6 }} />
+            <div style={{ flex: 1, margin: '0 12px', background: '#0f172a', borderRadius: 6, padding: '4px 12px', fontSize: 12, color: '#475569', border: '1px solid #334155' }}>
+              eat-up-sepia.vercel.app/dashboard
+            </div>
+          </div>
+          {/* Fake dashboard */}
+          <div style={{ padding: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+              {[
+                { label: "Commandes aujourd'hui", value: '24', color: '#60a5fa' },
+                { label: 'En attente', value: '7', color: '#f59e0b' },
+                { label: 'Revenus', value: '487€', color: '#10b981' },
+              ].map((stat, i) => (
+                <div key={i} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 14, padding: '16px 20px' }}>
+                  <p style={{ fontSize: 11, color: '#64748b', marginBottom: 6 }}>{stat.label}</p>
+                  <p style={{ fontSize: 28, fontWeight: 800, color: stat.color }}>{stat.value}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 14, padding: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>Dernières commandes</span>
+                <span style={{ fontSize: 12, color: '#3b82f6' }}>Voir tout</span>
+              </div>
+              {[
+                { name: 'Marie Lambert', amount: '23,50€', status: 'En attente', statusColor: '#f59e0b', statusBg: '#451a03' },
+                { name: 'Thomas Girard', amount: '18,90€', status: 'En préparation', statusColor: '#60a5fa', statusBg: '#1e3a5f' },
+                { name: 'Sophie Martin', amount: '31,00€', status: 'Prêt', statusColor: '#4ade80', statusBg: '#052e16' },
+              ].map((order, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 2 ? '1px solid #1e293b' : 'none' }}>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>{order.name}</p>
+                    <p style={{ fontSize: 11, color: '#475569' }}>#{Math.floor(Math.random() * 900000 + 100000)}</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{order.amount}</span>
+                    <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 100, background: order.statusBg, color: order.statusColor }}>{order.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* Features */}
-      <section className="px-6 py-20 max-w-5xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-black text-white text-center mb-4" style={{ letterSpacing: '-1px' }}>Tout ce dont vous avez besoin</h2>
-        <p className="text-center mb-14" style={{ color: '#475569' }}>Une plateforme complète, zéro configuration technique</p>
+      {/* Logos / Social proof */}
+      <div style={{ textAlign: 'center', padding: '0 24px 80px' }}>
+        <p style={{ fontSize: 13, color: '#1f2937', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 20 }}>
+          Conçu pour les restaurateurs indépendants
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 32, flexWrap: 'wrap' }}>
+          {['Kebabs', 'Pizzerias', 'Sushis', 'Burgers', 'Sandwicheries', 'Traiteurs'].map(type => (
+            <span key={type} style={{ fontSize: 14, color: '#374151', fontWeight: 500 }}>{type}</span>
+          ))}
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {/* Features */}
+      <section style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 64 }}>
+          <p style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Fonctionnalités</p>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1.5px', margin: '0 0 16px' }}>
+            Tout ce qu'il faut,<br />rien de superflu.
+          </h2>
+          <p style={{ color: '#4b5563', fontSize: 16, maxWidth: 480, margin: '0 auto' }}>
+            Une seule plateforme pour gérer vos commandes, votre menu et vos clients.
+          </p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 2 }}>
           {[
-            { icon: '🍽️', title: 'Menu en ligne', desc: 'Créez et gérez votre menu avec photos, catégories et disponibilités en temps réel.', color: '#3b82f6' },
-            { icon: '📱', title: 'Click & Collect', desc: 'Vos clients commandent depuis leur téléphone et choisissent leur créneau de retrait.', color: '#8b5cf6' },
-            { icon: '💳', title: 'Paiement en ligne', desc: "Acceptez les paiements par carte via Stripe. L'argent arrive directement sur votre compte.", color: '#10b981' },
-            { icon: '📊', title: 'Analytics', desc: 'Suivez vos revenus, commandes et clients depuis un dashboard clair et intuitif.', color: '#f59e0b' },
-            { icon: '📧', title: 'Emails automatiques', desc: 'Confirmations de commande envoyées automatiquement à vos clients après chaque achat.', color: '#ec4899' },
-            { icon: '⚙️', title: 'Horaires flexibles', desc: 'Configurez vos horaires jour par jour, avec deux plages horaires et fermetures exceptionnelles.', color: '#06b6d4' },
+            { icon: '🍽️', title: 'Menu digital', desc: 'Gérez votre carte en temps réel : photos, prix, catégories, disponibilités. Vos clients voient toujours les bonnes infos.' },
+            { icon: '🛒', title: 'Click & Collect fluide', desc: 'Interface mobile-first pensée pour convertir. Panier, créneaux horaires, confirmation en un clic.' },
+            { icon: '💳', title: 'Paiement Stripe intégré', desc: "Carte bancaire, Apple Pay, Google Pay. L'argent arrive directement sur votre compte. Zéro commission EatUp." },
+            { icon: '📊', title: 'Dashboard temps réel', desc: "Commandes entrantes, revenus du jour, analytics hebdomadaires. Tout ce qu'il faut pour piloter votre activité." },
+            { icon: '📧', title: 'Emails automatisés', desc: 'Confirmations de commande, notifications de paiement. Vos clients sont toujours informés, sans effort de votre part.' },
+            { icon: '🕐', title: 'Horaires intelligents', desc: 'Configurez vos horaires par jour, 2 services (midi/soir), fermetures exceptionnelles. Les créneaux s'adaptent automatiquement.' },
           ].map((f, i) => (
-            <div key={i} className="rounded-2xl p-6" style={{ background: '#111827', border: '1px solid #1f2937' }}>
-              <div className="text-3xl mb-4">{f.icon}</div>
-              <h3 className="font-bold text-white mb-2">{f.title}</h3>
-              <p className="text-sm leading-relaxed" style={{ color: '#6b7280' }}>{f.desc}</p>
+            <div key={i} style={{
+              padding: '32px 28px',
+              background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
+              border: '1px solid rgba(255,255,255,0.04)',
+              borderRadius: i === 0 ? '20px 0 0 0' : i === 1 ? '0 20px 0 0' : i === 4 ? '0 0 0 20px' : i === 5 ? '0 0 20px 0' : 0,
+            }}>
+              <div style={{ fontSize: 28, marginBottom: 16 }}>{f.icon}</div>
+              <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: 'white' }}>{f.title}</h3>
+              <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.7 }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section style={{ padding: '80px 24px', textAlign: 'center', background: 'rgba(99,102,241,0.03)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+        <p style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Comment ça marche</p>
+        <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1.5px', marginBottom: 64 }}>
+          En ligne en 5 minutes.
+        </h2>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 0, maxWidth: 900, margin: '0 auto', flexWrap: 'wrap' }}>
+          {[
+            { n: '1', title: 'Créez votre compte', desc: 'Renseignez votre restaurant en 2 minutes.' },
+            { n: '2', title: 'Choisissez votre offre', desc: 'Starter à 19,99€ ou Pro à 29,99€/mois.' },
+            { n: '3', title: 'Ajoutez votre menu', desc: 'Photos, prix, catégories. Simple et rapide.' },
+            { n: '4', title: 'Partagez le lien', desc: 'Vos clients commandent directement depuis leur mobile.' },
+          ].map((step, i) => (
+            <div key={i} style={{ flex: '1 1 200px', padding: '0 24px 40px', position: 'relative' }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: '50%', margin: '0 auto 20px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                fontSize: 18, fontWeight: 800,
+                boxShadow: '0 0 30px rgba(99,102,241,0.4)',
+              }}>
+                {step.n}
+              </div>
+              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, color: 'white' }}>{step.title}</h3>
+              <p style={{ fontSize: 13, color: '#4b5563', lineHeight: 1.6 }}>{step.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Pricing */}
-      <section className="px-6 py-20" style={{ background: '#0d1424' }}>
-        <h2 className="text-3xl md:text-4xl font-black text-white text-center mb-4" style={{ letterSpacing: '-1px' }}>Un prix simple et transparent</h2>
-        <p className="text-center mb-14" style={{ color: '#475569' }}>Pas de frais cachés, pas de commission sur vos ventes</p>
+      <section style={{ padding: '100px 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 64 }}>
+          <p style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Tarifs</p>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1.5px', marginBottom: 16 }}>
+            Transparent. Sans surprise.
+          </h2>
+          <p style={{ color: '#4b5563', fontSize: 16 }}>Zéro commission sur vos ventes. Résiliable à tout moment.</p>
+        </div>
 
-        <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="rounded-2xl p-8 relative" style={{ background: '#111827', border: '2px solid #3b82f6' }}>
-            <div className="absolute -top-3 left-6 px-3 py-1 rounded-full text-xs font-bold" style={{ background: '#3b82f6', color: 'white' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20, maxWidth: 760, margin: '0 auto' }}>
+          {/* Starter */}
+          <div style={{
+            borderRadius: 24, padding: '40px 32px',
+            background: 'linear-gradient(145deg, #0f172a, #111827)',
+            border: '2px solid rgba(99,102,241,0.5)',
+            boxShadow: '0 0 60px rgba(99,102,241,0.1)',
+            position: 'relative',
+          }}>
+            <div style={{
+              position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              padding: '4px 16px', borderRadius: 100, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap',
+            }}>
               OFFRE DE LANCEMENT
             </div>
-            <h3 className="font-bold text-white text-xl mb-1">EatUp Starter</h3>
-            <p className="text-4xl font-black text-white mt-4 mb-1">19,99€<span className="text-lg font-normal" style={{ color: '#64748b' }}>/mois</span></p>
-            <p className="text-sm mb-6" style={{ color: '#475569' }}>Idéal pour démarrer</p>
-            <ul className="space-y-3 mb-8">
-              {['Menu en ligne illimité', 'Commandes click & collect', 'Dashboard analytics', 'Gestion clients', 'Emails automatiques', 'Support par email'].map(f => (
-                <li key={f} className="flex items-center gap-2 text-sm" style={{ color: '#94a3b8' }}>
-                  <span style={{ color: '#3b82f6' }}>✓</span> {f}
+            <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 600, marginBottom: 8 }}>EatUp Starter</p>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+              <span style={{ fontSize: 52, fontWeight: 900, letterSpacing: '-2px' }}>19,99</span>
+              <span style={{ fontSize: 20, color: '#6b7280' }}>€/mois</span>
+            </div>
+            <p style={{ fontSize: 13, color: '#374151', marginBottom: 32 }}>Idéal pour démarrer</p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {['Menu en ligne illimité', 'Commandes click & collect', 'Dashboard & analytics', 'Gestion clients', 'Emails automatiques', 'Support par email'].map(f => (
+                <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#9ca3af' }}>
+                  <span style={{ color: '#6366f1', fontSize: 16, fontWeight: 800 }}>✓</span> {f}
                 </li>
               ))}
             </ul>
-            <Link href="/auth/register" className="block text-center py-3 rounded-xl font-bold" style={{ background: '#3b82f6', color: 'white' }}>
-              Commencer maintenant
+            <Link href="/auth/register" style={{
+              display: 'block', textAlign: 'center', padding: '14px', borderRadius: 14,
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: 'white', fontWeight: 700, fontSize: 15, textDecoration: 'none',
+              boxShadow: '0 8px 30px rgba(99,102,241,0.4)',
+            }}>
+              Commencer maintenant →
             </Link>
           </div>
 
-          <div className="rounded-2xl p-8" style={{ background: '#111827', border: '1px solid #1f2937' }}>
-            <h3 className="font-bold text-white text-xl mb-1">EatUp Pro</h3>
-            <p className="text-4xl font-black text-white mt-4 mb-1">29,99€<span className="text-lg font-normal" style={{ color: '#64748b' }}>/mois</span></p>
-            <p className="text-sm mb-6" style={{ color: '#475569' }}>Pour les restaurants ambitieux</p>
-            <ul className="space-y-3 mb-8">
+          {/* Pro */}
+          <div style={{
+            borderRadius: 24, padding: '40px 32px',
+            background: 'linear-gradient(145deg, #0a0f1e, #0d1117)',
+            border: '1px solid rgba(255,255,255,0.06)',
+          }}>
+            <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 600, marginBottom: 8 }}>EatUp Pro</p>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+              <span style={{ fontSize: 52, fontWeight: 900, letterSpacing: '-2px' }}>29,99</span>
+              <span style={{ fontSize: 20, color: '#6b7280' }}>€/mois</span>
+            </div>
+            <p style={{ fontSize: 13, color: '#374151', marginBottom: 32 }}>Pour les restaurants ambitieux</p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {['Tout EatUp Starter', 'Paiement en ligne Stripe', 'Notifications temps réel', 'Analytics avancés', 'QR code personnalisé', 'Support prioritaire'].map(f => (
-                <li key={f} className="flex items-center gap-2 text-sm" style={{ color: '#94a3b8' }}>
-                  <span style={{ color: '#8b5cf6' }}>✓</span> {f}
+                <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#9ca3af' }}>
+                  <span style={{ color: '#a78bfa', fontSize: 16, fontWeight: 800 }}>✓</span> {f}
                 </li>
               ))}
             </ul>
-            <Link href="/auth/register" className="block text-center py-3 rounded-xl font-bold" style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.3)' }}>
-              Choisir Pro
+            <Link href="/auth/register" style={{
+              display: 'block', textAlign: 'center', padding: '14px', borderRadius: 14,
+              background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)',
+              color: '#a78bfa', fontWeight: 700, fontSize: 15, textDecoration: 'none',
+            }}>
+              Choisir Pro →
             </Link>
           </div>
         </div>
       </section>
 
-      {/* CTA final */}
-      <section className="px-6 py-24 text-center">
-        <h2 className="text-3xl md:text-5xl font-black text-white mb-6" style={{ letterSpacing: '-1px' }}>
-          Prêt à digitaliser<br />votre restaurant ?
+      {/* Final CTA */}
+      <section style={{ padding: '80px 24px 120px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 700, background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <h2 style={{ fontSize: 'clamp(32px, 5vw, 64px)', fontWeight: 900, letterSpacing: '-2px', marginBottom: 20, lineHeight: 1.1 }}>
+          Votre restaurant mérite<br />
+          <span style={{ background: 'linear-gradient(135deg, #60a5fa, #818cf8, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            mieux que les applis tierces.
+          </span>
         </h2>
-        <p className="mb-8 text-lg" style={{ color: '#475569' }}>Rejoignez les restaurants qui utilisent EatUp</p>
-        <Link href="/auth/register"
-          className="inline-block px-10 py-4 rounded-2xl font-bold text-lg"
-          style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: 'white', boxShadow: '0 0 50px rgba(59,130,246,0.3)' }}>
-          Créer mon restaurant →
+        <p style={{ color: '#4b5563', fontSize: 18, marginBottom: 48, maxWidth: 480, margin: '0 auto 48px' }}>
+          Pas de commission. Pas d'intermédiaire. Vos commandes, vos clients, votre argent.
+        </p>
+        <Link href="/auth/register" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 10,
+          padding: '16px 36px', borderRadius: 16, textDecoration: 'none',
+          background: 'white', color: '#050810', fontWeight: 800, fontSize: 17,
+          boxShadow: '0 0 0 1px rgba(255,255,255,0.2), 0 20px 80px rgba(255,255,255,0.1)',
+          letterSpacing: '-0.3px',
+        }}>
+          Créer mon restaurant gratuitement
+          <span style={{ fontSize: 20 }}>→</span>
         </Link>
+        <p style={{ marginTop: 16, fontSize: 13, color: '#1f2937' }}>Sans engagement · Résiliable à tout moment</p>
       </section>
 
       {/* Footer */}
-      <footer className="px-6 py-8 text-center" style={{ borderTop: '1px solid #0f172a' }}>
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Image src="/LogoEatUp.PNG" alt="EatUp" width={24} height={24} className="rounded-full" />
-          <span className="font-bold text-white">EatUp</span>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '32px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Image src="/LogoEatUp.PNG" alt="EatUp" width={24} height={24} style={{ borderRadius: '50%' }} />
+          <span style={{ fontWeight: 700, color: '#374151' }}>EatUp</span>
         </div>
-        <p className="text-sm" style={{ color: '#334155' }}>© 2026 EatUp · Click & Collect pour restaurants</p>
+        <p style={{ fontSize: 13, color: '#1f2937' }}>© 2026 EatUp · Click & Collect pour restaurants</p>
+        <div style={{ display: 'flex', gap: 20 }}>
+          <Link href="/auth/login" style={{ fontSize: 13, color: '#374151', textDecoration: 'none' }}>Connexion</Link>
+          <Link href="/auth/register" style={{ fontSize: 13, color: '#374151', textDecoration: 'none' }}>Inscription</Link>
+        </div>
       </footer>
 
     </div>
