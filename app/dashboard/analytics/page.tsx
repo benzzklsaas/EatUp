@@ -46,7 +46,7 @@ export default function AnalyticsPage() {
     const d = new Date()
     d.setDate(d.getDate() - (6 - i))
     const key = d.toISOString().split('T')[0]
-    const dayOrders = orders.filter(o => o.created_at.startsWith(key))
+    const dayOrders = orders.filter(o => o.created_at?.startsWith(key))
     return {
       label: d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }),
       count: dayOrders.length,

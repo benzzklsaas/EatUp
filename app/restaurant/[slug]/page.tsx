@@ -20,7 +20,8 @@ type CartItem = {
 }
 
 export default function RestaurantPage() {
-  const { slug } = useParams()
+  const params = useParams()
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug as string
   const router = useRouter()
   const supabase = createClient()
 

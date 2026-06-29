@@ -19,9 +19,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error?.message || 'Erreur' }, { status: 500 })
   }
 
-  await supabase.from('order_items').insert(
+  const { error: itemsError } = await supabase.from('order_items').insert(
     items.map((i: any) => ({ ...i, order_id: data.id }))
   )
+
+  if (itemsError) {
+    return NextResponse.json({ error: itemsError.message }, { status: 500 })
+  }
 
   return NextResponse.json({ order: data })
 }

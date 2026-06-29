@@ -63,7 +63,7 @@ export default function OrdersPage() {
   async function updateStatus(orderId: string, status: string) {
     await supabase.from('orders').update({ status }).eq('id', orderId)
     setOrders(orders.map(o => o.id === orderId ? { ...o, status } : o))
-    if (selected?.id === orderId) setSelected({ ...selected, status })
+    if (selected?.id === orderId) setSelected({ ...selected!, status })
   }
 
   const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter)
