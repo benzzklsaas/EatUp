@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -27,13 +27,50 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Annulé',
 }
 
+function playNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const notes = [523, 659, 784] // Do Mi Sol
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12)
+      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i * 0.12 + 0.02)
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.12 + 0.2)
+      osc.start(ctx.currentTime + i * 0.12)
+      osc.stop(ctx.currentTime + i * 0.12 + 0.25)
+    })
+  } catch (_) {}
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState<Order | null>(null)
+  const [toast, setToast] = useState<{ name: string; amount: string } | null>(null)
+  const [soundEnabled, setSoundEnabled] = useState(true)
   const router = useRouter()
   const supabase = createClient()
+  const restaurantId = useRef<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showToast = useCallback((order: Order) => {
+    if (soundEnabled) playNotificationSound()
+    setToast({ name: `${order.first_name} ${order.last_name}`, amount: `${Number(order.total_price).toFixed(2)}€` })
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 5000)
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('🔔 Nouvelle commande EatUp', {
+        body: `${order.first_name} ${order.last_name} — ${Number(order.total_price).toFixed(2)}€`,
+        icon: '/LogoEatUp.PNG',
+      })
+    }
+  }, [soundEnabled])
 
   useEffect(() => {
     async function load() {
@@ -47,6 +84,7 @@ export default function OrdersPage() {
         .single()
 
       if (!resto) { router.push('/dashboard'); return }
+      restaurantId.current = resto.id
 
       const { data } = await supabase
         .from('orders')
@@ -56,6 +94,28 @@ export default function OrdersPage() {
 
       setOrders(data || [])
       setLoading(false)
+
+      // Demander permission notifs navigateur
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission()
+      }
+
+      // Supabase Realtime
+      const channel = supabase
+        .channel(`orders-${resto.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders',
+          filter: `restaurant_id=eq.${resto.id}`,
+        }, (payload) => {
+          const newOrder = payload.new as Order
+          setOrders(prev => [newOrder, ...prev])
+          showToast(newOrder)
+        })
+        .subscribe()
+
+      return () => { supabase.removeChannel(channel) }
     }
     load()
   }, [])
@@ -76,9 +136,48 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#0f172a' }}>
-      <header className="px-6 py-4 flex items-center gap-3" style={{ background: '#1e293b', borderBottom: '1px solid #334155' }}>
-        <button onClick={() => router.push('/dashboard')} style={{ color: '#64748b' }}>← Retour</button>
-        <h1 className="font-bold text-white text-lg">Commandes</h1>
+
+      {/* Toast notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed', top: 20, right: 20, zIndex: 200,
+          background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+          border: '1px solid #3b82f6',
+          borderRadius: 16, padding: '16px 20px', minWidth: 280,
+          boxShadow: '0 0 40px rgba(59,130,246,0.3)',
+          animation: 'slideIn 0.3s ease',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ fontSize: 28 }}>🔔</div>
+            <div>
+              <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: 0 }}>Nouvelle commande !</p>
+              <p style={{ color: '#60a5fa', fontSize: 13, margin: '2px 0 0' }}>{toast.name} — <strong>{toast.amount}</strong></p>
+            </div>
+            <button onClick={() => setToast(null)} style={{ marginLeft: 'auto', color: '#475569', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(100px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `}</style>
+
+      <header className="px-6 py-4 flex items-center justify-between" style={{ background: '#1e293b', borderBottom: '1px solid #334155' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => router.push('/dashboard')} style={{ color: '#64748b' }}>← Retour</button>
+          <h1 className="font-bold text-white text-lg">Commandes</h1>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px #4ade80' }} title="Temps réel actif" />
+        </div>
+        <button
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          style={{ fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', opacity: soundEnabled ? 1 : 0.3 }}
+          title={soundEnabled ? 'Son activé' : 'Son désactivé'}
+        >
+          {soundEnabled ? '🔊' : '🔇'}
+        </button>
       </header>
 
       <main className="p-6 max-w-4xl mx-auto">
@@ -112,7 +211,7 @@ export default function OrdersPage() {
                 key={order.id}
                 onClick={() => setSelected(order)}
                 className="rounded-2xl p-4 flex items-center justify-between cursor-pointer transition"
-                style={{ background: '#1e293b', border: '1px solid #334155' }}
+                style={{ background: '#1e293b', border: `1px solid ${order.status === 'pending' ? '#f59e0b' : '#334155'}` }}
               >
                 <div>
                   <p className="font-bold text-white">{order.first_name} {order.last_name}</p>
