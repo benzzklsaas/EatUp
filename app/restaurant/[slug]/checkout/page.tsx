@@ -59,31 +59,35 @@ export default function CheckoutPage() {
 
     const orderNumber = generateOrderNumber()
 
-    const { data: order, error } = await supabase.from('orders').insert({
-      restaurant_id: restaurant.id,
-      order_number: orderNumber,
-      first_name: form.firstName,
-      last_name: form.lastName,
-      phone: form.phone,
-      email: form.email,
-      total_price: total,
-      pickup_time: pickupTime,
-      payment_method: paymentMethod,
-      payment_status: paymentMethod === 'cash' ? 'unpaid' : 'paid',
-      status: 'pending',
-    }).select().single()
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        order: {
+          restaurant_id: restaurant.id,
+          order_number: orderNumber,
+          first_name: form.firstName,
+          last_name: form.lastName,
+          phone: form.phone,
+          email: form.email,
+          total_price: total,
+          pickup_time: pickupTime,
+          payment_method: paymentMethod,
+          payment_status: paymentMethod === 'cash' ? 'unpaid' : 'paid',
+          status: 'pending',
+        },
+        items: cart.map((i: any) => ({
+          product_id: i.product.id,
+          product_name: i.product.name,
+          quantity: i.quantity,
+          price: i.product.price,
+        })),
+      }),
+    })
 
-    if (error || !order) { setError('Erreur lors de la commande : ' + (error?.message || 'réessayez.')); setLoading(false); return }
-
-    await supabase.from('order_items').insert(
-      cart.map((i: any) => ({
-        order_id: order.id,
-        product_id: i.product.id,
-        product_name: i.product.name,
-        quantity: i.quantity,
-        price: i.product.price,
-      }))
-    )
+    const json = await res.json()
+    if (!res.ok || json.error) { setError('Erreur : ' + (json.error || 'réessayez.')); setLoading(false); return }
+    const order = json.order
 
     try {
       await fetch('/api/email', {
