@@ -3,6 +3,7 @@
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
+import Link from 'next/link'
 
 export default function OrderSuccessPage() {
   const params = useParams()
@@ -16,24 +17,12 @@ export default function OrderSuccessPage() {
     async function markPaidAndNotify() {
       if (!orderNumber) return
 
-      await supabase
-        .from('orders')
-        .update({ payment_status: 'paid' })
-        .eq('order_number', orderNumber)
+      await supabase.from('orders').update({ payment_status: 'paid' }).eq('order_number', orderNumber)
 
-      // Récupérer les infos de la commande pour l'email
-      const { data: order } = await supabase
-        .from('orders')
-        .select('*, restaurants(name, email)')
-        .eq('order_number', orderNumber)
-        .single()
+      const { data: order } = await supabase.from('orders').select('*, restaurants(name, email)').eq('order_number', orderNumber).single()
 
       if (order) {
-        const { data: items } = await supabase
-          .from('order_items')
-          .select('*')
-          .eq('order_id', order.id)
-
+        const { data: items } = await supabase.from('order_items').select('*').eq('order_id', order.id)
         try {
           await fetch('/api/email', {
             method: 'POST',
@@ -57,21 +46,34 @@ export default function OrderSuccessPage() {
   }, [orderNumber])
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#0f172a' }}>
-      <div className="w-full max-w-md rounded-2xl p-8 text-center" style={{ background: '#1e293b', border: '1px solid #334155' }}>
-        <div className="text-6xl mb-4">✅</div>
-        <h1 className="text-2xl font-bold text-white mb-2">Paiement confirmé !</h1>
-        <p className="text-sm mb-4" style={{ color: '#94a3b8' }}>Votre commande a été payée avec succès.</p>
-        <div className="rounded-xl p-4 mb-6" style={{ background: '#0f172a' }}>
-          <p className="text-xs mb-1" style={{ color: '#64748b' }}>Numéro de commande</p>
-          <p className="text-2xl font-bold" style={{ color: '#3b82f6' }}>{orderNumber}</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      <div style={{ position: 'fixed', top: '30%', left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, background: 'radial-gradient(circle, rgba(74,222,128,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+      <div style={{ width: '100%', maxWidth: 420, textAlign: 'center' }}>
+        {/* Icône succès */}
+        <div style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, background: 'rgba(74,222,128,0.1)', border: '2px solid rgba(74,222,128,0.3)' }}>
+          ✅
         </div>
-        <p className="text-sm mb-6" style={{ color: '#64748b' }}>Vous recevrez un email de confirmation. Présentez ce numéro lors du retrait.</p>
-        <button
-          onClick={() => router.push(`/restaurant/${slug}`)}
-          className="w-full py-3 rounded-xl font-semibold"
-          style={{ background: '#3b82f6', color: 'white' }}
-        >
+
+        <h1 style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 10px' }}>Paiement confirmé !</h1>
+        <p style={{ fontSize: 15, color: '#4b5563', margin: '0 0 32px', lineHeight: 1.6 }}>
+          Votre commande a été reçue et payée avec succès.
+        </p>
+
+        {/* Numéro de commande */}
+        <div style={{ borderRadius: 20, padding: '24px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(74,222,128,0.2)', marginBottom: 24 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Numéro de commande</p>
+          <p style={{ fontSize: 32, fontWeight: 900, color: '#4ade80', letterSpacing: '-1px', margin: 0 }}>{orderNumber}</p>
+        </div>
+
+        <div style={{ borderRadius: 16, padding: '16px 20px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', marginBottom: 32, textAlign: 'left' }}>
+          <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+            📧 Un email de confirmation a été envoyé.<br />
+            🛍️ Présentez ce numéro lors du retrait de votre commande.
+          </p>
+        </div>
+
+        <button onClick={() => router.push(`/restaurant/${slug}`)} style={{ width: '100%', padding: '15px', borderRadius: 16, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15, boxShadow: '0 8px 30px rgba(99,102,241,0.3)' }}>
           Retour au menu
         </button>
       </div>
