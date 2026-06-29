@@ -129,9 +129,9 @@ export default function LandingPage() {
           <div style={{ padding: 24 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
               {[
-                { label: "Commandes aujourd'hui", value: '24', color: '#60a5fa' },
-                { label: 'En attente', value: '7', color: '#f59e0b' },
-                { label: 'Revenus', value: '487€', color: '#10b981' },
+                { label: "Commandes aujourd'hui", value: '127', color: '#60a5fa' },
+                { label: 'En attente', value: '34', color: '#f59e0b' },
+                { label: 'Revenus du mois', value: '8 240€', color: '#10b981' },
               ].map((stat, i) => (
                 <div key={i} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 14, padding: '16px 20px' }}>
                   <p style={{ fontSize: 11, color: '#64748b', marginBottom: 6 }}>{stat.label}</p>
@@ -145,9 +145,9 @@ export default function LandingPage() {
                 <span style={{ fontSize: 12, color: '#3b82f6' }}>Voir tout</span>
               </div>
               {[
-                { name: 'Marie Lambert', amount: '23,50€', status: 'En attente', statusColor: '#f59e0b', statusBg: '#451a03' },
-                { name: 'Thomas Girard', amount: '18,90€', status: 'En préparation', statusColor: '#60a5fa', statusBg: '#1e3a5f' },
-                { name: 'Sophie Martin', amount: '31,00€', status: 'Prêt', statusColor: '#4ade80', statusBg: '#052e16' },
+                { name: 'Marie Lambert', amount: '47,50€', status: 'En attente', statusColor: '#f59e0b', statusBg: '#451a03' },
+                { name: 'Thomas Girard', amount: '62,90€', status: 'En préparation', statusColor: '#60a5fa', statusBg: '#1e3a5f' },
+                { name: 'Sophie Martin', amount: '38,00€', status: 'Prêt', statusColor: '#4ade80', statusBg: '#052e16' },
               ].map((order, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 2 ? '1px solid #1e293b' : 'none' }}>
                   <div>
