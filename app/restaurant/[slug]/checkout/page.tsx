@@ -13,6 +13,7 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState<any[]>([])
   const [form, setForm] = useState({ firstName: '', lastName: '', phone: '', email: '' })
   const [pickupTime, setPickupTime] = useState('')
+  const [pickupSlots, setPickupSlots] = useState<string[]>([])
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'online'>('cash')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
@@ -27,6 +28,20 @@ export default function CheckoutPage() {
       if (data) setRestaurant(data)
     }
     loadResto()
+
+    // Générer les créneaux : de maintenant + 30min, toutes les 15min, pour 3h
+    const slots: string[] = []
+    const now = new Date()
+    now.setMinutes(now.getMinutes() + 30)
+    now.setSeconds(0, 0)
+    const roundedMinutes = Math.ceil(now.getMinutes() / 15) * 15
+    now.setMinutes(roundedMinutes)
+    for (let i = 0; i < 12; i++) {
+      const slot = new Date(now.getTime() + i * 15 * 60000)
+      slots.push(slot.toISOString())
+    }
+    setPickupSlots(slots)
+    setPickupTime(slots[0])
   }, [slug])
 
   const total = cart.reduce((sum: number, i: any) => sum + i.product.price * i.quantity, 0)
@@ -168,14 +183,28 @@ export default function CheckoutPage() {
           {/* Heure de retrait */}
           <div className="rounded-2xl p-5" style={{ background: '#1e293b', border: '1px solid #334155' }}>
             <h2 className="font-bold text-white mb-3">Heure de retrait</h2>
-            <input
-              type="datetime-local"
-              value={pickupTime}
-              onChange={e => setPickupTime(e.target.value)}
-              required
-              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ background: '#0f172a', border: '1px solid #334155', color: 'white' }}
-            />
+            <div className="grid grid-cols-3 gap-2">
+              {pickupSlots.map(slot => {
+                const date = new Date(slot)
+                const label = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => setPickupTime(slot)}
+                    className="py-3 rounded-xl text-sm font-semibold transition"
+                    style={{
+                      background: pickupTime === slot ? '#3b82f6' : '#0f172a',
+                      color: pickupTime === slot ? 'white' : '#94a3b8',
+                      border: '1px solid',
+                      borderColor: pickupTime === slot ? '#3b82f6' : '#334155',
+                    }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Paiement */}
