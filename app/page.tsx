@@ -42,7 +42,7 @@ export default function LandingPage() {
             padding: '9px 20px', borderRadius: 10, textDecoration: 'none',
             boxShadow: '0 0 0 1px rgba(255,255,255,0.1)',
           }}>
-            Démarrer gratuitement
+            Démarrer
           </Link>
         </div>
       </nav>
@@ -106,7 +106,7 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p style={{ marginTop: 20, fontSize: 13, color: '#1f2937' }}>Aucune carte bancaire requise · 19,99€/mois</p>
+        <p style={{ marginTop: 20, fontSize: 13, color: '#1f2937' }}>À partir de 19,99€/mois · Sans engagement</p>
 
         {/* Dashboard mockup */}
         <div style={{
@@ -340,7 +340,7 @@ export default function LandingPage() {
           boxShadow: '0 0 0 1px rgba(255,255,255,0.2), 0 20px 80px rgba(255,255,255,0.1)',
           letterSpacing: '-0.3px',
         }}>
-          Créer mon restaurant gratuitement
+          Créer mon restaurant
           <span style={{ fontSize: 20 }}>→</span>
         </Link>
         <p style={{ marginTop: 16, fontSize: 13, color: '#1f2937' }}>Sans engagement · Résiliable à tout moment</p>
