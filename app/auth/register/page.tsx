@@ -6,15 +6,16 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
+const inputStyle: React.CSSProperties = {
+  width: '100%', borderRadius: 12, padding: '12px 16px', fontSize: 14,
+  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+  color: 'white', outline: 'none', boxSizing: 'border-box',
+}
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 600, color: '#6b7280', marginBottom: 8 }
+const sectionStyle: React.CSSProperties = { borderRadius: 16, padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 14 }
+
 export default function RegisterPage() {
-  const [form, setForm] = useState({
-    restaurantName: '',
-    email: '',
-    password: '',
-    phone: '',
-    address: '',
-    description: '',
-  })
+  const [form, setForm] = useState({ restaurantName: '', email: '', password: '', phone: '', address: '', description: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -29,167 +30,90 @@ export default function RegisterPage() {
     setLoading(true)
     setError('')
 
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-    })
-
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
+    const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password })
+    if (error) { setError(error.message); setLoading(false); return }
 
     if (data.user) {
-      const slug = form.restaurantName
-        .toLowerCase()
-        .normalize('NFD').replace(/[̀-ͯ]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, '')
-
+      const slug = form.restaurantName.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
       const { error: restoError } = await supabase.from('restaurants').insert({
-        name: form.restaurantName,
-        email: form.email,
-        phone: form.phone,
-        address: form.address,
-        description: form.description,
-        owner_id: data.user.id,
-        slug,
+        name: form.restaurantName, email: form.email, phone: form.phone,
+        address: form.address, description: form.description, owner_id: data.user.id, slug,
       })
-
-      if (restoError) {
-        setError('Erreur création restaurant : ' + restoError.message)
-        setLoading(false)
-        return
-      }
+      if (restoError) { setError('Erreur création restaurant : ' + restoError.message); setLoading(false); return }
     }
 
     router.push('/subscribe')
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#0f172a' }}>
-      <div className="w-full max-w-lg rounded-2xl p-8" style={{ background: '#1e293b', border: '1px solid #334155' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      <div style={{ position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 700, height: 700, background: 'radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        <div className="flex justify-center mb-3">
-          <Image src="/LogoEatUp.PNG" alt="EatUp" width={64} height={64} className="rounded-full" />
+      <div style={{ width: '100%', maxWidth: 520, borderRadius: 24, padding: '48px 40px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <Image src="/LogoEatUp.PNG" alt="EatUp" width={56} height={56} style={{ borderRadius: '50%', margin: '0 auto 16px' }} />
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>Créez votre restaurant</h1>
+          <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>Prêt en 5 minutes · 19,99€/mois les 2 premiers mois</p>
         </div>
-        <h1 className="text-center text-xl font-bold text-white mb-1">Créez votre restaurant</h1>
-        <p className="text-center text-sm mb-8" style={{ color: '#64748b' }}>Rejoignez EatUp et commencez à recevoir des commandes</p>
 
-        <form onSubmit={handleRegister} className="space-y-4">
-
-          {/* Infos restaurant */}
-          <div className="rounded-xl p-4 space-y-3" style={{ background: '#0f172a', border: '1px solid #334155' }}>
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}>Votre restaurant</p>
-
+        <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Restaurant */}
+          <div style={sectionStyle}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>Votre restaurant</p>
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#94a3b8' }}>Nom du restaurant *</label>
-              <input
-                type="text"
-                value={form.restaurantName}
-                onChange={e => update('restaurantName', e.target.value)}
-                placeholder="Crousty Naan"
-                required
-                className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ background: '#1e293b', border: '1px solid #334155', color: 'white' }}
-              />
+              <label style={labelStyle}>Nom du restaurant *</label>
+              <input type="text" value={form.restaurantName} onChange={e => update('restaurantName', e.target.value)} placeholder="Crousty Naan" required style={inputStyle} />
             </div>
-
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#94a3b8' }}>Adresse</label>
-              <input
-                type="text"
-                value={form.address}
-                onChange={e => update('address', e.target.value)}
-                placeholder="13 rue Jean Mermoz, Bordeaux"
-                className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ background: '#1e293b', border: '1px solid #334155', color: 'white' }}
-              />
+              <label style={labelStyle}>Adresse</label>
+              <input type="text" value={form.address} onChange={e => update('address', e.target.value)} placeholder="13 rue Jean Mermoz, Bordeaux" style={inputStyle} />
             </div>
-
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#94a3b8' }}>Téléphone</label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={e => update('phone', e.target.value)}
-                placeholder="05 56 00 00 00"
-                className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ background: '#1e293b', border: '1px solid #334155', color: 'white' }}
-              />
+              <label style={labelStyle}>Téléphone</label>
+              <input type="tel" value={form.phone} onChange={e => update('phone', e.target.value)} placeholder="05 56 00 00 00" style={inputStyle} />
             </div>
-
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#94a3b8' }}>Description courte</label>
-              <textarea
-                value={form.description}
-                onChange={e => update('description', e.target.value)}
-                placeholder="Cuisine indienne, spécialités tandoor..."
-                rows={2}
-                className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                style={{ background: '#1e293b', border: '1px solid #334155', color: 'white' }}
-              />
+              <label style={labelStyle}>Description courte</label>
+              <textarea value={form.description} onChange={e => update('description', e.target.value)} placeholder="Cuisine indienne, spécialités tandoor..." rows={2} style={{ ...inputStyle, resize: 'none' }} />
             </div>
           </div>
 
           {/* Compte */}
-          <div className="rounded-xl p-4 space-y-3" style={{ background: '#0f172a', border: '1px solid #334155' }}>
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#64748b' }}>Votre compte</p>
-
+          <div style={sectionStyle}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>Votre compte</p>
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#94a3b8' }}>Email *</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={e => update('email', e.target.value)}
-                placeholder="votre@email.com"
-                required
-                className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ background: '#1e293b', border: '1px solid #334155', color: 'white' }}
-              />
+              <label style={labelStyle}>Email *</label>
+              <input type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="votre@email.com" required style={inputStyle} />
             </div>
-
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#94a3b8' }}>Mot de passe *</label>
-              <input
-                type="password"
-                value={form.password}
-                onChange={e => update('password', e.target.value)}
-                placeholder="8 caractères minimum"
-                required
-                minLength={8}
-                className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ background: '#1e293b', border: '1px solid #334155', color: 'white' }}
-              />
+              <label style={labelStyle}>Mot de passe *</label>
+              <input type="password" value={form.password} onChange={e => update('password', e.target.value)} placeholder="8 caractères minimum" required minLength={8} style={inputStyle} />
             </div>
           </div>
 
           {error && (
-            <div className="rounded-xl p-3 text-sm" style={{ background: '#450a0a', color: '#fca5a5', border: '1px solid #7f1d1d' }}>
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#f87171' }}>
               {error}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 rounded-xl font-bold text-lg transition disabled:opacity-50"
-            style={{ background: '#3b82f6', color: 'white' }}
-          >
+          <button type="submit" disabled={loading} style={{
+            padding: '14px', borderRadius: 14, border: 'none', cursor: loading ? 'default' : 'pointer',
+            background: loading ? '#374151' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            color: 'white', fontWeight: 700, fontSize: 15,
+            boxShadow: loading ? 'none' : '0 8px 30px rgba(99,102,241,0.3)',
+          }}>
             {loading ? 'Création...' : 'Créer mon restaurant →'}
           </button>
 
-          <p className="text-center text-xs" style={{ color: '#475569' }}>
-            Après inscription, vous choisirez votre offre d'abonnement.
+          <p style={{ textAlign: 'center', fontSize: 12, color: '#1f2937' }}>
+            Après inscription, vous activerez votre abonnement.
           </p>
         </form>
 
-        <p className="text-center mt-6 text-sm" style={{ color: '#64748b' }}>
+        <p style={{ textAlign: 'center', marginTop: 24, fontSize: 14, color: '#374151' }}>
           Déjà un compte ?{' '}
-          <Link href="/auth/login" className="font-medium" style={{ color: '#60a5fa' }}>
-            Se connecter
-          </Link>
+          <Link href="/auth/login" style={{ color: '#818cf8', fontWeight: 600, textDecoration: 'none' }}>Se connecter</Link>
         </p>
       </div>
     </div>

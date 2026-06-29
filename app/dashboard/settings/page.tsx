@@ -16,11 +16,9 @@ type DaySchedule = {
   slot_duration: number
 }
 
-type Closure = {
-  id?: string
-  closed_date: string
-  reason: string
-}
+type Closure = { id?: string; closed_date: string; reason: string }
+
+const timeInput: React.CSSProperties = { flex: 1, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }
 
 export default function SettingsPage() {
   const [restaurant, setRestaurant] = useState<any>(null)
@@ -41,39 +39,15 @@ export default function SettingsPage() {
       if (!resto) { router.push('/dashboard'); return }
       setRestaurant(resto)
 
-      const { data: scheduleData } = await supabase
-        .from('restaurant_schedule')
-        .select('*')
-        .eq('restaurant_id', resto.id)
-        .order('day_of_week')
+      const { data: scheduleData } = await supabase.from('restaurant_schedule').select('*').eq('restaurant_id', resto.id).order('day_of_week')
 
       if (scheduleData && scheduleData.length === 7) {
-        setSchedule(scheduleData.map(d => ({
-          ...d,
-          opening_time_1: d.opening_time_1?.slice(0, 5) || '11:00',
-          closing_time_1: d.closing_time_1?.slice(0, 5) || '15:00',
-          opening_time_2: d.opening_time_2?.slice(0, 5) || null,
-          closing_time_2: d.closing_time_2?.slice(0, 5) || null,
-        })))
+        setSchedule(scheduleData.map(d => ({ ...d, opening_time_1: d.opening_time_1?.slice(0, 5) || '11:00', closing_time_1: d.closing_time_1?.slice(0, 5) || '15:00', opening_time_2: d.opening_time_2?.slice(0, 5) || null, closing_time_2: d.closing_time_2?.slice(0, 5) || null })))
       } else {
-        // Initialiser les 7 jours par défaut
-        const defaults: DaySchedule[] = DAYS.map((_, i) => ({
-          day_of_week: i,
-          is_closed: i === 6, // dimanche fermé par défaut
-          opening_time_1: '11:00',
-          closing_time_1: '15:00',
-          opening_time_2: '18:00',
-          closing_time_2: '23:00',
-          slot_duration: 15,
-        }))
-        setSchedule(defaults)
+        setSchedule(DAYS.map((_, i) => ({ day_of_week: i, is_closed: i === 6, opening_time_1: '11:00', closing_time_1: '15:00', opening_time_2: '18:00', closing_time_2: '23:00', slot_duration: 15 })))
       }
 
-      const { data: closuresData } = await supabase
-        .from('restaurant_closures')
-        .select('*')
-        .eq('restaurant_id', resto.id)
-        .order('closed_date')
+      const { data: closuresData } = await supabase.from('restaurant_closures').select('*').eq('restaurant_id', resto.id).order('closed_date')
       setClosures(closuresData || [])
       setLoading(false)
     }
@@ -87,16 +61,9 @@ export default function SettingsPage() {
   async function handleSave() {
     if (!restaurant) return
     setSaving(true)
-
     for (const day of schedule) {
-      await supabase.from('restaurant_schedule').upsert({
-        restaurant_id: restaurant.id,
-        ...day,
-        opening_time_2: day.opening_time_2 || null,
-        closing_time_2: day.closing_time_2 || null,
-      }, { onConflict: 'restaurant_id,day_of_week' })
+      await supabase.from('restaurant_schedule').upsert({ restaurant_id: restaurant.id, ...day, opening_time_2: day.opening_time_2 || null, closing_time_2: day.closing_time_2 || null }, { onConflict: 'restaurant_id,day_of_week' })
     }
-
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -104,15 +71,8 @@ export default function SettingsPage() {
 
   async function addClosure() {
     if (!newClosure.closed_date || !restaurant) return
-    const { data } = await supabase.from('restaurant_closures').insert({
-      restaurant_id: restaurant.id,
-      closed_date: newClosure.closed_date,
-      reason: newClosure.reason || null,
-    }).select().single()
-    if (data) {
-      setClosures(prev => [...prev, data])
-      setNewClosure({ closed_date: '', reason: '' })
-    }
+    const { data } = await supabase.from('restaurant_closures').insert({ restaurant_id: restaurant.id, closed_date: newClosure.closed_date, reason: newClosure.reason || null }).select().single()
+    if (data) { setClosures(prev => [...prev, data]); setNewClosure({ closed_date: '', reason: '' }) }
   }
 
   async function removeClosure(id: string) {
@@ -121,98 +81,74 @@ export default function SettingsPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f172a' }}>
-      <p style={{ color: '#94a3b8' }}>Chargement...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810' }}>
+      <p style={{ color: '#374151', fontSize: 14 }}>Chargement...</p>
     </div>
   )
 
   return (
-    <div className="min-h-screen pb-10" style={{ background: '#0f172a' }}>
-      <header className="px-6 py-4 flex items-center gap-3" style={{ background: '#1e293b', borderBottom: '1px solid #334155' }}>
-        <button onClick={() => router.push('/dashboard')} style={{ color: '#64748b' }}>← Retour</button>
-        <h1 className="font-bold text-white text-lg">Paramètres</h1>
+    <div style={{ minHeight: '100vh', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', paddingBottom: 48 }}>
+
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => router.push('/dashboard')} style={{ color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>← Retour</button>
+          <p style={{ fontSize: 16, fontWeight: 700, color: 'white', margin: 0 }}>Paramètres</p>
+        </div>
+        <button onClick={handleSave} disabled={saving} style={{ padding: '9px 20px', borderRadius: 12, border: 'none', cursor: saving ? 'default' : 'pointer', background: saved ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: saved ? '#4ade80' : 'white', fontWeight: 700, fontSize: 13, transition: 'all 0.3s' }}>
+          {saved ? '✓ Sauvegardé' : saving ? 'Sauvegarde...' : 'Sauvegarder'}
+        </button>
       </header>
 
-      <main className="p-6 max-w-2xl mx-auto space-y-6">
+      <main style={{ padding: '32px 24px', maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* Horaires par jour */}
-        <div className="rounded-2xl p-6" style={{ background: '#1e293b', border: '1px solid #334155' }}>
-          <h2 className="font-bold text-white mb-5">Horaires d'ouverture</h2>
-          <div className="space-y-4">
+        {/* Horaires */}
+        <div style={{ borderRadius: 20, padding: '28px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>Horaires d'ouverture</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {DAYS.map((day, i) => {
               const d = schedule[i]
               if (!d) return null
               return (
-                <div key={i} className="rounded-xl p-4" style={{ background: '#0f172a', border: '1px solid #334155' }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-semibold text-white">{day}</span>
-                    <button
-                      onClick={() => updateDay(i, 'is_closed', !d.is_closed)}
-                      className="text-xs px-3 py-1 rounded-full font-medium transition"
-                      style={{
-                        background: d.is_closed ? '#450a0a' : '#052e16',
-                        color: d.is_closed ? '#fca5a5' : '#4ade80',
-                        border: '1px solid',
-                        borderColor: d.is_closed ? '#7f1d1d' : '#14532d',
-                      }}
-                    >
+                <div key={i} style={{ borderRadius: 14, padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: d.is_closed ? 0 : 14 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: d.is_closed ? '#374151' : 'white' }}>{day}</span>
+                    <button onClick={() => updateDay(i, 'is_closed', !d.is_closed)} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 100, border: 'none', cursor: 'pointer', background: d.is_closed ? 'rgba(239,68,68,0.1)' : 'rgba(74,222,128,0.1)', color: d.is_closed ? '#f87171' : '#4ade80', fontWeight: 700 }}>
                       {d.is_closed ? 'Fermé' : 'Ouvert'}
                     </button>
                   </div>
 
                   {!d.is_closed && (
-                    <div className="space-y-3">
-                      {/* Plage 1 */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div>
-                        <p className="text-xs mb-1" style={{ color: '#64748b' }}>Plage 1</p>
-                        <div className="flex gap-2 items-center">
-                          <input type="time" value={d.opening_time_1} onChange={e => updateDay(i, 'opening_time_1', e.target.value)}
-                            className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none"
-                            style={{ background: '#1e293b', border: '1px solid #334155', color: 'white' }} />
-                          <span style={{ color: '#475569' }}>→</span>
-                          <input type="time" value={d.closing_time_1} onChange={e => updateDay(i, 'closing_time_1', e.target.value)}
-                            className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none"
-                            style={{ background: '#1e293b', border: '1px solid #334155', color: 'white' }} />
+                        <p style={{ fontSize: 11, color: '#374151', fontWeight: 600, marginBottom: 6 }}>Plage 1</p>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <input type="time" value={d.opening_time_1} onChange={e => updateDay(i, 'opening_time_1', e.target.value)} style={timeInput} />
+                          <span style={{ color: '#374151', fontSize: 12 }}>→</span>
+                          <input type="time" value={d.closing_time_1} onChange={e => updateDay(i, 'closing_time_1', e.target.value)} style={timeInput} />
                         </div>
                       </div>
 
-                      {/* Plage 2 */}
                       <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs" style={{ color: '#64748b' }}>Plage 2 (optionnel)</p>
-                          <button
-                            onClick={() => updateDay(i, 'opening_time_2', d.opening_time_2 ? null : '18:00')}
-                            className="text-xs" style={{ color: '#3b82f6' }}
-                          >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <p style={{ fontSize: 11, color: '#374151', fontWeight: 600, margin: 0 }}>Plage 2</p>
+                          <button onClick={() => updateDay(i, 'opening_time_2', d.opening_time_2 ? null : '18:00')} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
                             {d.opening_time_2 ? '− Supprimer' : '+ Ajouter'}
                           </button>
                         </div>
                         {d.opening_time_2 && (
-                          <div className="flex gap-2 items-center">
-                            <input type="time" value={d.opening_time_2 || ''} onChange={e => updateDay(i, 'opening_time_2', e.target.value)}
-                              className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none"
-                              style={{ background: '#1e293b', border: '1px solid #334155', color: 'white' }} />
-                            <span style={{ color: '#475569' }}>→</span>
-                            <input type="time" value={d.closing_time_2 || ''} onChange={e => updateDay(i, 'closing_time_2', e.target.value)}
-                              className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none"
-                              style={{ background: '#1e293b', border: '1px solid #334155', color: 'white' }} />
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <input type="time" value={d.opening_time_2 || ''} onChange={e => updateDay(i, 'opening_time_2', e.target.value)} style={timeInput} />
+                            <span style={{ color: '#374151', fontSize: 12 }}>→</span>
+                            <input type="time" value={d.closing_time_2 || ''} onChange={e => updateDay(i, 'closing_time_2', e.target.value)} style={timeInput} />
                           </div>
                         )}
                       </div>
 
-                      {/* Durée créneaux */}
                       <div>
-                        <p className="text-xs mb-1" style={{ color: '#64748b' }}>Créneaux</p>
-                        <div className="flex gap-2">
+                        <p style={{ fontSize: 11, color: '#374151', fontWeight: 600, marginBottom: 6 }}>Créneaux</p>
+                        <div style={{ display: 'flex', gap: 6 }}>
                           {[15, 20, 30].map(dur => (
-                            <button key={dur} type="button" onClick={() => updateDay(i, 'slot_duration', dur)}
-                              className="px-3 py-1 rounded-lg text-xs font-medium transition"
-                              style={{
-                                background: d.slot_duration === dur ? '#3b82f6' : '#1e293b',
-                                color: d.slot_duration === dur ? 'white' : '#64748b',
-                                border: '1px solid',
-                                borderColor: d.slot_duration === dur ? '#3b82f6' : '#334155',
-                              }}>
+                            <button key={dur} onClick={() => updateDay(i, 'slot_duration', dur)} style={{ padding: '6px 14px', borderRadius: 100, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: d.slot_duration === dur ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)', color: d.slot_duration === dur ? '#818cf8' : '#4b5563' }}>
                               {dur} min
                             </button>
                           ))}
@@ -224,53 +160,35 @@ export default function SettingsPage() {
               )
             })}
           </div>
-
-          <button onClick={handleSave} disabled={saving}
-            className="w-full py-3 rounded-xl font-semibold mt-6 transition"
-            style={{ background: saved ? '#10b981' : '#3b82f6', color: 'white' }}>
-            {saved ? '✓ Sauvegardé !' : saving ? 'Sauvegarde...' : 'Sauvegarder les horaires'}
-          </button>
         </div>
 
-        {/* Fermetures ponctuelles */}
-        <div className="rounded-2xl p-6" style={{ background: '#1e293b', border: '1px solid #334155' }}>
-          <h2 className="font-bold text-white mb-5">Fermetures exceptionnelles</h2>
+        {/* Fermetures exceptionnelles */}
+        <div style={{ borderRadius: 20, padding: '28px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>Fermetures exceptionnelles</p>
 
-          <div className="flex gap-2 mb-4">
-            <input type="date" value={newClosure.closed_date}
-              onChange={e => setNewClosure({ ...newClosure, closed_date: e.target.value })}
-              className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
-              style={{ background: '#0f172a', border: '1px solid #334155', color: 'white' }} />
-            <input placeholder="Raison (optionnel)" value={newClosure.reason}
-              onChange={e => setNewClosure({ ...newClosure, reason: e.target.value })}
-              className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
-              style={{ background: '#0f172a', border: '1px solid #334155', color: 'white' }} />
-            <button onClick={addClosure}
-              className="px-4 py-2 rounded-xl font-medium text-sm"
-              style={{ background: '#3b82f6', color: 'white' }}>
-              +
-            </button>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <input type="date" value={newClosure.closed_date} onChange={e => setNewClosure({ ...newClosure, closed_date: e.target.value })} style={{ flex: 1, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }} />
+            <input placeholder="Raison (optionnel)" value={newClosure.reason} onChange={e => setNewClosure({ ...newClosure, reason: e.target.value })} style={{ flex: 2, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }} />
+            <button onClick={addClosure} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 16 }}>+</button>
           </div>
 
           {closures.length === 0 ? (
-            <p className="text-sm" style={{ color: '#475569' }}>Aucune fermeture planifiée</p>
+            <p style={{ fontSize: 13, color: '#374151' }}>Aucune fermeture planifiée</p>
           ) : (
-            <div className="space-y-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {closures.map(c => (
-                <div key={c.id} className="flex items-center justify-between rounded-xl p-3"
-                  style={{ background: '#0f172a', border: '1px solid #334155' }}>
+                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 12, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
                   <div>
-                    <p className="text-sm font-medium text-white">
-                      {new Date(c.closed_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                    </p>
-                    {c.reason && <p className="text-xs" style={{ color: '#64748b' }}>{c.reason}</p>}
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'white', margin: '0 0 2px' }}>{new Date(c.closed_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                    {c.reason && <p style={{ fontSize: 12, color: '#4b5563', margin: 0 }}>{c.reason}</p>}
                   </div>
-                  <button onClick={() => c.id && removeClosure(c.id)} style={{ color: '#ef4444' }} className="text-sm">✕</button>
+                  <button onClick={() => c.id && removeClosure(c.id)} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
                 </div>
               ))}
             </div>
           )}
         </div>
+
       </main>
     </div>
   )

@@ -6,6 +6,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
+const S = {
+  page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' } as React.CSSProperties,
+  card: { width: '100%', maxWidth: 420, borderRadius: 24, padding: '48px 40px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.07)' } as React.CSSProperties,
+  label: { display: 'block', fontSize: 13, fontWeight: 600, color: '#6b7280', marginBottom: 8 } as React.CSSProperties,
+  input: { width: '100%', borderRadius: 12, padding: '12px 16px', fontSize: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none', boxSizing: 'border-box' } as React.CSSProperties,
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -18,69 +25,53 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-
-    if (error) {
-      setError('Email ou mot de passe incorrect')
-      setLoading(false)
-      return
-    }
-
+    if (error) { setError('Email ou mot de passe incorrect'); setLoading(false); return }
     router.push('/dashboard')
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#0f172a' }}>
-      <div className="w-full max-w-md rounded-2xl p-8" style={{ background: '#1e293b', border: '1px solid #334155' }}>
-        <div className="flex justify-center mb-4">
-          <Image src="/LogoEatUp.PNG" alt="EatUp" width={100} height={100} className="rounded-full" />
+    <div style={S.page}>
+      {/* Glow */}
+      <div style={{ position: 'fixed', top: '30%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+      <div style={S.card}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <Image src="/LogoEatUp.PNG" alt="EatUp" width={56} height={56} style={{ borderRadius: '50%', margin: '0 auto 16px' }} />
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>Bon retour 👋</h1>
+          <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>Connectez-vous à votre restaurant</p>
         </div>
-        <p className="text-center mb-8 text-sm" style={{ color: '#94a3b8' }}>Connectez-vous à votre restaurant</p>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: '#cbd5e1' }}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ background: '#0f172a', border: '1px solid #334155', color: 'white' }}
-              placeholder="votre@email.com"
-              required
-            />
+            <label style={S.label}>Email</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="votre@email.com" required style={S.input} />
+          </div>
+          <div>
+            <label style={S.label}>Mot de passe</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required style={S.input} />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1" style={{ color: '#cbd5e1' }}>Mot de passe</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ background: '#0f172a', border: '1px solid #334155', color: 'white' }}
-              placeholder="••••••••"
-              required
-            />
-          </div>
+          {error && (
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#f87171' }}>
+              {error}
+            </div>
+          )}
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl font-semibold transition disabled:opacity-50"
-            style={{ background: '#3b82f6', color: 'white' }}
-          >
-            {loading ? 'Connexion...' : 'Se connecter'}
+          <button type="submit" disabled={loading} style={{
+            marginTop: 8, padding: '14px', borderRadius: 14, border: 'none', cursor: loading ? 'default' : 'pointer',
+            background: loading ? '#374151' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            color: 'white', fontWeight: 700, fontSize: 15,
+            boxShadow: loading ? 'none' : '0 8px 30px rgba(99,102,241,0.3)',
+          }}>
+            {loading ? 'Connexion...' : 'Se connecter →'}
           </button>
         </form>
 
-        <p className="text-center mt-6 text-sm" style={{ color: '#64748b' }}>
+        <p style={{ textAlign: 'center', marginTop: 28, fontSize: 14, color: '#374151' }}>
           Pas encore de compte ?{' '}
-          <Link href="/auth/register" className="font-medium" style={{ color: '#60a5fa' }}>
-            Créer un compte
+          <Link href="/auth/register" style={{ color: '#818cf8', fontWeight: 600, textDecoration: 'none' }}>
+            Créer un restaurant
           </Link>
         </p>
       </div>
