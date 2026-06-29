@@ -5,10 +5,13 @@ import { cookies } from 'next/headers'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
-const PRICE_IDS = {
-  launch: 'price_1TngRzFOi1P60mkwELrZBdd6',
-  standard: 'price_1TngVqFOi1P60mkw54gxnI3h',
-}
+// Prix 29,99€/mois (plan unique)
+const PRICE_ID = 'price_1TngVqFOi1P60mkw54gxnI3h'
+
+// Coupon Stripe à créer une seule fois dans le dashboard :
+// -10€ pendant 2 mois (duration: repeating, duration_in_months: 2)
+// ID du coupon : LANCEMENT2MOIS
+const COUPON_ID = process.env.STRIPE_COUPON_LANCEMENT || 'LANCEMENT2MOIS'
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies()
@@ -29,14 +32,12 @@ export async function POST(req: NextRequest) {
 
   if (!resto) return NextResponse.json({ error: 'Restaurant introuvable' }, { status: 404 })
 
-  const { plan } = await req.json()
-  const priceId = plan === 'standard' ? PRICE_IDS.standard : PRICE_IDS.launch
-
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     payment_method_types: ['card'],
     customer_email: resto.email,
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: [{ price: PRICE_ID, quantity: 1 }],
+    discounts: [{ coupon: COUPON_ID }],
     success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscribed=true`,
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscribe`,
     metadata: { restaurant_id: resto.id, user_id: user.id },

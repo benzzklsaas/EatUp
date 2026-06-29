@@ -1,89 +1,93 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
 export default function SubscribePage() {
-  const [loading, setLoading] = useState<string | null>(null)
-  const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
-  async function handleSubscribe(plan: 'launch' | 'standard') {
-    setLoading(plan)
+  async function handleSubscribe() {
+    setLoading(true)
     const res = await fetch('/api/stripe/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan }),
+      body: JSON.stringify({ plan: 'launch' }),
     })
     const { url, error } = await res.json()
-    if (error) { setLoading(null); return }
+    if (error) { setLoading(false); return }
     window.location.href = url
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: '#0f172a' }}>
-      <div className="mb-8 text-center">
-        <Image src="/LogoEatUp.PNG" alt="EatUp" width={80} height={80} className="rounded-full mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-white">Choisissez votre offre</h1>
-        <p className="text-sm mt-1" style={{ color: '#94a3b8' }}>Activez votre restaurant sur EatUp</p>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+
+      <div style={{ marginBottom: 32, textAlign: 'center' }}>
+        <Image src="/LogoEatUp.PNG" alt="EatUp" width={64} height={64} style={{ borderRadius: '50%', margin: '0 auto 16px' }} />
+        <h1 style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-1px', margin: '0 0 8px' }}>Activez votre restaurant</h1>
+        <p style={{ fontSize: 15, color: '#4b5563', margin: 0 }}>Commencez à recevoir des commandes dès aujourd'hui</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
-        {/* Offre lancement */}
-        <div className="rounded-2xl p-6 relative" style={{ background: '#1e293b', border: '2px solid #3b82f6' }}>
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full" style={{ background: '#3b82f6', color: 'white' }}>
+      <div style={{ width: '100%', maxWidth: 420 }}>
+        <div style={{
+          borderRadius: 24, padding: '40px 32px',
+          background: 'linear-gradient(145deg, #0f172a, #111827)',
+          border: '2px solid rgba(99,102,241,0.5)',
+          boxShadow: '0 0 60px rgba(99,102,241,0.1)',
+          position: 'relative',
+        }}>
+          <div style={{
+            position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            padding: '4px 20px', borderRadius: 100, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', color: 'white',
+          }}>
             OFFRE DE LANCEMENT
-          </span>
-          <h2 className="font-bold text-white text-lg mt-2">EatUp Starter</h2>
-          <div className="my-4">
-            <span className="text-4xl font-bold text-white">19,99€</span>
-            <span style={{ color: '#64748b' }}>/mois</span>
           </div>
-          <ul className="space-y-2 mb-6 text-sm" style={{ color: '#94a3b8' }}>
-            {['Menu en ligne illimité', 'Commandes click & collect', 'Dashboard analytics', 'Gestion clients', 'Support par email'].map(f => (
-              <li key={f} className="flex items-center gap-2">
-                <span style={{ color: '#3b82f6' }}>✓</span> {f}
-              </li>
-            ))}
-          </ul>
-          <button
-            onClick={() => handleSubscribe('launch')}
-            disabled={loading !== null}
-            className="w-full py-3 rounded-xl font-bold transition disabled:opacity-50"
-            style={{ background: '#3b82f6', color: 'white' }}
-          >
-            {loading === 'launch' ? 'Redirection...' : 'Commencer pour 19,99€/mois'}
-          </button>
-        </div>
 
-        {/* Offre standard */}
-        <div className="rounded-2xl p-6" style={{ background: '#1e293b', border: '1px solid #334155' }}>
-          <h2 className="font-bold text-white text-lg mt-2">EatUp Pro</h2>
-          <div className="my-4">
-            <span className="text-4xl font-bold text-white">29,99€</span>
-            <span style={{ color: '#64748b' }}>/mois</span>
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginBottom: 6 }}>
+              <span style={{ fontSize: 64, fontWeight: 900, color: 'white', letterSpacing: '-2px', lineHeight: 1 }}>19,99</span>
+              <span style={{ fontSize: 20, color: '#6b7280' }}>€/mois</span>
+            </div>
+            <p style={{ fontSize: 14, color: '#818cf8', fontWeight: 600, margin: '0 0 4px' }}>pendant les 2 premiers mois</p>
+            <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>puis 29,99€/mois · Sans engagement</p>
           </div>
-          <ul className="space-y-2 mb-6 text-sm" style={{ color: '#94a3b8' }}>
-            {['Tout EatUp Starter', 'Paiement en ligne Stripe', 'Emails automatiques', 'Analytics avancés', 'Support prioritaire'].map(f => (
-              <li key={f} className="flex items-center gap-2">
-                <span style={{ color: '#10b981' }}>✓</span> {f}
+
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[
+              'Menu en ligne illimité',
+              'Commandes click & collect',
+              'Paiement en ligne Stripe',
+              'Dashboard & analytics',
+              'Emails de confirmation automatiques',
+              'Gestion des horaires & fermetures',
+              'Support par email',
+            ].map(f => (
+              <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#9ca3af' }}>
+                <span style={{ color: '#818cf8', fontSize: 16, fontWeight: 800 }}>✓</span> {f}
               </li>
             ))}
           </ul>
+
           <button
-            onClick={() => handleSubscribe('standard')}
-            disabled={loading !== null}
-            className="w-full py-3 rounded-xl font-bold transition disabled:opacity-50"
-            style={{ background: '#0f172a', color: '#94a3b8', border: '1px solid #334155' }}
+            onClick={handleSubscribe}
+            disabled={loading}
+            style={{
+              width: '100%', padding: '16px', borderRadius: 14, border: 'none', cursor: loading ? 'default' : 'pointer',
+              background: loading ? '#374151' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: 'white', fontWeight: 700, fontSize: 16,
+              boxShadow: loading ? 'none' : '0 8px 30px rgba(99,102,241,0.4)',
+              transition: 'all 0.2s',
+            }}
           >
-            {loading === 'standard' ? 'Redirection...' : 'Passer à Pro — 29,99€/mois'}
+            {loading ? 'Redirection...' : 'Commencer pour 19,99€/mois →'}
           </button>
+
+          <p style={{ textAlign: 'center', fontSize: 12, color: '#1f2937', marginTop: 16 }}>
+            Résiliable à tout moment · Paiement sécurisé Stripe
+          </p>
         </div>
       </div>
 
-      <button onClick={() => router.push('/dashboard')} className="mt-8 text-sm" style={{ color: '#475569' }}>
-        Retour au dashboard
-      </button>
     </div>
   )
 }

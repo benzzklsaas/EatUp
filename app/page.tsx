@@ -252,71 +252,56 @@ export default function LandingPage() {
           <p style={{ color: '#4b5563', fontSize: 16 }}>Zéro commission sur vos ventes. Résiliable à tout moment.</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20, maxWidth: 760, margin: '0 auto' }}>
-          {/* Starter */}
+        <div style={{ maxWidth: 480, margin: '0 auto' }}>
           <div style={{
-            borderRadius: 24, padding: '40px 32px',
+            borderRadius: 24, padding: '48px 40px',
             background: 'linear-gradient(145deg, #0f172a, #111827)',
             border: '2px solid rgba(99,102,241,0.5)',
-            boxShadow: '0 0 60px rgba(99,102,241,0.1)',
+            boxShadow: '0 0 80px rgba(99,102,241,0.12)',
             position: 'relative',
           }}>
             <div style={{
               position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
               background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              padding: '4px 16px', borderRadius: 100, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap',
+              padding: '4px 20px', borderRadius: 100, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', color: 'white',
             }}>
               OFFRE DE LANCEMENT
             </div>
-            <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 600, marginBottom: 8 }}>EatUp Starter</p>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
-              <span style={{ fontSize: 52, fontWeight: 900, letterSpacing: '-2px' }}>19,99</span>
-              <span style={{ fontSize: 20, color: '#6b7280' }}>€/mois</span>
-            </div>
-            <p style={{ fontSize: 13, color: '#374151', marginBottom: 32 }}>Idéal pour démarrer</p>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {['Menu en ligne illimité', 'Commandes click & collect', 'Dashboard & analytics', 'Gestion clients', 'Emails automatiques', 'Support par email'].map(f => (
-                <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#9ca3af' }}>
-                  <span style={{ color: '#6366f1', fontSize: 16, fontWeight: 800 }}>✓</span> {f}
-                </li>
-              ))}
-            </ul>
-            <Link href="/auth/register" style={{
-              display: 'block', textAlign: 'center', padding: '14px', borderRadius: 14,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              color: 'white', fontWeight: 700, fontSize: 15, textDecoration: 'none',
-              boxShadow: '0 8px 30px rgba(99,102,241,0.4)',
-            }}>
-              Commencer maintenant →
-            </Link>
-          </div>
 
-          {/* Pro */}
-          <div style={{
-            borderRadius: 24, padding: '40px 32px',
-            background: 'linear-gradient(145deg, #0a0f1e, #0d1117)',
-            border: '1px solid rgba(255,255,255,0.06)',
-          }}>
-            <p style={{ fontSize: 13, color: '#6b7280', fontWeight: 600, marginBottom: 8 }}>EatUp Pro</p>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
-              <span style={{ fontSize: 52, fontWeight: 900, letterSpacing: '-2px' }}>29,99</span>
-              <span style={{ fontSize: 20, color: '#6b7280' }}>€/mois</span>
+            <div style={{ textAlign: 'center', marginBottom: 36 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginBottom: 6 }}>
+                <span style={{ fontSize: 72, fontWeight: 900, letterSpacing: '-3px', lineHeight: 1 }}>19,99</span>
+                <span style={{ fontSize: 22, color: '#6b7280' }}>€/mois</span>
+              </div>
+              <p style={{ fontSize: 15, color: '#818cf8', fontWeight: 600, margin: '0 0 4px' }}>pendant les 2 premiers mois</p>
+              <p style={{ fontSize: 14, color: '#374151', margin: 0 }}>puis 29,99€/mois · Sans engagement</p>
             </div>
-            <p style={{ fontSize: 13, color: '#374151', marginBottom: 32 }}>Pour les restaurants ambitieux</p>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {['Tout EatUp Starter', 'Paiement en ligne Stripe', 'Notifications temps réel', 'Analytics avancés', 'QR code personnalisé', 'Support prioritaire'].map(f => (
-                <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#9ca3af' }}>
-                  <span style={{ color: '#a78bfa', fontSize: 16, fontWeight: 800 }}>✓</span> {f}
+
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {[
+                'Menu en ligne illimité',
+                'Commandes click & collect',
+                'Paiement en ligne Stripe',
+                'Dashboard & analytics',
+                'Emails de confirmation automatiques',
+                'Gestion des horaires & fermetures',
+                'Support par email',
+              ].map(f => (
+                <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, color: '#9ca3af' }}>
+                  <span style={{ color: '#818cf8', fontSize: 18, fontWeight: 800 }}>✓</span> {f}
                 </li>
               ))}
             </ul>
+
             <Link href="/auth/register" style={{
-              display: 'block', textAlign: 'center', padding: '14px', borderRadius: 14,
-              background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)',
-              color: '#a78bfa', fontWeight: 700, fontSize: 15, textDecoration: 'none',
+              display: 'block', textAlign: 'center', padding: '16px', borderRadius: 14,
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: 'white', fontWeight: 700, fontSize: 16, textDecoration: 'none',
+              boxShadow: '0 8px 40px rgba(99,102,241,0.4)',
             }}>
-              Choisir Pro →
+              Commencer pour 19,99€/mois →
             </Link>
+            <p style={{ textAlign: 'center', fontSize: 12, color: '#1f2937', marginTop: 14 }}>Résiliable à tout moment · Paiement sécurisé</p>
           </div>
         </div>
       </section>
