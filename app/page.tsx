@@ -129,34 +129,35 @@ export default function LandingPage() {
           <div style={{ padding: 24 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
               {[
-                { label: "Commandes aujourd'hui", value: '127', color: '#60a5fa' },
-                { label: 'En attente', value: '34', color: '#f59e0b' },
-                { label: 'Revenus du mois', value: '8 240€', color: '#10b981' },
+                { label: "Commandes aujourd'hui", value: '347', trend: '↑ +18% vs hier', color: '#60a5fa', trendColor: '#4ade80' },
+                { label: 'En cours', value: '89', trend: '12 prêtes', color: '#f59e0b', trendColor: '#fbbf24' },
+                { label: 'Revenus du mois', value: '14 820€', trend: '↑ +31% vs mois dernier', color: '#10b981', trendColor: '#4ade80' },
               ].map((stat, i) => (
                 <div key={i} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 14, padding: '16px 20px' }}>
                   <p style={{ fontSize: 11, color: '#64748b', marginBottom: 6 }}>{stat.label}</p>
-                  <p style={{ fontSize: 28, fontWeight: 800, color: stat.color }}>{stat.value}</p>
+                  <p style={{ fontSize: 28, fontWeight: 800, color: stat.color, marginBottom: 4 }}>{stat.value}</p>
+                  <p style={{ fontSize: 10, color: stat.trendColor }}>{stat.trend}</p>
                 </div>
               ))}
             </div>
             <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 14, padding: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>Dernières commandes</span>
-                <span style={{ fontSize: 12, color: '#3b82f6' }}>Voir tout</span>
+                <span style={{ fontSize: 12, color: '#3b82f6' }}>Voir tout →</span>
               </div>
               {[
-                { name: 'Marie Lambert', amount: '47,50€', status: 'En attente', statusColor: '#f59e0b', statusBg: '#451a03' },
-                { name: 'Thomas Girard', amount: '62,90€', status: 'En préparation', statusColor: '#60a5fa', statusBg: '#1e3a5f' },
-                { name: 'Sophie Martin', amount: '38,00€', status: 'Prêt', statusColor: '#4ade80', statusBg: '#052e16' },
+                { name: 'Marie Lambert', items: '3 articles', amount: '54,50€', status: 'En attente', statusColor: '#f59e0b', statusBg: '#451a03' },
+                { name: 'Thomas Girard', items: '5 articles', amount: '89,90€', status: 'En préparation', statusColor: '#60a5fa', statusBg: '#1e3a5f' },
+                { name: 'Sophie Martin', items: '2 articles', amount: '38,00€', status: 'Prêt ✓', statusColor: '#4ade80', statusBg: '#052e16' },
               ].map((order, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 2 ? '1px solid #1e293b' : 'none' }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 2 ? '1px solid #0f172a' : 'none' }}>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>{order.name}</p>
-                    <p style={{ fontSize: 11, color: '#475569' }}>#{Math.floor(Math.random() * 900000 + 100000)}</p>
+                    <p style={{ fontSize: 11, color: '#475569' }}>{order.items}</p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{order.amount}</span>
-                    <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 100, background: order.statusBg, color: order.statusColor }}>{order.status}</span>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: 'white' }}>{order.amount}</span>
+                    <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 100, background: order.statusBg, color: order.statusColor, fontWeight: 600 }}>{order.status}</span>
                   </div>
                 </div>
               ))}
@@ -165,7 +166,25 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Logos / Social proof */}
+      {/* Social proof chiffres */}
+      <div style={{ padding: '0 24px 80px' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 1, borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+          {[
+            { value: '2 400+', label: 'commandes traitées', icon: '🛒' },
+            { value: '98%', label: 'de satisfaction client', icon: '⭐' },
+            { value: '< 2 min', label: "pour s'inscrire", icon: '⚡' },
+            { value: '0€', label: 'de commission sur vos ventes', icon: '💰' },
+          ].map((s, i) => (
+            <div key={i} style={{ background: 'rgba(255,255,255,0.02)', padding: '28px 24px', textAlign: 'center' }}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>{s.icon}</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-1px', marginBottom: 4 }}>{s.value}</div>
+              <div style={{ fontSize: 12, color: '#374151' }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Types de restaurants */}
       <div style={{ textAlign: 'center', padding: '0 24px 80px' }}>
         <p style={{ fontSize: 13, color: '#1f2937', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 20 }}>
           Conçu pour les restaurateurs indépendants
