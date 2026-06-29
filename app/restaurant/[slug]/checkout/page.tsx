@@ -16,6 +16,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'online'>('cash')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem(`cart_${slug}`)
@@ -36,7 +37,9 @@ export default function CheckoutPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!restaurant || cart.length === 0) return
+    setError(null)
+    if (!restaurant) { setError('Restaurant introuvable — rechargez la page.'); return }
+    if (cart.length === 0) { setError('Votre panier est vide — retournez au menu.'); return }
     setLoading(true)
 
     const orderNumber = generateOrderNumber()
@@ -55,7 +58,7 @@ export default function CheckoutPage() {
       status: 'pending',
     }).select().single()
 
-    if (error || !order) { setLoading(false); return }
+    if (error || !order) { setError('Erreur lors de la commande : ' + (error?.message || 'réessayez.')); setLoading(false); return }
 
     await supabase.from('order_items').insert(
       cart.map((i: any) => ({
@@ -201,13 +204,19 @@ export default function CheckoutPage() {
             </div>
           </div>
 
+          {error && (
+            <div className="rounded-xl p-4 text-sm" style={{ background: '#450a0a', color: '#fca5a5', border: '1px solid #7f1d1d' }}>
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
             className="w-full py-4 rounded-2xl font-bold text-lg transition disabled:opacity-50"
             style={{ background: '#3b82f6', color: 'white' }}
           >
-            {loading ? 'Envoi...' : `Confirmer la commande · ${total.toFixed(2)}€`}
+            {loading ? 'Envoi en cours...' : `Confirmer la commande · ${total.toFixed(2)}€`}
           </button>
         </form>
       </main>
