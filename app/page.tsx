@@ -196,7 +196,7 @@ export default function LandingPage() {
             { icon: '💳', title: 'Paiement Stripe intégré', desc: "Carte bancaire, Apple Pay, Google Pay. L'argent arrive directement sur votre compte. Zéro commission EatUp." },
             { icon: '📊', title: 'Dashboard temps réel', desc: "Commandes entrantes, revenus du jour, analytics hebdomadaires. Tout ce qu'il faut pour piloter votre activité." },
             { icon: '📧', title: 'Emails automatisés', desc: 'Confirmations de commande, notifications de paiement. Vos clients sont toujours informés, sans effort de votre part.' },
-            { icon: '🕐', title: 'Horaires intelligents', desc: 'Configurez vos horaires par jour, 2 services (midi/soir), fermetures exceptionnelles. Les créneaux s'adaptent automatiquement.' },
+            { icon: '🕐', title: 'Horaires intelligents', desc: "Configurez vos horaires par jour, 2 services (midi/soir), fermetures exceptionnelles. Les créneaux s'adaptent automatiquement." },
           ].map((f, i) => (
             <div key={i} style={{
               padding: '32px 28px',
