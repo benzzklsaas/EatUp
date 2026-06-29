@@ -23,7 +23,11 @@ export default function DashboardPage() {
         .eq('owner_id', user.id)
         .single()
 
-      if (!resto) { router.push('/auth/register'); return }
+      if (!resto) {
+        const { data: admin } = await supabase.from('superadmins').select('id').eq('id', user.id).single()
+        if (admin) { router.push('/superadmin'); return }
+        router.push('/auth/register'); return
+      }
       setRestaurant(resto)
 
       const { data: ordersData } = await supabase
