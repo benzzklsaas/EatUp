@@ -102,6 +102,13 @@ export default function CheckoutPage() {
 
     const orderNumber = generateOrderNumber()
 
+    const items = cart.map((i: any) => ({
+      product_id: i.product.id,
+      product_name: i.product.name,
+      quantity: i.quantity,
+      price: i.product.price,
+    }))
+
     const res = await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -116,21 +123,37 @@ export default function CheckoutPage() {
           total_price: total,
           pickup_time: pickupTime,
           payment_method: paymentMethod,
-          payment_status: paymentMethod === 'cash' ? 'unpaid' : 'paid',
+          payment_status: 'unpaid',
           status: 'pending',
         },
-        items: cart.map((i: any) => ({
-          product_id: i.product.id,
-          product_name: i.product.name,
-          quantity: i.quantity,
-          price: i.product.price,
-        })),
+        items,
       }),
     })
 
     const json = await res.json()
     if (!res.ok || json.error) { setError('Erreur : ' + (json.error || 'réessayez.')); setLoading(false); return }
     const order = json.order
+
+    // Paiement en ligne → redirection Stripe
+    if (paymentMethod === 'online') {
+      const stripeRes = await fetch('/api/checkout-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items,
+          restaurantName: restaurant.name,
+          orderNumber,
+          restaurantId: slug,
+          customerEmail: form.email,
+        }),
+      })
+      const stripeJson = await stripeRes.json()
+      if (stripeJson.url) {
+        localStorage.removeItem(`cart_${slug}`)
+        window.location.href = stripeJson.url
+        return
+      }
+    }
 
     try {
       await fetch('/api/email', {
