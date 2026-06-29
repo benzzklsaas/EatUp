@@ -28,6 +28,17 @@ export default function DashboardPage() {
         if (admin) { router.push('/superadmin'); return }
         router.push('/auth/register'); return
       }
+      const { data: sub } = await supabase
+        .from('restaurant_subscriptions')
+        .select('status')
+        .eq('restaurant_id', resto.id)
+        .single()
+
+      if (!sub || sub.status !== 'active') {
+        router.push('/subscribe')
+        return
+      }
+
       setRestaurant(resto)
 
       const { data: ordersData } = await supabase
