@@ -29,29 +29,53 @@ export default function CheckoutPage() {
       if (data) {
         setRestaurant(data)
 
-        // Générer les créneaux selon les horaires du restaurant
-        const openingTime = data.opening_time || '09:00'
-        const closingTime = data.closing_time || '22:00'
-        const duration = data.slot_duration || 15
+        // Récupérer les horaires du jour
+        const todayIndex = (new Date().getDay() + 6) % 7 // 0=lundi
+        const { data: daySchedule } = await supabase
+          .from('restaurant_schedule')
+          .select('*')
+          .eq('restaurant_id', data.id)
+          .eq('day_of_week', todayIndex)
+          .single()
+
+        // Vérifier les fermetures exceptionnelles
+        const today = new Date().toISOString().split('T')[0]
+        const { data: closure } = await supabase
+          .from('restaurant_closures')
+          .select('id')
+          .eq('restaurant_id', data.id)
+          .eq('closed_date', today)
+          .single()
+
+        if (closure || daySchedule?.is_closed) {
+          setPickupSlots([])
+          return
+        }
 
         const now = new Date()
         const minTime = new Date(now.getTime() + 30 * 60000)
-
-        const [openH, openM] = openingTime.split(':').map(Number)
-        const [closeH, closeM] = closingTime.split(':').map(Number)
-
+        const duration = daySchedule?.slot_duration || 15
         const slots: string[] = []
-        const current = new Date()
-        current.setHours(openH, openM, 0, 0)
 
-        const closing = new Date()
-        closing.setHours(closeH, closeM, 0, 0)
-
-        while (current <= closing) {
-          if (current > minTime) {
-            slots.push(new Date(current).toISOString())
+        function addSlots(openStr: string, closeStr: string) {
+          const [oh, om] = openStr.split(':').map(Number)
+          const [ch, cm] = closeStr.split(':').map(Number)
+          const cur = new Date()
+          cur.setHours(oh, om, 0, 0)
+          const closing = new Date()
+          closing.setHours(ch, cm, 0, 0)
+          while (cur <= closing) {
+            if (cur > minTime) slots.push(new Date(cur).toISOString())
+            cur.setMinutes(cur.getMinutes() + duration)
           }
-          current.setMinutes(current.getMinutes() + duration)
+        }
+
+        const open1 = daySchedule?.opening_time_1?.slice(0, 5) || '11:00'
+        const close1 = daySchedule?.closing_time_1?.slice(0, 5) || '15:00'
+        addSlots(open1, close1)
+
+        if (daySchedule?.opening_time_2 && daySchedule?.closing_time_2) {
+          addSlots(daySchedule.opening_time_2.slice(0, 5), daySchedule.closing_time_2.slice(0, 5))
         }
 
         if (slots.length > 0) {
@@ -206,6 +230,11 @@ export default function CheckoutPage() {
           {/* Heure de retrait */}
           <div className="rounded-2xl p-5" style={{ background: '#1e293b', border: '1px solid #334155' }}>
             <h2 className="font-bold text-white mb-3">Heure de retrait</h2>
+            {pickupSlots.length === 0 ? (
+              <p className="text-sm py-4 text-center" style={{ color: '#f87171' }}>
+                Le restaurant est fermé aujourd'hui — aucune commande possible.
+              </p>
+            ) : (
             <div className="grid grid-cols-3 gap-2">
               {pickupSlots.map(slot => {
                 const date = new Date(slot)
@@ -228,6 +257,7 @@ export default function CheckoutPage() {
                 )
               })}
             </div>
+            )}
           </div>
 
           {/* Paiement */}
