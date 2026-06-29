@@ -26,23 +26,41 @@ export default function CheckoutPage() {
 
     async function loadResto() {
       const { data } = await supabase.from('restaurants').select('*').eq('slug', slug).single()
-      if (data) setRestaurant(data)
+      if (data) {
+        setRestaurant(data)
+
+        // Générer les créneaux selon les horaires du restaurant
+        const openingTime = data.opening_time || '09:00'
+        const closingTime = data.closing_time || '22:00'
+        const duration = data.slot_duration || 15
+
+        const now = new Date()
+        const minTime = new Date(now.getTime() + 30 * 60000)
+
+        const [openH, openM] = openingTime.split(':').map(Number)
+        const [closeH, closeM] = closingTime.split(':').map(Number)
+
+        const slots: string[] = []
+        const current = new Date()
+        current.setHours(openH, openM, 0, 0)
+
+        const closing = new Date()
+        closing.setHours(closeH, closeM, 0, 0)
+
+        while (current <= closing) {
+          if (current > minTime) {
+            slots.push(new Date(current).toISOString())
+          }
+          current.setMinutes(current.getMinutes() + duration)
+        }
+
+        if (slots.length > 0) {
+          setPickupSlots(slots)
+          setPickupTime(slots[0])
+        }
+      }
     }
     loadResto()
-
-    // Générer les créneaux : de maintenant + 30min, toutes les 15min, pour 3h
-    const slots: string[] = []
-    const now = new Date()
-    now.setMinutes(now.getMinutes() + 30)
-    now.setSeconds(0, 0)
-    const roundedMinutes = Math.ceil(now.getMinutes() / 15) * 15
-    now.setMinutes(roundedMinutes)
-    for (let i = 0; i < 12; i++) {
-      const slot = new Date(now.getTime() + i * 15 * 60000)
-      slots.push(slot.toISOString())
-    }
-    setPickupSlots(slots)
-    setPickupTime(slots[0])
   }, [slug])
 
   const total = cart.reduce((sum: number, i: any) => sum + i.product.price * i.quantity, 0)

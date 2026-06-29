@@ -103,12 +103,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Navigation */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
           {[
             { label: 'Commandes', href: '/dashboard/orders', emoji: '📋' },
             { label: 'Menu', href: '/dashboard/menu', emoji: '🍽️' },
             { label: 'Clients', href: '/dashboard/customers', emoji: '👥' },
             { label: 'Analytics', href: '/dashboard/analytics', emoji: '📊' },
+            { label: 'Paramètres', href: '/dashboard/settings', emoji: '⚙️' },
           ].map(item => (
             <a
               key={item.href}
