@@ -115,7 +115,7 @@ export default function MenuPage() {
     const { data, error } = await supabase.from('product_option_groups').insert({
       product_id: optionsProduct.id,
       name: newGroupName.trim(),
-      min_choices: 1,
+      min_choices: 0,
       max_choices: parseInt(newGroupMax) || 1,
     }).select().single()
     if (error) { alert('Erreur : ' + error.message); return }
