@@ -44,6 +44,7 @@ export default function MenuPage() {
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '' })
   const [saving, setSaving] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const [optionsProduct, setOptionsProduct] = useState<Product | null>(null)
   const [optionGroups, setOptionGroups] = useState<OptionGroup[]>([])
@@ -72,6 +73,17 @@ export default function MenuPage() {
 
   function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '' }); setShowForm(true) }
   function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '' }); setShowForm(true) }
+
+  async function handleImageUpload(file: File) {
+    setUploadingImage(true)
+    const ext = file.name.split('.').pop()
+    const filename = `${Date.now()}.${ext}`
+    const { data, error } = await supabase.storage.from('products').upload(filename, file, { upsert: true })
+    if (error) { alert('Erreur upload : ' + error.message); setUploadingImage(false); return }
+    const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(data.path)
+    setForm(f => ({ ...f, image_url: publicUrl }))
+    setUploadingImage(false)
+  }
 
   async function handleSave() {
     if (!form.name || !form.price) return
@@ -250,7 +262,26 @@ export default function MenuPage() {
                   </div>
                 )}
               </div>
-              <input placeholder="URL de l'image (optionnel)" value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })} style={inputStyle} />
+              <div>
+                <label style={{ display: 'block', fontSize: 12, color: '#4b5563', marginBottom: 8, fontWeight: 600 }}>Photo du produit</label>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  {form.image_url && (
+                    <img src={form.image_url} alt="" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }} />
+                  )}
+                  <label style={{
+                    flex: 1, padding: '12px 16px', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.15)',
+                    background: 'rgba(255,255,255,0.03)', color: uploadingImage ? '#4b5563' : '#818cf8',
+                    cursor: uploadingImage ? 'default' : 'pointer', textAlign: 'center', fontSize: 13, fontWeight: 600,
+                  }}>
+                    {uploadingImage ? 'Upload en cours...' : form.image_url ? '📷 Changer la photo' : '📷 Ajouter une photo'}
+                    <input type="file" accept="image/*" style={{ display: 'none' }} disabled={uploadingImage}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f) }} />
+                  </label>
+                  {form.image_url && (
+                    <button type="button" onClick={() => setForm({ ...form, image_url: '' })} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button>
+                  )}
+                </div>
+              </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowForm(false)} style={{ flex: 1, padding: '13px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#6b7280', cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
