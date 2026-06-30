@@ -353,7 +353,7 @@ export default function MenuPage() {
                     >
                       {[1,2,3,4,5].map(n => <option key={n} value={n}>Max {n}</option>)}
                     </select>
-                    <button onClick={async () => { await addGroup(); setOptionsProduct(null) }} style={{ padding: '10px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700 }}>Confirmer</button>
+                    <button onClick={addGroup} style={{ padding: '10px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700 }}>Confirmer</button>
                   </div>
                 </div>
               </>
