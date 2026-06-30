@@ -36,6 +36,8 @@ export default function DashboardPage() {
       const { data: sub } = await supabase.from('restaurant_subscriptions').select('status').eq('restaurant_id', resto.id).single()
       if (!sub || sub.status !== 'active') { router.push('/subscribe'); return }
 
+      if (!resto.onboarding_done) { router.push('/dashboard/onboarding'); return }
+
       setRestaurant(resto)
 
       const { data: ordersData } = await supabase
