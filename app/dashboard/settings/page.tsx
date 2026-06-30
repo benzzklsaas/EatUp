@@ -18,7 +18,9 @@ type DaySchedule = {
 
 type Closure = { id?: string; closed_date: string; reason: string }
 
+const inp: React.CSSProperties = { width: '100%', borderRadius: 12, padding: '12px 14px', fontSize: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none', boxSizing: 'border-box' }
 const timeInput: React.CSSProperties = { flex: 1, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }
+const label: React.CSSProperties = { fontSize: 12, color: '#4b5563', fontWeight: 600, marginBottom: 6, display: 'block' }
 
 export default function SettingsPage() {
   const [restaurant, setRestaurant] = useState<any>(null)
@@ -28,6 +30,9 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [infoForm, setInfoForm] = useState({ name: '', description: '', address: '', phone: '', daily_message: '' })
+  const [savingInfo, setSavingInfo] = useState(false)
+  const [savedInfo, setSavedInfo] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -38,11 +43,11 @@ export default function SettingsPage() {
       const { data: resto } = await supabase.from('restaurants').select('*').eq('owner_id', user.id).single()
       if (!resto) { router.push('/dashboard'); return }
       setRestaurant(resto)
+      setInfoForm({ name: resto.name || '', description: resto.description || '', address: resto.address || '', phone: resto.phone || '', daily_message: resto.daily_message || '' })
 
       const { data: scheduleData } = await supabase.from('restaurant_schedule').select('*').eq('restaurant_id', resto.id).order('day_of_week')
-
       if (scheduleData && scheduleData.length === 7) {
-        setSchedule(scheduleData.map(d => ({ ...d, opening_time_1: d.opening_time_1?.slice(0, 5) || '11:00', closing_time_1: d.closing_time_1?.slice(0, 5) || '15:00', opening_time_2: d.opening_time_2?.slice(0, 5) || null, closing_time_2: d.closing_time_2?.slice(0, 5) || null })))
+        setSchedule(scheduleData.map((d: any) => ({ ...d, opening_time_1: d.opening_time_1?.slice(0, 5) || '11:00', closing_time_1: d.closing_time_1?.slice(0, 5) || '15:00', opening_time_2: d.opening_time_2?.slice(0, 5) || null, closing_time_2: d.closing_time_2?.slice(0, 5) || null })))
       } else {
         setSchedule(DAYS.map((_, i) => ({ day_of_week: i, is_closed: i === 6, opening_time_1: '11:00', closing_time_1: '15:00', opening_time_2: '18:00', closing_time_2: '23:00', slot_duration: 15 })))
       }
@@ -58,7 +63,7 @@ export default function SettingsPage() {
     setSchedule(prev => prev.map((d, idx) => idx === i ? { ...d, [field]: value } : d))
   }
 
-  async function handleSave() {
+  async function handleSaveSchedule() {
     if (!restaurant) return
     setSaving(true)
     for (const day of schedule) {
@@ -67,6 +72,27 @@ export default function SettingsPage() {
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function handleSaveInfo() {
+    if (!restaurant) return
+    setSavingInfo(true)
+    await supabase.from('restaurants').update({
+      name: infoForm.name,
+      description: infoForm.description,
+      address: infoForm.address,
+      phone: infoForm.phone,
+      daily_message: infoForm.daily_message,
+    }).eq('id', restaurant.id)
+    setSavingInfo(false)
+    setSavedInfo(true)
+    setTimeout(() => setSavedInfo(false), 2000)
+  }
+
+  async function toggleOpen() {
+    const next = !restaurant.is_open
+    await supabase.from('restaurants').update({ is_open: next }).eq('id', restaurant.id)
+    setRestaurant({ ...restaurant, is_open: next })
   }
 
   async function addClosure() {
@@ -86,24 +112,74 @@ export default function SettingsPage() {
     </div>
   )
 
+  const section: React.CSSProperties = { borderRadius: 20, padding: '24px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)' }
+
   return (
     <div style={{ minHeight: '100vh', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', paddingBottom: 48 }}>
 
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => router.push('/dashboard')} style={{ color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>← Retour</button>
-          <p style={{ fontSize: 16, fontWeight: 700, color: 'white', margin: 0 }}>Paramètres</p>
-        </div>
-        <button onClick={handleSave} disabled={saving} style={{ padding: '9px 20px', borderRadius: 12, border: 'none', cursor: saving ? 'default' : 'pointer', background: saved ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: saved ? '#4ade80' : 'white', fontWeight: 700, fontSize: 13, transition: 'all 0.3s' }}>
-          {saved ? '✓ Sauvegardé' : saving ? 'Sauvegarde...' : 'Sauvegarder'}
-        </button>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px', background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <button onClick={() => router.push('/dashboard')} style={{ color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>← Retour</button>
+        <p style={{ fontSize: 16, fontWeight: 700, color: 'white', margin: 0 }}>Paramètres</p>
       </header>
 
-      <main style={{ padding: '32px 24px', maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <main style={{ padding: '24px 20px', maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+        {/* Statut en direct */}
+        <div style={{ ...section }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 16px' }}>⚡ Statut en direct</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderRadius: 14, background: restaurant.is_open ? 'rgba(74,222,128,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${restaurant.is_open ? 'rgba(74,222,128,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
+            <div>
+              <p style={{ color: restaurant.is_open ? '#4ade80' : '#f87171', fontWeight: 800, fontSize: 16, margin: 0 }}>
+                {restaurant.is_open ? '● Ouvert' : '○ Fermé'}
+              </p>
+              <p style={{ color: '#4b5563', fontSize: 12, margin: '4px 0 0' }}>Visible par les clients</p>
+            </div>
+            <button
+              onClick={toggleOpen}
+              style={{ padding: '10px 20px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, background: restaurant.is_open ? 'rgba(239,68,68,0.15)' : 'rgba(74,222,128,0.15)', color: restaurant.is_open ? '#f87171' : '#4ade80' }}
+            >
+              {restaurant.is_open ? 'Fermer maintenant' : 'Ouvrir maintenant'}
+            </button>
+          </div>
+        </div>
+
+        {/* Informations du restaurant */}
+        <div style={{ ...section }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>🏪 Informations du restaurant</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div>
+              <label style={label}>Nom du restaurant</label>
+              <input value={infoForm.name} onChange={e => setInfoForm({ ...infoForm, name: e.target.value })} style={inp} />
+            </div>
+            <div>
+              <label style={label}>Description (affichée aux clients)</label>
+              <textarea value={infoForm.description} onChange={e => setInfoForm({ ...infoForm, description: e.target.value })} rows={3} style={{ ...inp, resize: 'none' }} />
+            </div>
+            <div>
+              <label style={label}>Adresse</label>
+              <input value={infoForm.address} onChange={e => setInfoForm({ ...infoForm, address: e.target.value })} style={inp} />
+            </div>
+            <div>
+              <label style={label}>Téléphone</label>
+              <input value={infoForm.phone} onChange={e => setInfoForm({ ...infoForm, phone: e.target.value })} type="tel" style={inp} />
+            </div>
+            <div>
+              <label style={label}>Message du jour 💬 (affiché aux clients sur la page du restaurant)</label>
+              <input value={infoForm.daily_message} onChange={e => setInfoForm({ ...infoForm, daily_message: e.target.value })} placeholder="Ex: Spécial du jour : Burger XXL à 8€ !" style={inp} />
+            </div>
+          </div>
+          <button
+            onClick={handleSaveInfo}
+            disabled={savingInfo}
+            style={{ marginTop: 16, padding: '12px 24px', borderRadius: 12, border: 'none', cursor: 'pointer', background: savedInfo ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: savedInfo ? '#4ade80' : 'white', fontWeight: 700, fontSize: 13 }}
+          >
+            {savedInfo ? '✓ Sauvegardé' : savingInfo ? 'Sauvegarde...' : 'Enregistrer les infos'}
+          </button>
+        </div>
 
         {/* Horaires */}
-        <div style={{ borderRadius: 20, padding: '28px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>Horaires d'ouverture</p>
+        <div style={{ ...section }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>🕐 Horaires d'ouverture</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {DAYS.map((day, i) => {
               const d = schedule[i]
@@ -116,7 +192,6 @@ export default function SettingsPage() {
                       {d.is_closed ? 'Fermé' : 'Ouvert'}
                     </button>
                   </div>
-
                   {!d.is_closed && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div>
@@ -127,7 +202,6 @@ export default function SettingsPage() {
                           <input type="time" value={d.closing_time_1} onChange={e => updateDay(i, 'closing_time_1', e.target.value)} style={timeInput} />
                         </div>
                       </div>
-
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                           <p style={{ fontSize: 11, color: '#374151', fontWeight: 600, margin: 0 }}>Plage 2</p>
@@ -143,7 +217,6 @@ export default function SettingsPage() {
                           </div>
                         )}
                       </div>
-
                       <div>
                         <p style={{ fontSize: 11, color: '#374151', fontWeight: 600, marginBottom: 6 }}>Créneaux</p>
                         <div style={{ display: 'flex', gap: 6 }}>
@@ -160,18 +233,19 @@ export default function SettingsPage() {
               )
             })}
           </div>
+          <button onClick={handleSaveSchedule} disabled={saving} style={{ marginTop: 16, padding: '12px 24px', borderRadius: 12, border: 'none', cursor: 'pointer', background: saved ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: saved ? '#4ade80' : 'white', fontWeight: 700, fontSize: 13 }}>
+            {saved ? '✓ Sauvegardé' : saving ? 'Sauvegarde...' : 'Enregistrer les horaires'}
+          </button>
         </div>
 
         {/* Fermetures exceptionnelles */}
-        <div style={{ borderRadius: 20, padding: '28px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>Fermetures exceptionnelles</p>
-
+        <div style={{ ...section }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>📅 Fermetures exceptionnelles</p>
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             <input type="date" value={newClosure.closed_date} onChange={e => setNewClosure({ ...newClosure, closed_date: e.target.value })} style={{ flex: 1, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }} />
             <input placeholder="Raison (optionnel)" value={newClosure.reason} onChange={e => setNewClosure({ ...newClosure, reason: e.target.value })} style={{ flex: 2, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }} />
             <button onClick={addClosure} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 16 }}>+</button>
           </div>
-
           {closures.length === 0 ? (
             <p style={{ fontSize: 13, color: '#374151' }}>Aucune fermeture planifiée</p>
           ) : (
