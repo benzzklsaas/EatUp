@@ -329,7 +329,14 @@ export default function MenuPage() {
                   </div>
                 ))}
 
-                <div style={{ marginTop: 16, padding: 16, borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)' }}>
+                <button
+                  onClick={() => setOptionsProduct(null)}
+                  style={{ width: '100%', padding: '13px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#6b7280', cursor: 'pointer', fontWeight: 600, marginBottom: 12 }}
+                >
+                  ✓ Fermer les options
+                </button>
+
+                <div style={{ marginTop: 0, padding: 16, borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)' }}>
                   <p style={{ fontSize: 12, color: '#4b5563', margin: '0 0 10px', fontWeight: 600 }}>+ Nouveau groupe d'options</p>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input
