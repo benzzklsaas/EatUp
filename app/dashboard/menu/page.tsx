@@ -317,7 +317,22 @@ export default function MenuPage() {
           <div>
             {(categories.length > 0 ? categories.map(c => c.name) : ['']).map(cat => (
               <div key={cat} style={{ marginBottom: 32 }}>
-                {cat && <p style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{categories.find(c => c.name === cat)?.emoji} {cat}</p>}
+                {cat && (() => {
+                  const catObj = categories.find(c => c.name === cat)
+                  return editCat?.id === catObj?.id ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                      <input value={editCatEmoji} onChange={e => setEditCatEmoji(e.target.value)} style={{ width: 44, borderRadius: 8, padding: '5px', fontSize: 18, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none', textAlign: 'center' }} />
+                      <input value={editCatName} onChange={e => setEditCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditCat()} style={{ flex: 1, maxWidth: 200, borderRadius: 8, padding: '6px 10px', fontSize: 13, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none' }} />
+                      <button onClick={saveEditCat} style={{ padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#6366f1', color: 'white', fontWeight: 700, fontSize: 12 }}>✓</button>
+                      <button onClick={() => setEditCat(null)} style={{ padding: '5px 8px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', color: '#6b7280', fontSize: 12 }}>✕</button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>{catObj?.emoji} {cat}</p>
+                      {catObj && <button onClick={() => { setEditCat(catObj); setEditCatName(catObj.name); setEditCatEmoji(catObj.emoji) }} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Modifier</button>}
+                    </div>
+                  )
+                })()}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
                   {products.filter(p => p.category === cat || (!cat && !p.category)).map(p => (
                     <div key={p.id} style={{ borderRadius: 18, padding: '16px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 14 }}>
