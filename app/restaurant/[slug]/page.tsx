@@ -38,7 +38,6 @@ type CartItem = {
   selectedOptions?: SelectedOptions
   optionGroups?: OptionGroup[]
   extraPrice: number
-  asMenu: boolean
   cartKey: string
 }
 
@@ -55,9 +54,7 @@ export default function RestaurantPage() {
   const [activeCategory, setActiveCategory] = useState<string>('')
 
   // Options modal
-  const [optionsModal, setOptionsModal] = useState<{ product: Product; groups: OptionGroup[]; asMenu: boolean } | null>(null)
-  const [menuPrompt, setMenuPrompt] = useState<{ cartKey: string; product: Product } | null>(null)
-  const menuPromptTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [optionsModal, setOptionsModal] = useState<{ product: Product; groups: OptionGroup[] } | null>(null)
   const [selectedOptions, setSelectedOptions] = useState<SelectedOptions>({})
   const [loadingOptions, setLoadingOptions] = useState(false)
 
@@ -101,7 +98,7 @@ export default function RestaurantPage() {
     localStorage.setItem(`cart_${slug}`, JSON.stringify(newCart))
   }
 
-  async function handleAddToCart(product: Product, asMenu: boolean = false) {
+  async function handleAddToCart(product: Product) {
     setLoadingOptions(true)
     const { data: groups } = await supabase
       .from('product_option_groups')
@@ -114,36 +111,15 @@ export default function RestaurantPage() {
 
     if (optGroups.length > 0) {
       setSelectedOptions({})
-      setOptionsModal({ product, groups: optGroups, asMenu })
+      setOptionsModal({ product, groups: optGroups })
     } else {
-      const cartKey = addToCart(product, {}, [], 0, false)
-      // Proposer le menu si configuré
-      if (!asMenu && Number((product as any).menu_extra_price) > 0) {
-        if (menuPromptTimer.current) clearTimeout(menuPromptTimer.current)
-        setMenuPrompt({ cartKey, product })
-        menuPromptTimer.current = setTimeout(() => setMenuPrompt(null), 6000)
-      }
+      addToCart(product, {}, [], 0)
     }
   }
 
-  function addToCart(product: Product, selOpts: SelectedOptions, groups: OptionGroup[], extra: number, asMenu: boolean = false): string {
-    const cartKey = product.id + JSON.stringify(selOpts) + (asMenu ? '_menu' : '') + Date.now()
-    const existing = cart.find(i => i.cartKey === cartKey)
-    if (existing) {
-      saveCart(cart.map(i => i.cartKey === cartKey ? { ...i, quantity: i.quantity + 1 } : i))
-    } else {
-      saveCart([...cart, { product, quantity: 1, selectedOptions: selOpts, optionGroups: groups, extraPrice: extra, asMenu, cartKey }])
-    }
-    return cartKey
-  }
-
-  function upgradeToMenu(cartKey: string, product: Product) {
-    const menuExtra = Number((product as any).menu_extra_price || 0)
-    saveCart(cart.map(i => i.cartKey === cartKey
-      ? { ...i, extraPrice: i.extraPrice + menuExtra, asMenu: true }
-      : i
-    ))
-    setMenuPrompt(null)
+  function addToCart(product: Product, selOpts: SelectedOptions, groups: OptionGroup[], extra: number) {
+    const cartKey = product.id + JSON.stringify(selOpts) + Date.now()
+    saveCart([...cart, { product, quantity: 1, selectedOptions: selOpts, optionGroups: groups, extraPrice: extra, cartKey }])
   }
 
   function removeFromCart(cartKey: string) {
@@ -171,12 +147,11 @@ export default function RestaurantPage() {
 
   function confirmOptions() {
     if (!optionsModal) return
-    const { product, groups, asMenu } = optionsModal
-    const optExtra = groups.reduce((sum, g) => {
+    const { product, groups } = optionsModal
+    const extra = groups.reduce((sum, g) => {
       return sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0)
     }, 0)
-    const menuExtra = asMenu ? Number((product as any).menu_extra_price || 0) : 0
-    addToCart(product, selectedOptions, groups, optExtra + menuExtra, asMenu)
+    addToCart(product, selectedOptions, groups, extra)
     setOptionsModal(null)
   }
 
@@ -318,40 +293,6 @@ export default function RestaurantPage() {
           </div>
         ))}
       </main>
-
-      {/* Bannière "Passer en menu ?" */}
-      {menuPrompt && (
-        <div style={{
-          position: 'fixed', bottom: cartCount > 0 ? 90 : 20, left: 16, right: 16, zIndex: 60,
-          maxWidth: 540, margin: '0 auto',
-          background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-          border: '1px solid rgba(99,102,241,0.4)',
-          borderRadius: 18, padding: '14px 16px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          animation: 'slideUp 0.3s ease',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: 0 }}>Passer en menu ?</p>
-              <p style={{ color: '#64748b', fontSize: 12, margin: '2px 0 0' }}>
-                {(menuPrompt.product as any).menu_label} · <span style={{ color: '#f59e0b', fontWeight: 700 }}>+{Number((menuPrompt.product as any).menu_extra_price).toFixed(2)}€</span>
-              </p>
-            </div>
-            <button
-              onClick={() => upgradeToMenu(menuPrompt.cartKey, menuPrompt.product)}
-              style={{ padding: '8px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 13 }}
-            >
-              Oui
-            </button>
-            <button
-              onClick={() => setMenuPrompt(null)}
-              style={{ padding: '8px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', background: 'transparent', color: '#64748b', fontSize: 13 }}
-            >
-              Non
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Bouton panier sticky */}
       {cartCount > 0 && (
