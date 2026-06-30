@@ -56,6 +56,7 @@ export default function RestaurantPage() {
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState<string>('')
   const [dbCategories, setDbCategories] = useState<Category[]>([])
+  const [nextOpening, setNextOpening] = useState<string | null>(null)
 
   // Options modal
   const [optionsModal, setOptionsModal] = useState<{ product: Product; groups: OptionGroup[] } | null>(null)
@@ -71,11 +72,35 @@ export default function RestaurantPage() {
         .from('restaurants')
         .select('*')
         .eq('slug', slug)
-        .eq('is_open', true)
         .single()
 
       if (!resto) { setLoading(false); return }
       setRestaurant(resto)
+
+      if (!resto.is_open) {
+        // Cherche la prochaine ouverture dans les 7 prochains jours
+        const DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+        const { data: schedules } = await supabase
+          .from('restaurant_schedule')
+          .select('*')
+          .eq('restaurant_id', resto.id)
+          .eq('is_closed', false)
+          .order('day_of_week')
+        if (schedules && schedules.length > 0) {
+          const todayIdx = (new Date().getDay() + 6) % 7
+          for (let i = 1; i <= 7; i++) {
+            const dayIdx = (todayIdx + i) % 7
+            const sched = schedules.find((s: any) => s.day_of_week === dayIdx)
+            if (sched) {
+              const dayName = i === 1 ? 'Demain' : DAY_NAMES[dayIdx]
+              setNextOpening(`${dayName} à ${sched.opening_time_1?.slice(0, 5) || '11:00'}`)
+              break
+            }
+          }
+        }
+        setLoading(false)
+        return
+      }
 
       const { data } = await supabase
         .from('products')
@@ -195,7 +220,31 @@ export default function RestaurantPage() {
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
         <p style={{ color: 'white', fontSize: 18, fontWeight: 700, marginBottom: 8, fontFamily: 'system-ui' }}>Restaurant introuvable</p>
-        <p style={{ color: '#374151', fontSize: 14, fontFamily: 'system-ui' }}>Ce lien ne correspond à aucun restaurant actif.</p>
+        <p style={{ color: '#374151', fontSize: 14, fontFamily: 'system-ui' }}>Ce lien ne correspond à aucun restaurant.</p>
+      </div>
+    </div>
+  )
+
+  if (!restaurant.is_open) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      <div style={{ position: 'fixed', top: '30%', left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, background: 'radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ textAlign: 'center', maxWidth: 380, padding: '0 24px' }}>
+        <div style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          🌙
+        </div>
+        <h1 style={{ fontSize: 26, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 10px' }}>{restaurant.name}</h1>
+        <p style={{ fontSize: 16, fontWeight: 700, color: '#ef4444', margin: '0 0 8px' }}>Fermé pour le moment</p>
+        {nextOpening ? (
+          <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 32px', lineHeight: 1.6 }}>
+            Prochain service :<br />
+            <span style={{ color: '#818cf8', fontWeight: 700, fontSize: 16 }}>{nextOpening}</span>
+          </p>
+        ) : (
+          <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 32px' }}>Revenez bientôt !</p>
+        )}
+        {restaurant.address && (
+          <p style={{ fontSize: 13, color: '#374151' }}>📍 {restaurant.address}</p>
+        )}
       </div>
     </div>
   )
