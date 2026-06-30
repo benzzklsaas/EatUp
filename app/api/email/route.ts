@@ -139,6 +139,15 @@ function restaurantEmailHtml({ customerName, orderNumber, itemsHtml, total, pick
 export async function POST(req: NextRequest) {
   const { customerEmail, customerName, restaurantEmail, restaurantName, orderNumber, items, total, pickupTime } = await req.json()
 
+  // Validation basique pour éviter l'abus de la route email
+  if (!orderNumber || !customerEmail || !restaurantEmail || !items?.length) {
+    return NextResponse.json({ error: 'Données manquantes' }, { status: 400 })
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(customerEmail) || !emailRegex.test(restaurantEmail)) {
+    return NextResponse.json({ error: 'Email invalide' }, { status: 400 })
+  }
+
   const itemsHtml = items.map((i: any) => `
     <tr>
       <td style="padding:8px 0;color:#cbd5e1;font-size:14px">${i.name} <span style="color:#475569">×${i.quantity}</span></td>

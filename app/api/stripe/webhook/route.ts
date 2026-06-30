@@ -16,14 +16,14 @@ export async function POST(req: NextRequest) {
 
   let event: Stripe.Event
 
+  if (!webhookSecret || !sig) {
+    return NextResponse.json({ error: 'Webhook non configuré' }, { status: 400 })
+  }
+
   try {
-    if (webhookSecret && sig) {
-      event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
-    } else {
-      event = JSON.parse(body)
-    }
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
   } catch {
-    return NextResponse.json({ error: 'Webhook error' }, { status: 400 })
+    return NextResponse.json({ error: 'Signature invalide' }, { status: 400 })
   }
 
   if (event.type === 'checkout.session.completed') {
