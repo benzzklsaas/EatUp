@@ -80,7 +80,6 @@ export default function RestaurantPage() {
         .from('products')
         .select('*')
         .eq('restaurant_id', resto.id)
-        .eq('is_available', true)
         .neq('is_online', false)
         .order('category')
 
@@ -270,21 +269,32 @@ export default function RestaurantPage() {
                 const totalQty = cartItems.reduce((s, i) => s + i.quantity, 0)
                 return (
                   <div key={product.id} style={{
-                    borderRadius: 20, padding: '16px', display: 'flex', gap: 14, alignItems: 'center',
-                    background: totalQty > 0 ? 'linear-gradient(145deg, #0f172a, rgba(99,102,241,0.08))' : 'linear-gradient(145deg, #0f172a, #111827)',
-                    border: totalQty > 0 ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: 20, overflow: 'hidden', position: 'relative',
+                    background: !product.is_available ? 'linear-gradient(145deg, #0a0a0a, #111)' : totalQty > 0 ? 'linear-gradient(145deg, #0f172a, rgba(99,102,241,0.08))' : 'linear-gradient(145deg, #0f172a, #111827)',
+                    border: !product.is_available ? '1px solid rgba(255,255,255,0.04)' : totalQty > 0 ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.06)',
                     transition: 'all 0.2s',
+                    opacity: product.is_available ? 1 : 0.75,
                   }}>
+                    {/* Bande rupture de stock */}
+                    {!product.is_available && (
+                      <div style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)', padding: '5px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 13 }}>🔥</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: 'white', letterSpacing: '0.05em' }}>Victime de son succès</span>
+                        <span style={{ fontSize: 13 }}>🔥</span>
+                      </div>
+                    )}
+                    <div style={{ padding: '16px', display: 'flex', gap: 14, alignItems: 'center' }}>
                     {product.image_url && (
-                      <img src={product.image_url} alt={product.name} style={{ width: 76, height: 76, objectFit: 'cover', borderRadius: 14, flexShrink: 0 }} />
+                      <img src={product.image_url} alt={product.name} style={{ width: 76, height: 76, objectFit: 'cover', borderRadius: 14, flexShrink: 0, filter: product.is_available ? 'none' : 'grayscale(0.6) brightness(0.6)' }} />
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: '0 0 4px' }}>{product.name}</p>
+                      <p style={{ fontSize: 15, fontWeight: 700, color: product.is_available ? 'white' : '#4b5563', margin: '0 0 4px' }}>{product.name}</p>
                       {product.description && (
                         <p style={{ fontSize: 13, color: '#374151', margin: '0 0 12px', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{product.description}</p>
                       )}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <p style={{ fontSize: 16, fontWeight: 900, color: '#818cf8', margin: 0, letterSpacing: '-0.3px' }}>{Number(product.price).toFixed(2)}€</p>
+                        <p style={{ fontSize: 16, fontWeight: 900, color: product.is_available ? '#818cf8' : '#374151', margin: 0, letterSpacing: '-0.3px' }}>{Number(product.price).toFixed(2)}€</p>
+                        {product.is_available ? (
                         <button
                           onClick={() => handleAddToCart(product)}
                           disabled={loadingOptions}
@@ -293,6 +303,9 @@ export default function RestaurantPage() {
                           {totalQty > 0 && <span style={{ background: '#6366f1', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{totalQty}</span>}
                           + Ajouter
                         </button>
+                        ) : (
+                          <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, padding: '6px 12px', borderRadius: 100, background: 'rgba(255,255,255,0.04)' }}>Indisponible</span>
+                        )}
                       </div>
                       {/* Show cart items with options */}
                       {cartItems.length > 0 && cartItems.some(i => i.optionGroups && i.optionGroups.length > 0) && (
@@ -312,6 +325,7 @@ export default function RestaurantPage() {
                           ))}
                         </div>
                       )}
+                    </div>
                     </div>
                   </div>
                 )
