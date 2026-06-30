@@ -14,6 +14,13 @@ type Product = {
   is_available: boolean
 }
 
+type Category = {
+  id: string
+  name: string
+  emoji: string
+  position: number
+}
+
 type OptionItem = {
   id: string
   group_id: string
@@ -46,6 +53,11 @@ export default function MenuPage() {
   const [saving, setSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
 
+  const [tab, setTab] = useState<'produits' | 'categories'>('produits')
+  const [categories, setCategories] = useState<Category[]>([])
+  const [newCatName, setNewCatName] = useState('')
+  const [newCatEmoji, setNewCatEmoji] = useState('🍽️')
+
   const [optionsProduct, setOptionsProduct] = useState<Product | null>(null)
   const [optionGroups, setOptionGroups] = useState<OptionGroup[]>([])
   const [loadingOptions, setLoadingOptions] = useState(false)
@@ -66,6 +78,8 @@ export default function MenuPage() {
       setRestaurantId(resto.id)
       const { data } = await supabase.from('products').select('*').eq('restaurant_id', resto.id).order('category')
       setProducts(data || [])
+      const { data: cats } = await supabase.from('categories').select('*').eq('restaurant_id', resto.id).order('position')
+      setCategories(cats || [])
       setLoading(false)
     }
     load()
@@ -131,6 +145,30 @@ export default function MenuPage() {
     setLoadingOptions(false)
   }
 
+  async function addCategory() {
+    if (!newCatName.trim() || !restaurantId) return
+    const { data } = await supabase.from('categories').insert({ restaurant_id: restaurantId, name: newCatName.trim(), emoji: newCatEmoji, position: categories.length }).select().single()
+    if (data) setCategories([...categories, data])
+    setNewCatName('')
+    setNewCatEmoji('🍽️')
+  }
+
+  async function deleteCategory(id: string) {
+    await supabase.from('categories').delete().eq('id', id)
+    setCategories(categories.filter(c => c.id !== id))
+  }
+
+  async function moveCat(id: string, dir: -1 | 1) {
+    const idx = categories.findIndex(c => c.id === id)
+    const newIdx = idx + dir
+    if (newIdx < 0 || newIdx >= categories.length) return
+    const updated = [...categories]
+    ;[updated[idx], updated[newIdx]] = [updated[newIdx], updated[idx]]
+    const reordered = updated.map((c, i) => ({ ...c, position: i }))
+    setCategories(reordered)
+    for (const c of reordered) await supabase.from('categories').update({ position: c.position }).eq('id', c.id)
+  }
+
   async function addGroup() {
     if (!newGroupName.trim() || !optionsProduct) return
     const { data, error } = await supabase.from('product_option_groups').insert({
@@ -178,7 +216,6 @@ export default function MenuPage() {
     </div>
   )
 
-  const categories = [...new Set(products.map(p => p.category).filter(Boolean))]
 
   return (
     <div style={{ minHeight: '100vh', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
@@ -189,13 +226,58 @@ export default function MenuPage() {
           <p style={{ fontSize: 16, fontWeight: 700, color: 'white', margin: 0 }}>Menu</p>
           <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 100, background: 'rgba(99,102,241,0.15)', color: '#818cf8', fontWeight: 600 }}>{products.length} produits</span>
         </div>
-        <button onClick={openAdd} style={{ padding: '9px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 13 }}>
-          + Ajouter
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 3 }}>
+            {(['produits', 'categories'] as const).map(t => (
+              <button key={t} onClick={() => setTab(t)} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, background: tab === t ? 'rgba(99,102,241,0.3)' : 'transparent', color: tab === t ? '#818cf8' : '#4b5563' }}>
+                {t === 'produits' ? '🍽️ Produits' : '🏷️ Catégories'}
+              </button>
+            ))}
+          </div>
+          {tab === 'produits' && (
+            <button onClick={openAdd} style={{ padding: '9px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 13 }}>
+              + Ajouter
+            </button>
+          )}
+        </div>
       </header>
 
-      <main style={{ padding: '32px 24px', maxWidth: 960, margin: '0 auto' }}>
-        {products.length === 0 ? (
+      <main style={{ padding: '24px', maxWidth: 960, margin: '0 auto' }}>
+
+        {/* Onglet Catégories */}
+        {tab === 'categories' && (
+          <div>
+            <div style={{ borderRadius: 20, padding: 24, background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)', marginBottom: 16 }}>
+              <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: '0 0 16px' }}>Vos catégories</p>
+              {categories.length === 0 && <p style={{ color: '#374151', fontSize: 13 }}>Aucune catégorie — ajoutez-en ci-dessous</p>}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {categories.map((cat, idx) => (
+                  <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <span style={{ fontSize: 22 }}>{cat.emoji}</span>
+                    <span style={{ color: 'white', fontWeight: 600, fontSize: 14, flex: 1 }}>{cat.name}</span>
+                    <span style={{ fontSize: 12, color: '#374151' }}>{products.filter(p => p.category === cat.name).length} produits</span>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={() => moveCat(cat.id, -1)} disabled={idx === 0} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 16 }}>↑</button>
+                      <button onClick={() => moveCat(cat.id, 1)} disabled={idx === categories.length - 1} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 16 }}>↓</button>
+                    </div>
+                    <button onClick={() => deleteCategory(cat.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ borderRadius: 20, padding: 24, background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: '0 0 14px' }}>+ Nouvelle catégorie</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input placeholder="Emoji" value={newCatEmoji} onChange={e => setNewCatEmoji(e.target.value)} style={{ width: 60, borderRadius: 10, padding: '10px', fontSize: 20, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none', textAlign: 'center' }} />
+                <input placeholder="Nom (ex: Crousty, Burgers...)" value={newCatName} onChange={e => setNewCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} style={{ flex: 1, borderRadius: 10, padding: '10px 14px', fontSize: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }} />
+                <button onClick={addCategory} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700 }}>Ajouter</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Onglet Produits */}
+        {tab === 'produits' && (products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 24px' }}>
             <p style={{ fontSize: 48, marginBottom: 16 }}>🍽️</p>
             <p style={{ color: '#374151', fontSize: 16, marginBottom: 24 }}>Votre menu est vide</p>
@@ -205,9 +287,9 @@ export default function MenuPage() {
           </div>
         ) : (
           <div>
-            {(categories.length > 0 ? categories : ['']).map(cat => (
+            {(categories.length > 0 ? categories.map(c => c.name) : ['']).map(cat => (
               <div key={cat} style={{ marginBottom: 32 }}>
-                {cat && <p style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{cat}</p>}
+                {cat && <p style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{categories.find(c => c.name === cat)?.emoji} {cat}</p>}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
                   {products.filter(p => p.category === cat || (!cat && !p.category)).map(p => (
                     <div key={p.id} style={{ borderRadius: 18, padding: '16px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 14 }}>
@@ -235,7 +317,7 @@ export default function MenuPage() {
               </div>
             ))}
           </div>
-        )}
+        ))}
       </main>
 
       {/* Modal produit */}
@@ -255,17 +337,17 @@ export default function MenuPage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                     {categories.map(cat => (
                       <button
-                        key={cat}
+                        key={cat.id}
                         type="button"
-                        onClick={() => setForm({ ...form, category: cat })}
+                        onClick={() => setForm({ ...form, category: cat.name })}
                         style={{
                           fontSize: 11, padding: '4px 12px', borderRadius: 100, cursor: 'pointer', fontWeight: 600,
-                          background: form.category === cat ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)',
-                          color: form.category === cat ? '#818cf8' : '#6b7280',
-                          border: `1px solid ${form.category === cat ? '#6366f1' : 'rgba(255,255,255,0.08)'}`,
+                          background: form.category === cat.name ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)',
+                          color: form.category === cat.name ? '#818cf8' : '#6b7280',
+                          border: `1px solid ${form.category === cat.name ? '#6366f1' : 'rgba(255,255,255,0.08)'}`,
                         }}
                       >
-                        {cat}
+                        {cat.emoji} {cat.name}
                       </button>
                     ))}
                   </div>

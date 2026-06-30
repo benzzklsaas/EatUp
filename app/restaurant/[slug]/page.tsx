@@ -32,6 +32,8 @@ type OptionGroup = {
 
 type SelectedOptions = Record<string, OptionItem[]> // group_id -> selected items
 
+type Category = { id: string; name: string; emoji: string; position: number }
+
 type CartItem = {
   product: Product
   quantity: number
@@ -52,6 +54,7 @@ export default function RestaurantPage() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState<string>('')
+  const [dbCategories, setDbCategories] = useState<Category[]>([])
 
   // Options modal
   const [optionsModal, setOptionsModal] = useState<{ product: Product; groups: OptionGroup[] } | null>(null)
@@ -81,6 +84,14 @@ export default function RestaurantPage() {
         .order('category')
 
       setProducts(data || [])
+
+      const { data: cats } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('restaurant_id', resto.id)
+        .order('position')
+      setDbCategories(cats || [])
+
       setLoading(false)
     }
     load()
@@ -89,7 +100,7 @@ export default function RestaurantPage() {
   useEffect(() => {
     if (products.length > 0) {
       const cats = [...new Set(products.map(p => p.category || 'Autres'))]
-      setActiveCategory(cats[0])
+      setActiveCategory(dbCategories.length > 0 ? (dbCategories.find(c => cats.includes(c.name))?.name || cats[0]) : cats[0])
     }
   }, [products])
 
@@ -162,7 +173,11 @@ export default function RestaurantPage() {
 
   const total = cart.reduce((sum, i) => sum + (i.product.price + i.extraPrice) * i.quantity, 0)
   const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0)
-  const categories = [...new Set(products.map(p => p.category || 'Autres'))]
+  const productCategories = [...new Set(products.map(p => p.category || 'Autres'))]
+  const orderedCategories = dbCategories.length > 0
+    ? [...dbCategories.map(c => c.name).filter(n => productCategories.includes(n)), ...productCategories.filter(n => !dbCategories.find(c => c.name === n))]
+    : productCategories
+  const getCatEmoji = (name: string) => dbCategories.find(c => c.name === name)?.emoji || ''
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810' }}>
@@ -208,35 +223,46 @@ export default function RestaurantPage() {
       </div>
 
       {/* Barre de catégories sticky */}
-      {categories.length > 1 && (
-        <div style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(5,8,16,0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '12px 0' }}>
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 20px', scrollbarWidth: 'none' }}>
-            {categories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => {
-                  setActiveCategory(cat)
-                  document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }}
-                style={{
-                  flexShrink: 0, padding: '8px 16px', borderRadius: 100, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, transition: 'all 0.2s',
-                  background: activeCategory === cat ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.05)',
-                  color: activeCategory === cat ? 'white' : '#4b5563',
-                  boxShadow: activeCategory === cat ? '0 4px 15px rgba(99,102,241,0.3)' : 'none',
-                }}
-              >
-                {cat}
-              </button>
-            ))}
+      {orderedCategories.length > 1 && (
+        <div style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(5,8,16,0.97)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '10px 0' }}>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 16px', scrollbarWidth: 'none' }}>
+            {orderedCategories.map(cat => {
+              const emoji = getCatEmoji(cat)
+              const isActive = activeCategory === cat
+              return (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setActiveCategory(cat)
+                    document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }}
+                  style={{
+                    flexShrink: 0, padding: '9px 18px', borderRadius: 14, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, transition: 'all 0.2s',
+                    background: isActive ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.06)',
+                    color: isActive ? 'white' : '#6b7280',
+                    boxShadow: isActive ? '0 4px 20px rgba(99,102,241,0.35)' : 'none',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}
+                >
+                  {emoji && <span style={{ fontSize: 16 }}>{emoji}</span>}
+                  {cat}
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
 
       {/* Menu */}
       <main style={{ padding: '24px 16px', maxWidth: 680, margin: '0 auto' }}>
-        {categories.map(cat => (
-          <div key={cat} id={`cat-${cat}`} style={{ marginBottom: 36 }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: '#374151', letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 14px', paddingLeft: 4 }}>{cat}</p>
+        {orderedCategories.map(cat => (
+          <div key={cat} id={`cat-${cat}`} style={{ marginBottom: 40, scrollMarginTop: 70 }}>
+            {/* En-tête de catégorie bien visible */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px', padding: '14px 18px', borderRadius: 16, background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08))', border: '1px solid rgba(99,102,241,0.2)' }}>
+              {getCatEmoji(cat) && <span style={{ fontSize: 22 }}>{getCatEmoji(cat)}</span>}
+              <span style={{ fontSize: 16, fontWeight: 800, color: 'white', letterSpacing: '-0.2px' }}>{cat}</span>
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: '#6366f1', fontWeight: 600 }}>{products.filter(p => (p.category || 'Autres') === cat).length} plats</span>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {products.filter(p => (p.category || 'Autres') === cat).map(product => {
                 const cartItems = cart.filter(i => i.product.id === product.id)
