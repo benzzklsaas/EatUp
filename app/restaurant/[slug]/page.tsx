@@ -81,6 +81,7 @@ export default function RestaurantPage() {
         .select('*')
         .eq('restaurant_id', resto.id)
         .eq('is_available', true)
+        .neq('is_online', false)
         .order('category')
 
       setProducts(data || [])

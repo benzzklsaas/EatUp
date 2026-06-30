@@ -57,6 +57,9 @@ export default function MenuPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [newCatName, setNewCatName] = useState('')
   const [newCatEmoji, setNewCatEmoji] = useState('🍽️')
+  const [editCat, setEditCat] = useState<Category | null>(null)
+  const [editCatName, setEditCatName] = useState('')
+  const [editCatEmoji, setEditCatEmoji] = useState('')
 
   const [optionsProduct, setOptionsProduct] = useState<Product | null>(null)
   const [optionGroups, setOptionGroups] = useState<OptionGroup[]>([])
@@ -143,6 +146,19 @@ export default function MenuPage() {
       .order('created_at')
     setOptionGroups((groups || []).map((g: any) => ({ ...g, items: g.items || [] })))
     setLoadingOptions(false)
+  }
+
+  async function saveEditCat() {
+    if (!editCat || !editCatName.trim()) return
+    await supabase.from('categories').update({ name: editCatName.trim(), emoji: editCatEmoji }).eq('id', editCat.id)
+    setCategories(categories.map(c => c.id === editCat.id ? { ...c, name: editCatName.trim(), emoji: editCatEmoji } : c))
+    setEditCat(null)
+  }
+
+  async function toggleOnline(p: Product) {
+    const val = !(p as any).is_online
+    await supabase.from('products').update({ is_online: val }).eq('id', p.id)
+    setProducts(products.map(x => x.id === p.id ? { ...x, is_online: val } as any : x))
   }
 
   async function addCategory() {
@@ -252,15 +268,27 @@ export default function MenuPage() {
               {categories.length === 0 && <p style={{ color: '#374151', fontSize: 13 }}>Aucune catégorie — ajoutez-en ci-dessous</p>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {categories.map((cat, idx) => (
-                  <div key={cat.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                    <span style={{ fontSize: 22 }}>{cat.emoji}</span>
-                    <span style={{ color: 'white', fontWeight: 600, fontSize: 14, flex: 1 }}>{cat.name}</span>
-                    <span style={{ fontSize: 12, color: '#374151' }}>{products.filter(p => p.category === cat.name).length} produits</span>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button onClick={() => moveCat(cat.id, -1)} disabled={idx === 0} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 16 }}>↑</button>
-                      <button onClick={() => moveCat(cat.id, 1)} disabled={idx === categories.length - 1} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 16 }}>↓</button>
-                    </div>
-                    <button onClick={() => deleteCategory(cat.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                  <div key={cat.id} style={{ borderRadius: 14, overflow: 'hidden', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    {editCat?.id === cat.id ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px' }}>
+                        <input value={editCatEmoji} onChange={e => setEditCatEmoji(e.target.value)} style={{ width: 52, borderRadius: 8, padding: '6px', fontSize: 20, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none', textAlign: 'center' }} />
+                        <input value={editCatName} onChange={e => setEditCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditCat()} style={{ flex: 1, borderRadius: 8, padding: '7px 12px', fontSize: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none' }} />
+                        <button onClick={saveEditCat} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#6366f1', color: 'white', fontWeight: 700, fontSize: 13 }}>✓</button>
+                        <button onClick={() => setEditCat(null)} style={{ padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', color: '#6b7280', fontSize: 13 }}>✕</button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
+                        <span style={{ fontSize: 22 }}>{cat.emoji}</span>
+                        <span style={{ color: 'white', fontWeight: 600, fontSize: 14, flex: 1 }}>{cat.name}</span>
+                        <span style={{ fontSize: 12, color: '#374151' }}>{products.filter(p => p.category === cat.name).length} produits</span>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button onClick={() => moveCat(cat.id, -1)} disabled={idx === 0} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 16 }}>↑</button>
+                          <button onClick={() => moveCat(cat.id, 1)} disabled={idx === categories.length - 1} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 16 }}>↓</button>
+                        </div>
+                        <button onClick={() => { setEditCat(cat); setEditCatName(cat.name); setEditCatEmoji(cat.emoji) }} style={{ fontSize: 12, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Modifier</button>
+                        <button onClick={() => deleteCategory(cat.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Supprimer</button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -302,13 +330,16 @@ export default function MenuPage() {
                           <p style={{ fontSize: 15, fontWeight: 800, color: '#818cf8', margin: '0 0 0 8px', flexShrink: 0 }}>{Number(p.price).toFixed(2)}€</p>
                         </div>
                         {p.description && <p style={{ fontSize: 12, color: '#374151', margin: '0 0 10px', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{p.description}</p>}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                          <button onClick={() => toggleOnline(p)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 100, border: 'none', cursor: 'pointer', background: (p as any).is_online !== false ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', color: (p as any).is_online !== false ? '#818cf8' : '#4b5563', fontWeight: 700 }}>
+                            {(p as any).is_online !== false ? '🌐 En ligne' : '📴 Hors ligne'}
+                          </button>
                           <button onClick={() => toggleAvailable(p)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 100, border: 'none', cursor: 'pointer', background: p.is_available ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.05)', color: p.is_available ? '#4ade80' : '#6b7280', fontWeight: 600 }}>
                             {p.is_available ? '● Dispo' : '○ Indispo'}
                           </button>
                           <button onClick={() => openEdit(p)} style={{ fontSize: 12, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Modifier</button>
                           <button onClick={() => openOptions(p)} style={{ fontSize: 12, color: '#f59e0b', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>⚙ Options</button>
-                          <button onClick={() => handleDelete(p.id)} style={{ fontSize: 12, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>Supprimer</button>
+                          <button onClick={() => handleDelete(p.id)} style={{ fontSize: 12, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Supprimer</button>
                         </div>
                       </div>
                     </div>
