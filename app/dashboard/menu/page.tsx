@@ -112,12 +112,13 @@ export default function MenuPage() {
 
   async function addGroup() {
     if (!newGroupName.trim() || !optionsProduct) return
-    const { data } = await supabase.from('product_option_groups').insert({
+    const { data, error } = await supabase.from('product_option_groups').insert({
       product_id: optionsProduct.id,
       name: newGroupName.trim(),
       min_choices: 1,
       max_choices: parseInt(newGroupMax) || 1,
     }).select().single()
+    if (error) { alert('Erreur : ' + error.message); return }
     if (data) setOptionGroups([...optionGroups, { ...data, items: [] }])
     setNewGroupName('')
     setNewGroupMax('1')
