@@ -6,16 +6,28 @@ import Image from 'next/image'
 export default function SubscribePage() {
   const [loading, setLoading] = useState(false)
 
+  const [err, setErr] = useState('')
+
   async function handleSubscribe() {
     setLoading(true)
-    const res = await fetch('/api/stripe/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: 'launch' }),
-    })
-    const { url, error } = await res.json()
-    if (error) { setLoading(false); return }
-    window.location.href = url
+    setErr('')
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'launch' }),
+      })
+      const data = await res.json()
+      if (data.error || !data.url) {
+        setErr(data.error || 'Erreur inattendue, réessayez.')
+        setLoading(false)
+        return
+      }
+      window.location.href = data.url
+    } catch {
+      setErr('Erreur réseau, réessayez.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -35,20 +47,12 @@ export default function SubscribePage() {
           boxShadow: '0 0 60px rgba(99,102,241,0.1)',
           position: 'relative',
         }}>
-          <div style={{
-            position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            padding: '4px 20px', borderRadius: 100, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', color: 'white',
-          }}>
-            OFFRE DE LANCEMENT
-          </div>
-
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+<div style={{ textAlign: 'center', marginBottom: 32 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginBottom: 6 }}>
               <span style={{ fontSize: 64, fontWeight: 900, color: 'white', letterSpacing: '-2px', lineHeight: 1 }}>19,99</span>
               <span style={{ fontSize: 20, color: '#6b7280' }}>€/mois</span>
             </div>
-            <p style={{ fontSize: 14, color: '#818cf8', fontWeight: 600, margin: '0 0 4px' }}>pendant les 2 premiers mois</p>
+            <p style={{ fontSize: 14, color: '#9ca3af', fontWeight: 500, margin: '0 0 4px' }}>pendant les 2 premiers mois</p>
             <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>puis 29,99€/mois · Sans engagement</p>
           </div>
 
@@ -68,6 +72,12 @@ export default function SubscribePage() {
             ))}
           </ul>
 
+          {err && (
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#f87171', marginBottom: 16 }}>
+              {err}
+            </div>
+          )}
+
           <button
             onClick={handleSubscribe}
             disabled={loading}
@@ -79,7 +89,7 @@ export default function SubscribePage() {
               transition: 'all 0.2s',
             }}
           >
-            {loading ? 'Redirection...' : 'Commencer pour 19,99€/mois →'}
+            {loading ? 'Redirection...' : 'Commencer maintenant →'}
           </button>
 
           <p style={{ textAlign: 'center', fontSize: 12, color: '#1f2937', marginTop: 16 }}>

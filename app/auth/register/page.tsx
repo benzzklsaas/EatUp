@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -18,11 +18,29 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ restaurantName: '', email: '', password: '', phone: '', address: '', description: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
+  const [addressLoading, setAddressLoading] = useState(false)
+  const addressDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
   function update(key: string, value: string) {
     setForm(prev => ({ ...prev, [key]: value }))
+  }
+
+  function handleAddressInput(q: string) {
+    update('address', q)
+    if (addressDebounce.current) clearTimeout(addressDebounce.current)
+    if (q.length < 3) { setAddressSuggestions([]); return }
+    addressDebounce.current = setTimeout(async () => {
+      setAddressLoading(true)
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5&accept-language=fr`)
+        const data = await res.json()
+        setAddressSuggestions(data)
+      } catch { setAddressSuggestions([]) }
+      setAddressLoading(false)
+    }, 350)
   }
 
   async function handleRegister(e: React.FormEvent) {
@@ -53,7 +71,7 @@ export default function RegisterPage() {
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <Image src="/LogoEatUp.PNG" alt="EatUp" width={56} height={56} style={{ borderRadius: '50%', margin: '0 auto 16px' }} />
           <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>Créez votre restaurant</h1>
-          <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>Prêt en 5 minutes · 19,99€/mois les 2 premiers mois</p>
+          <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>Prêt en 5 minutes · 19,99€/mois sans engagement</p>
         </div>
 
         <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -64,9 +82,35 @@ export default function RegisterPage() {
               <label style={labelStyle}>Nom du restaurant *</label>
               <input type="text" value={form.restaurantName} onChange={e => update('restaurantName', e.target.value)} placeholder="Crousty Naan" required style={inputStyle} />
             </div>
-            <div>
+            <div style={{ position: 'relative' }}>
               <label style={labelStyle}>Adresse</label>
-              <input type="text" value={form.address} onChange={e => update('address', e.target.value)} placeholder="13 rue Jean Mermoz, Bordeaux" style={inputStyle} />
+              <input
+                type="text"
+                value={form.address}
+                onChange={e => handleAddressInput(e.target.value)}
+                placeholder="13 rue Jean Mermoz, Bordeaux"
+                style={inputStyle}
+                autoComplete="off"
+              />
+              {addressLoading && (
+                <div style={{ position: 'absolute', right: 12, top: 38, fontSize: 12, color: '#6366f1' }}>...</div>
+              )}
+              {addressSuggestions.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, marginTop: 4, overflow: 'hidden' }}>
+                  {addressSuggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => { update('address', s.display_name); setAddressSuggestions([]) }}
+                      style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: 'white', fontSize: 13, cursor: 'pointer', borderBottom: i < addressSuggestions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.1)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                    >
+                      📍 {s.display_name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <label style={labelStyle}>Téléphone</label>
