@@ -95,13 +95,16 @@ export default function OrdersPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth/login'); return }
 
-      const { data: resto } = await supabase
+      const { data: resto, error: restoError } = await supabase
         .from('restaurants')
         .select('id')
         .eq('owner_id', user.id)
         .single()
 
-      if (!resto) { router.push('/dashboard'); return }
+      if (!resto) {
+        alert(`DEBUG - user.id: ${user.id} | erreur: ${restoError?.message}`)
+        router.push('/dashboard'); return
+      }
       restaurantId.current = resto.id
 
       const { data } = await supabase
