@@ -26,6 +26,8 @@ export default function OnboardingPage() {
   const [description, setDescription] = useState('')
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
+  const [addressLoading, setAddressLoading] = useState(false)
 
   // Step 2
   const [categories, setCategories] = useState<{ name: string; emoji: string }[]>([])
@@ -39,6 +41,18 @@ export default function OnboardingPage() {
   const [prodCat, setProdCat] = useState('')
 
   const [saving, setSaving] = useState(false)
+
+  async function searchAddress(q: string) {
+    setAddress(q)
+    if (q.length < 3) { setAddressSuggestions([]); return }
+    setAddressLoading(true)
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=5&accept-language=fr`)
+      const data = await res.json()
+      setAddressSuggestions(data)
+    } catch { setAddressSuggestions([]) }
+    setAddressLoading(false)
+  }
 
   useEffect(() => {
     async function load() {
@@ -171,7 +185,32 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <input placeholder="Nom du restaurant *" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
               <textarea placeholder="Description (ambiance, spécialité...)" value={description} onChange={e => setDescription(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'none' }} />
-              <input placeholder="Adresse" value={address} onChange={e => setAddress(e.target.value)} style={inputStyle} />
+              <div style={{ position: 'relative' }}>
+                <input
+                  placeholder="Adresse du restaurant"
+                  value={address}
+                  onChange={e => searchAddress(e.target.value)}
+                  style={{ ...inputStyle, paddingRight: addressLoading ? 40 : 16 }}
+                  autoComplete="off"
+                />
+                {addressLoading && <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: '#4b5563' }}>...</span>}
+                {addressSuggestions.length > 0 && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: '#0f172a', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', marginTop: 4 }}>
+                    {addressSuggestions.map((s, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => { setAddress(s.display_name); setAddressSuggestions([]) }}
+                        style={{ width: '100%', padding: '11px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', color: '#d1d5db', fontSize: 13, borderBottom: i < addressSuggestions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', lineHeight: 1.4 }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.1)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                      >
+                        📍 {s.display_name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <input placeholder="Téléphone" value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
             </div>
 
