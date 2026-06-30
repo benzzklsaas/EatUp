@@ -9,6 +9,19 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   const { order, items } = await req.json()
 
+  // Vérifie que le restaurant existe bien avant d'insérer
+  if (!order?.restaurant_id) {
+    return NextResponse.json({ error: 'restaurant_id manquant' }, { status: 400 })
+  }
+  const { data: resto } = await supabase
+    .from('restaurants')
+    .select('id')
+    .eq('id', order.restaurant_id)
+    .single()
+  if (!resto) {
+    return NextResponse.json({ error: 'Restaurant introuvable' }, { status: 403 })
+  }
+
   const { data, error } = await supabase
     .from('orders')
     .insert(order)

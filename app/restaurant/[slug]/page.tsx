@@ -19,6 +19,7 @@ type OptionItem = {
   group_id: string
   name: string
   extra_price: number
+  is_available: boolean
 }
 
 type OptionGroup = {
@@ -141,6 +142,7 @@ export default function RestaurantPage() {
   }
 
   function toggleOption(group: OptionGroup, item: OptionItem) {
+    if (item.is_available === false) return
     const current = selectedOptions[group.id] || []
     const already = current.find(i => i.id === item.id)
     if (already) {
@@ -378,15 +380,18 @@ export default function RestaurantPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {group.items.map(item => {
                     const selected = (selectedOptions[group.id] || []).some(i => i.id === item.id)
+                    const unavailable = item.is_available === false
                     return (
                       <button
                         key={item.id}
                         onClick={() => toggleOption(group, item)}
+                        disabled={unavailable}
                         style={{
                           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          padding: '14px 16px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left',
-                          background: selected ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
-                          outline: selected ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)',
+                          padding: '14px 16px', borderRadius: 14, border: 'none', cursor: unavailable ? 'not-allowed' : 'pointer', textAlign: 'left',
+                          background: unavailable ? 'rgba(255,255,255,0.02)' : selected ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
+                          outline: unavailable ? '1px solid rgba(255,255,255,0.04)' : selected ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)',
+                          opacity: unavailable ? 0.5 : 1,
                           transition: 'all 0.15s',
                         }}
                       >
@@ -399,10 +404,13 @@ export default function RestaurantPage() {
                           }}>
                             {selected && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
                           </div>
-                          <span style={{ fontSize: 14, color: selected ? 'white' : '#d1d5db', fontWeight: selected ? 600 : 400 }}>{item.name}</span>
+                          <div>
+                            <span style={{ fontSize: 14, color: unavailable ? '#4b5563' : selected ? 'white' : '#d1d5db', fontWeight: selected ? 600 : 400, textDecoration: unavailable ? 'line-through' : 'none' }}>{item.name}</span>
+                            {unavailable && <span style={{ display: 'block', fontSize: 10, color: '#dc2626', fontWeight: 700, marginTop: 1 }}>Victime de son succès</span>}
+                          </div>
                         </div>
                         {item.extra_price > 0 && (
-                          <span style={{ fontSize: 13, color: '#f59e0b', fontWeight: 700 }}>+{Number(item.extra_price).toFixed(2)}€</span>
+                          <span style={{ fontSize: 13, color: unavailable ? '#4b5563' : '#f59e0b', fontWeight: 700 }}>+{Number(item.extra_price).toFixed(2)}€</span>
                         )}
                       </button>
                     )

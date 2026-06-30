@@ -26,6 +26,7 @@ type OptionItem = {
   group_id: string
   name: string
   extra_price: number
+  is_available: boolean
 }
 
 type OptionGroup = {
@@ -474,10 +475,20 @@ export default function MenuPage() {
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
                       {group.items.map(item => (
-                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.04)' }}>
-                          <span style={{ fontSize: 13, color: '#d1d5db' }}>{item.name}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: item.is_available !== false ? 'rgba(255,255,255,0.04)' : 'rgba(239,68,68,0.07)', border: item.is_available !== false ? 'none' : '1px solid rgba(239,68,68,0.2)' }}>
+                          <span style={{ fontSize: 13, color: item.is_available !== false ? '#d1d5db' : '#6b7280', textDecoration: item.is_available !== false ? 'none' : 'line-through' }}>{item.name}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             {item.extra_price > 0 && <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 700 }}>+{Number(item.extra_price).toFixed(2)}€</span>}
+                            <button
+                              onClick={async () => {
+                                const val = item.is_available === false ? true : false
+                                await supabase.from('product_option_items').update({ is_available: val }).eq('id', item.id)
+                                setOptionGroups(optionGroups.map(g => g.id === group.id ? { ...g, items: g.items.map(i => i.id === item.id ? { ...i, is_available: val } : i) } : g))
+                              }}
+                              style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: 'none', cursor: 'pointer', fontWeight: 700, background: item.is_available !== false ? 'rgba(74,222,128,0.1)' : 'rgba(239,68,68,0.15)', color: item.is_available !== false ? '#4ade80' : '#f87171' }}
+                            >
+                              {item.is_available !== false ? 'Dispo' : 'Rupture'}
+                            </button>
                             <button onClick={() => deleteItem(group.id, item.id)} style={{ fontSize: 13, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
                           </div>
                         </div>
