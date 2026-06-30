@@ -14,9 +14,31 @@ type Product = {
   is_available: boolean
 }
 
+type OptionItem = {
+  id: string
+  group_id: string
+  name: string
+  extra_price: number
+}
+
+type OptionGroup = {
+  id: string
+  product_id: string
+  name: string
+  min_choices: number
+  max_choices: number
+  items: OptionItem[]
+}
+
+type SelectedOptions = Record<string, OptionItem[]> // group_id -> selected items
+
 type CartItem = {
   product: Product
   quantity: number
+  selectedOptions?: SelectedOptions
+  optionGroups?: OptionGroup[]
+  extraPrice: number
+  cartKey: string // unique key per product+options combo
 }
 
 export default function RestaurantPage() {
@@ -30,6 +52,11 @@ export default function RestaurantPage() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState<string>('')
+
+  // Options modal
+  const [optionsModal, setOptionsModal] = useState<{ product: Product; groups: OptionGroup[] } | null>(null)
+  const [selectedOptions, setSelectedOptions] = useState<SelectedOptions>({})
+  const [loadingOptions, setLoadingOptions] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(`cart_${slug}`)
@@ -71,20 +98,74 @@ export default function RestaurantPage() {
     localStorage.setItem(`cart_${slug}`, JSON.stringify(newCart))
   }
 
-  function addToCart(product: Product) {
-    const existing = cart.find(i => i.product.id === product.id)
-    if (existing) saveCart(cart.map(i => i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i))
-    else saveCart([...cart, { product, quantity: 1 }])
+  async function handleAddToCart(product: Product) {
+    setLoadingOptions(true)
+    const { data: groups } = await supabase
+      .from('product_option_groups')
+      .select('*, items:product_option_items(*)')
+      .eq('product_id', product.id)
+      .order('created_at')
+
+    const optGroups: OptionGroup[] = (groups || []).map((g: any) => ({ ...g, items: g.items || [] }))
+    setLoadingOptions(false)
+
+    if (optGroups.length > 0) {
+      setSelectedOptions({})
+      setOptionsModal({ product, groups: optGroups })
+    } else {
+      addToCart(product, {}, [], 0)
+    }
   }
 
-  function removeFromCart(productId: string) {
-    const existing = cart.find(i => i.product.id === productId)
+  function addToCart(product: Product, selOpts: SelectedOptions, groups: OptionGroup[], extra: number) {
+    const cartKey = product.id + JSON.stringify(selOpts)
+    const existing = cart.find(i => i.cartKey === cartKey)
+    if (existing) {
+      saveCart(cart.map(i => i.cartKey === cartKey ? { ...i, quantity: i.quantity + 1 } : i))
+    } else {
+      saveCart([...cart, { product, quantity: 1, selectedOptions: selOpts, optionGroups: groups, extraPrice: extra, cartKey }])
+    }
+  }
+
+  function removeFromCart(cartKey: string) {
+    const existing = cart.find(i => i.cartKey === cartKey)
     if (!existing) return
-    if (existing.quantity === 1) saveCart(cart.filter(i => i.product.id !== productId))
-    else saveCart(cart.map(i => i.product.id === productId ? { ...i, quantity: i.quantity - 1 } : i))
+    if (existing.quantity === 1) saveCart(cart.filter(i => i.cartKey !== cartKey))
+    else saveCart(cart.map(i => i.cartKey === cartKey ? { ...i, quantity: i.quantity - 1 } : i))
   }
 
-  const total = cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0)
+  function toggleOption(group: OptionGroup, item: OptionItem) {
+    const current = selectedOptions[group.id] || []
+    const already = current.find(i => i.id === item.id)
+    if (already) {
+      setSelectedOptions({ ...selectedOptions, [group.id]: current.filter(i => i.id !== item.id) })
+    } else {
+      if (current.length >= group.max_choices) {
+        // Replace oldest if max reached (for single choice)
+        const next = group.max_choices === 1 ? [item] : [...current.slice(1), item]
+        setSelectedOptions({ ...selectedOptions, [group.id]: next })
+      } else {
+        setSelectedOptions({ ...selectedOptions, [group.id]: [...current, item] })
+      }
+    }
+  }
+
+  function confirmOptions() {
+    if (!optionsModal) return
+    const { product, groups } = optionsModal
+    const extra = groups.reduce((sum, g) => {
+      return sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0)
+    }, 0)
+    addToCart(product, selectedOptions, groups, extra)
+    setOptionsModal(null)
+  }
+
+  function optionsValid() {
+    if (!optionsModal) return false
+    return optionsModal.groups.every(g => (selectedOptions[g.id] || []).length >= g.min_choices)
+  }
+
+  const total = cart.reduce((sum, i) => sum + (i.product.price + i.extraPrice) * i.quantity, 0)
   const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0)
   const categories = [...new Set(products.map(p => p.category || 'Autres'))]
 
@@ -112,26 +193,19 @@ export default function RestaurantPage() {
 
       {/* Hero header */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>
-        {/* Glow background */}
         <div style={{ position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
         <div style={{ padding: '48px 24px 32px', textAlign: 'center', position: 'relative' }}>
-          {/* Avatar restaurant */}
           <div style={{ width: 72, height: 72, borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2))', border: '2px solid rgba(99,102,241,0.3)' }}>
             🍽️
           </div>
-
           <h1 style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>{restaurant.name}</h1>
-
           {restaurant.description && (
             <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 16px', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>{restaurant.description}</p>
           )}
-
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 100, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)' }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 8px #4ade80' }} />
             <span style={{ fontSize: 12, fontWeight: 700, color: '#4ade80' }}>Ouvert · Click & Collect</span>
           </div>
-
           {restaurant.address && (
             <p style={{ fontSize: 12, color: '#374151', marginTop: 10 }}>📍 {restaurant.address}</p>
           )}
@@ -170,12 +244,13 @@ export default function RestaurantPage() {
             <p style={{ fontSize: 11, fontWeight: 800, color: '#374151', letterSpacing: '0.12em', textTransform: 'uppercase', margin: '0 0 14px', paddingLeft: 4 }}>{cat}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {products.filter(p => (p.category || 'Autres') === cat).map(product => {
-                const cartItem = cart.find(i => i.product.id === product.id)
+                const cartItems = cart.filter(i => i.product.id === product.id)
+                const totalQty = cartItems.reduce((s, i) => s + i.quantity, 0)
                 return (
                   <div key={product.id} style={{
                     borderRadius: 20, padding: '16px', display: 'flex', gap: 14, alignItems: 'center',
-                    background: cartItem ? 'linear-gradient(145deg, #0f172a, rgba(99,102,241,0.08))' : 'linear-gradient(145deg, #0f172a, #111827)',
-                    border: cartItem ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.06)',
+                    background: totalQty > 0 ? 'linear-gradient(145deg, #0f172a, rgba(99,102,241,0.08))' : 'linear-gradient(145deg, #0f172a, #111827)',
+                    border: totalQty > 0 ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.06)',
                     transition: 'all 0.2s',
                   }}>
                     {product.image_url && (
@@ -188,18 +263,33 @@ export default function RestaurantPage() {
                       )}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <p style={{ fontSize: 16, fontWeight: 900, color: '#818cf8', margin: 0, letterSpacing: '-0.3px' }}>{Number(product.price).toFixed(2)}€</p>
-                        {cartItem ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <button onClick={() => removeFromCart(product.id)} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, background: 'rgba(255,255,255,0.08)', color: 'white' }}>−</button>
-                            <span style={{ fontWeight: 800, color: 'white', fontSize: 15, minWidth: 20, textAlign: 'center' }}>{cartItem.quantity}</span>
-                            <button onClick={() => addToCart(product)} style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white' }}>+</button>
-                          </div>
-                        ) : (
-                          <button onClick={() => addToCart(product)} style={{ padding: '8px 18px', borderRadius: 100, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: 'rgba(99,102,241,0.15)', color: '#818cf8', transition: 'all 0.2s' }}>
-                            + Ajouter
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleAddToCart(product)}
+                          disabled={loadingOptions}
+                          style={{ padding: '8px 18px', borderRadius: 100, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: 'rgba(99,102,241,0.15)', color: '#818cf8', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
+                        >
+                          {totalQty > 0 && <span style={{ background: '#6366f1', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{totalQty}</span>}
+                          + Ajouter
+                        </button>
                       </div>
+                      {/* Show cart items with options */}
+                      {cartItems.length > 0 && cartItems.some(i => i.optionGroups && i.optionGroups.length > 0) && (
+                        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {cartItems.map(ci => (
+                            <div key={ci.cartKey} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', borderRadius: 10, background: 'rgba(99,102,241,0.08)' }}>
+                              <span style={{ fontSize: 11, color: '#818cf8' }}>
+                                {ci.optionGroups?.map(g => (selectedOptions[g.id] || ci.selectedOptions?.[g.id] || []).map(i => i.name).join(', ')).filter(Boolean).join(' · ') || Object.values(ci.selectedOptions || {}).flat().map((i: any) => i.name).join(', ')}
+                                {ci.extraPrice > 0 && ` +${ci.extraPrice.toFixed(2)}€`}
+                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <button onClick={() => removeFromCart(ci.cartKey)} style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.08)', color: 'white', fontWeight: 800 }}>−</button>
+                                <span style={{ fontSize: 12, color: 'white', fontWeight: 700 }}>{ci.quantity}</span>
+                                <button onClick={() => handleAddToCart(product)} style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', cursor: 'pointer', background: '#6366f1', color: 'white', fontWeight: 800 }}>+</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
@@ -229,6 +319,87 @@ export default function RestaurantPage() {
         </div>
       )}
 
+      {/* Modal sélection options */}
+      {optionsModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ width: '100%', maxWidth: 540, borderRadius: '24px 24px 0 0', padding: '28px 20px 36px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '80vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div>
+                <h3 style={{ color: 'white', fontWeight: 800, fontSize: 17, margin: 0 }}>{optionsModal.product.name}</h3>
+                <p style={{ color: '#4b5563', fontSize: 12, margin: '4px 0 0' }}>Personnalisez votre commande</p>
+              </div>
+              <button onClick={() => setOptionsModal(null)} style={{ color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', fontSize: 20 }}>✕</button>
+            </div>
+
+            {optionsModal.groups.map(group => (
+              <div key={group.id} style={{ marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: 0 }}>{group.name}</p>
+                  <span style={{ fontSize: 11, color: '#4b5563', background: 'rgba(255,255,255,0.05)', padding: '3px 10px', borderRadius: 100 }}>
+                    {group.max_choices === 1 ? '1 choix' : `Jusqu'à ${group.max_choices} choix`}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {group.items.map(item => {
+                    const selected = (selectedOptions[group.id] || []).some(i => i.id === item.id)
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => toggleOption(group, item)}
+                        style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '14px 16px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left',
+                          background: selected ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
+                          outline: selected ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{
+                            width: 20, height: 20, borderRadius: group.max_choices === 1 ? '50%' : 6,
+                            border: `2px solid ${selected ? '#6366f1' : 'rgba(255,255,255,0.2)'}`,
+                            background: selected ? '#6366f1' : 'transparent',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                          }}>
+                            {selected && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
+                          </div>
+                          <span style={{ fontSize: 14, color: selected ? 'white' : '#d1d5db', fontWeight: selected ? 600 : 400 }}>{item.name}</span>
+                        </div>
+                        {item.extra_price > 0 && (
+                          <span style={{ fontSize: 13, color: '#f59e0b', fontWeight: 700 }}>+{Number(item.extra_price).toFixed(2)}€</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Récap prix */}
+            {(() => {
+              const extra = optionsModal.groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
+              const totalItem = optionsModal.product.price + extra
+              return (
+                <button
+                  onClick={confirmOptions}
+                  disabled={!optionsValid()}
+                  style={{
+                    width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: optionsValid() ? 'pointer' : 'default',
+                    background: optionsValid() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.05)',
+                    color: optionsValid() ? 'white' : '#4b5563',
+                    fontWeight: 800, fontSize: 15, marginTop: 8,
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span>Ajouter au panier</span>
+                  <span>{totalItem.toFixed(2)}€</span>
+                </button>
+              )
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

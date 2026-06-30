@@ -87,7 +87,7 @@ export default function CheckoutPage() {
     loadResto()
   }, [slug])
 
-  const total = cart.reduce((sum: number, i: any) => sum + i.product.price * i.quantity, 0)
+  const total = cart.reduce((sum: number, i: any) => sum + (i.product.price + (i.extraPrice || 0)) * i.quantity, 0)
 
   function generateOrderNumber() {
     return 'EAT-' + Date.now().toString().slice(-6)
@@ -106,7 +106,8 @@ export default function CheckoutPage() {
       product_id: i.product.id,
       product_name: i.product.name,
       quantity: i.quantity,
-      price: i.product.price,
+      price: i.product.price + (i.extraPrice || 0),
+      options: i.selectedOptions ? Object.values(i.selectedOptions).flat().map((o: any) => o.name).join(', ') : '',
     }))
 
     const res = await fetch('/api/orders', {
@@ -210,12 +211,21 @@ export default function CheckoutPage() {
         <div className="rounded-2xl p-5" style={{ background: '#1e293b', border: '1px solid #334155' }}>
           <h2 className="font-bold text-white mb-3">Votre panier</h2>
           <div className="space-y-2">
-            {cart.map((i: any) => (
-              <div key={i.product.id} className="flex justify-between text-sm">
-                <span style={{ color: '#cbd5e1' }}>{i.product.name} × {i.quantity}</span>
-                <span className="font-medium text-white">{(i.product.price * i.quantity).toFixed(2)}€</span>
-              </div>
-            ))}
+            {cart.map((i: any, idx: number) => {
+              const optionLabels = i.selectedOptions
+                ? Object.values(i.selectedOptions).flat().map((o: any) => o.name).join(', ')
+                : ''
+              const unitPrice = i.product.price + (i.extraPrice || 0)
+              return (
+                <div key={idx} className="text-sm">
+                  <div className="flex justify-between">
+                    <span style={{ color: '#cbd5e1' }}>{i.product.name} × {i.quantity}</span>
+                    <span className="font-medium text-white">{(unitPrice * i.quantity).toFixed(2)}€</span>
+                  </div>
+                  {optionLabels && <p style={{ color: '#64748b', fontSize: 11, marginTop: 2 }}>{optionLabels}</p>}
+                </div>
+              )
+            })}
           </div>
           <div className="flex justify-between font-bold text-white mt-3 pt-3" style={{ borderTop: '1px solid #334155' }}>
             <span>Total</span>

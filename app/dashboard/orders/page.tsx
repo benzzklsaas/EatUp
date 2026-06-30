@@ -27,9 +27,21 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Annulé',
 }
 
+let audioCtx: AudioContext | null = null
+
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume()
+  }
+  return audioCtx
+}
+
 function playNotificationSound() {
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const ctx = getAudioContext()
     const notes = [523, 659, 784] // Do Mi Sol
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator()
@@ -71,6 +83,12 @@ export default function OrdersPage() {
       })
     }
   }, [soundEnabled])
+
+  useEffect(() => {
+    const unlock = () => getAudioContext()
+    window.addEventListener('click', unlock, { once: true })
+    return () => window.removeEventListener('click', unlock)
+  }, [])
 
   useEffect(() => {
     async function load() {
