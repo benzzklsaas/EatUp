@@ -38,7 +38,8 @@ type CartItem = {
   selectedOptions?: SelectedOptions
   optionGroups?: OptionGroup[]
   extraPrice: number
-  cartKey: string // unique key per product+options combo
+  asMenu: boolean
+  cartKey: string
 }
 
 export default function RestaurantPage() {
@@ -54,7 +55,7 @@ export default function RestaurantPage() {
   const [activeCategory, setActiveCategory] = useState<string>('')
 
   // Options modal
-  const [optionsModal, setOptionsModal] = useState<{ product: Product; groups: OptionGroup[] } | null>(null)
+  const [optionsModal, setOptionsModal] = useState<{ product: Product; groups: OptionGroup[]; asMenu: boolean } | null>(null)
   const [selectedOptions, setSelectedOptions] = useState<SelectedOptions>({})
   const [loadingOptions, setLoadingOptions] = useState(false)
 
@@ -98,7 +99,7 @@ export default function RestaurantPage() {
     localStorage.setItem(`cart_${slug}`, JSON.stringify(newCart))
   }
 
-  async function handleAddToCart(product: Product) {
+  async function handleAddToCart(product: Product, asMenu: boolean = false) {
     setLoadingOptions(true)
     const { data: groups } = await supabase
       .from('product_option_groups')
@@ -111,19 +112,20 @@ export default function RestaurantPage() {
 
     if (optGroups.length > 0) {
       setSelectedOptions({})
-      setOptionsModal({ product, groups: optGroups })
+      setOptionsModal({ product, groups: optGroups, asMenu })
     } else {
-      addToCart(product, {}, [], 0)
+      const menuExtra = asMenu ? Number((product as any).menu_extra_price || 0) : 0
+      addToCart(product, {}, [], menuExtra, asMenu)
     }
   }
 
-  function addToCart(product: Product, selOpts: SelectedOptions, groups: OptionGroup[], extra: number) {
-    const cartKey = product.id + JSON.stringify(selOpts)
+  function addToCart(product: Product, selOpts: SelectedOptions, groups: OptionGroup[], extra: number, asMenu: boolean = false) {
+    const cartKey = product.id + JSON.stringify(selOpts) + (asMenu ? '_menu' : '')
     const existing = cart.find(i => i.cartKey === cartKey)
     if (existing) {
       saveCart(cart.map(i => i.cartKey === cartKey ? { ...i, quantity: i.quantity + 1 } : i))
     } else {
-      saveCart([...cart, { product, quantity: 1, selectedOptions: selOpts, optionGroups: groups, extraPrice: extra, cartKey }])
+      saveCart([...cart, { product, quantity: 1, selectedOptions: selOpts, optionGroups: groups, extraPrice: extra, asMenu, cartKey }])
     }
   }
 
@@ -152,11 +154,12 @@ export default function RestaurantPage() {
 
   function confirmOptions() {
     if (!optionsModal) return
-    const { product, groups } = optionsModal
-    const extra = groups.reduce((sum, g) => {
+    const { product, groups, asMenu } = optionsModal
+    const optExtra = groups.reduce((sum, g) => {
       return sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0)
     }, 0)
-    addToCart(product, selectedOptions, groups, extra)
+    const menuExtra = asMenu ? Number((product as any).menu_extra_price || 0) : 0
+    addToCart(product, selectedOptions, groups, optExtra + menuExtra, asMenu)
     setOptionsModal(null)
   }
 
@@ -261,8 +264,31 @@ export default function RestaurantPage() {
                       {product.description && (
                         <p style={{ fontSize: 13, color: '#374151', margin: '0 0 12px', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{product.description}</p>
                       )}
+                      {/* Toggle Seul / En menu */}
+                      {(product as any).menu_extra_price > 0 && (
+                        <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                          <button
+                            onClick={() => handleAddToCart(product, false)}
+                            disabled={loadingOptions}
+                            style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: 'rgba(255,255,255,0.06)', color: '#94a3b8' }}
+                          >
+                            Seul<br /><span style={{ fontSize: 13, color: '#818cf8' }}>{Number(product.price).toFixed(2)}€</span>
+                          </button>
+                          <button
+                            onClick={() => handleAddToCart(product, true)}
+                            disabled={loadingOptions}
+                            style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: '1.5px solid rgba(99,102,241,0.4)', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: 'rgba(99,102,241,0.1)', color: '#818cf8' }}
+                          >
+                            En menu<br />
+                            <span style={{ fontSize: 10, color: '#64748b' }}>{(product as any).menu_label || ''}</span><br />
+                            <span style={{ fontSize: 13, color: '#818cf8' }}>{(Number(product.price) + Number((product as any).menu_extra_price)).toFixed(2)}€</span>
+                          </button>
+                        </div>
+                      )}
+
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <p style={{ fontSize: 16, fontWeight: 900, color: '#818cf8', margin: 0, letterSpacing: '-0.3px' }}>{Number(product.price).toFixed(2)}€</p>
+                        {!(product as any).menu_extra_price && (
                         <button
                           onClick={() => handleAddToCart(product)}
                           disabled={loadingOptions}
@@ -271,6 +297,7 @@ export default function RestaurantPage() {
                           {totalQty > 0 && <span style={{ background: '#6366f1', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{totalQty}</span>}
                           + Ajouter
                         </button>
+                        )}
                       </div>
                       {/* Show cart items with options */}
                       {cartItems.length > 0 && cartItems.some(i => i.optionGroups && i.optionGroups.length > 0) && (

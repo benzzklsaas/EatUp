@@ -42,7 +42,7 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
-  const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '' })
+  const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' })
   const [saving, setSaving] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
 
@@ -71,8 +71,8 @@ export default function MenuPage() {
     load()
   }, [])
 
-  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '' }); setShowForm(true) }
-  function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '' }); setShowForm(true) }
+  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' }); setShowForm(true) }
+  function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '' }); setShowForm(true) }
 
   async function handleImageUpload(file: File) {
     setUploadingImage(true)
@@ -88,10 +88,19 @@ export default function MenuPage() {
   async function handleSave() {
     if (!form.name || !form.price) return
     setSaving(true)
+    const fields = {
+      name: form.name,
+      description: form.description,
+      price: parseFloat(form.price),
+      category: form.category,
+      image_url: form.image_url,
+      menu_extra_price: form.menu_extra_price ? parseFloat(form.menu_extra_price) : 0,
+      menu_label: form.menu_label,
+    }
     if (editProduct) {
-      await supabase.from('products').update({ name: form.name, description: form.description, price: parseFloat(form.price), category: form.category, image_url: form.image_url }).eq('id', editProduct.id)
+      await supabase.from('products').update(fields).eq('id', editProduct.id)
     } else {
-      await supabase.from('products').insert({ restaurant_id: restaurantId, name: form.name, description: form.description, price: parseFloat(form.price), category: form.category, image_url: form.image_url })
+      await supabase.from('products').insert({ restaurant_id: restaurantId, ...fields })
     }
     const { data } = await supabase.from('products').select('*').eq('restaurant_id', restaurantId).order('category')
     setProducts(data || [])
@@ -261,6 +270,13 @@ export default function MenuPage() {
                     ))}
                   </div>
                 )}
+              </div>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
+                <label style={{ display: 'block', fontSize: 12, color: '#4b5563', marginBottom: 8, fontWeight: 600 }}>Option Menu (facultatif)</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input placeholder="Prix du menu (ex: 2.00)" value={form.menu_extra_price} onChange={e => setForm({ ...form, menu_extra_price: e.target.value })} type="number" step="0.5" style={{ ...inputStyle, flex: 1 }} />
+                  <input placeholder="Contenu (ex: Frites + Boisson)" value={form.menu_label} onChange={e => setForm({ ...form, menu_label: e.target.value })} style={{ ...inputStyle, flex: 2 }} />
+                </div>
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 12, color: '#4b5563', marginBottom: 8, fontWeight: 600 }}>Photo du produit</label>
