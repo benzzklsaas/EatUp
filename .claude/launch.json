@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "reel-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["/private/tmp/claude-501/-Users-benkacel-Downloads/b933ff08-c00e-4b41-95f8-1d061181eaa5/scratchpad/server.js"],
+      "port": 7788
+    }
+  ]
+}

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { createClient } from '@supabase/supabase-js'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 function customerEmailHtml({ customerName, restaurantName, orderNumber, itemsHtml, total, pickupFormatted }: any) {
   return `<!DOCTYPE html>
@@ -139,13 +144,22 @@ function restaurantEmailHtml({ customerName, orderNumber, itemsHtml, total, pick
 export async function POST(req: NextRequest) {
   const { customerEmail, customerName, restaurantEmail, restaurantName, orderNumber, items, total, pickupTime } = await req.json()
 
-  // Validation basique pour éviter l'abus de la route email
   if (!orderNumber || !customerEmail || !restaurantEmail || !items?.length) {
     return NextResponse.json({ error: 'Données manquantes' }, { status: 400 })
   }
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(customerEmail) || !emailRegex.test(restaurantEmail)) {
     return NextResponse.json({ error: 'Email invalide' }, { status: 400 })
+  }
+
+  // Vérifie que la commande existe vraiment en base (anti-spam)
+  const { data: orderExists } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('order_number', orderNumber)
+    .single()
+  if (!orderExists) {
+    return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 })
   }
 
   const itemsHtml = items.map((i: any) => `

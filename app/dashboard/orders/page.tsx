@@ -74,6 +74,10 @@ export default function OrdersPage() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const printRef = useRef<HTMLDivElement>(null)
 
+  function esc(str: string) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  }
+
   async function fetchItemsAndPrint(order: Order) {
     const { data: items } = await supabase
       .from('order_items')
@@ -87,29 +91,29 @@ export default function OrdersPage() {
     printRef.current.innerHTML = `
       <div style="font-family: monospace; font-size: 14px; width: 280px; padding: 12px;">
         <div style="text-align:center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
-          <div style="font-size: 18px; font-weight: bold;">${restaurantName || 'EatUp'}</div>
-          <div style="font-size: 11px; color: #555;">Reçu le ${now}</div>
+          <div style="font-size: 18px; font-weight: bold;">${esc(restaurantName || 'EatUp')}</div>
+          <div style="font-size: 11px; color: #555;">Reçu le ${esc(now)}</div>
         </div>
         <div style="text-align:center; font-size: 28px; font-weight: 900; letter-spacing: 2px; margin: 8px 0;">
-          #${order.order_number}
+          #${esc(order.order_number)}
         </div>
         <div style="text-align:center; font-size: 13px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
-          ⏰ Retrait à ${pickupTime}
+          ⏰ Retrait à ${esc(pickupTime)}
         </div>
         <div style="font-size: 13px; margin-bottom: 8px; display:flex; justify-content:space-between; align-items:flex-start;">
           <div>
-            <strong>${order.first_name} ${order.last_name}</strong><br/>
-            ${order.phone || ''}
+            <strong>${esc(order.first_name)} ${esc(order.last_name)}</strong><br/>
+            ${esc(order.phone || '')}
           </div>
           <div style="font-size:12px; font-weight:bold; border: 2px solid #000; padding: 2px 6px; white-space:nowrap;">NON RÉGLÉ</div>
         </div>
         <div style="border-top: 1px dashed #000; padding-top: 8px; margin-bottom: 8px;">
           ${(items || []).map((item: any) => `
             <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-              <span><strong>${item.quantity}x</strong> ${item.product_name}</span>
+              <span><strong>${esc(String(item.quantity))}x</strong> ${esc(item.product_name)}</span>
               <span>${Number(item.price * item.quantity).toFixed(2)}€</span>
             </div>
-            ${item.options ? `<div style="font-size:11px; color:#555; padding-left:16px;">→ ${item.options}</div>` : ''}
+            ${item.options ? `<div style="font-size:11px; color:#555; padding-left:16px;">→ ${esc(item.options)}</div>` : ''}
           `).join('')}
         </div>
         <div style="border-top: 2px dashed #000; padding-top: 8px; display:flex; justify-content:space-between; font-size:15px; font-weight:bold;">
@@ -155,7 +159,6 @@ export default function OrdersPage() {
         .single()
 
       if (!resto) {
-        alert(`DEBUG - user.id: ${user.id} | erreur: ${restoError?.message}`)
         router.push('/dashboard'); return
       }
       restaurantId.current = resto.id
