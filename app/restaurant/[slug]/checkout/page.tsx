@@ -15,7 +15,7 @@ export default function CheckoutPage() {
   const [form, setForm] = useState({ firstName: '', lastName: '', phone: '', email: '' })
   const [pickupTime, setPickupTime] = useState('')
   const [pickupSlots, setPickupSlots] = useState<string[]>([])
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'online'>('cash')
+  const [paymentMethod] = useState<'cash'>('cash')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -134,27 +134,6 @@ export default function CheckoutPage() {
     const json = await res.json()
     if (!res.ok || json.error) { setError('Erreur : ' + (json.error || 'réessayez.')); setLoading(false); return }
     const order = json.order
-
-    // Paiement en ligne → redirection Stripe
-    if (paymentMethod === 'online') {
-      const stripeRes = await fetch('/api/checkout-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items,
-          restaurantName: restaurant.name,
-          orderNumber,
-          restaurantId: slug,
-          customerEmail: form.email,
-        }),
-      })
-      const stripeJson = await stripeRes.json()
-      if (stripeJson.url) {
-        localStorage.removeItem(`cart_${slug}`)
-        window.location.href = stripeJson.url
-        return
-      }
-    }
 
     try {
       await fetch('/api/email', {
@@ -295,27 +274,13 @@ export default function CheckoutPage() {
 
           {/* Paiement */}
           <div className="rounded-2xl p-5" style={{ background: '#1e293b', border: '1px solid #334155' }}>
-            <h2 className="font-bold text-white mb-3">Mode de paiement</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: 'cash', label: '💵 Payer en caisse' },
-                { value: 'online', label: '💳 Payer en ligne' },
-              ].map(opt => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setPaymentMethod(opt.value as 'cash' | 'online')}
-                  className="py-3 rounded-xl text-sm font-medium transition"
-                  style={{
-                    background: paymentMethod === opt.value ? '#1d4ed8' : '#0f172a',
-                    color: paymentMethod === opt.value ? 'white' : '#94a3b8',
-                    border: '1px solid',
-                    borderColor: paymentMethod === opt.value ? '#3b82f6' : '#334155',
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
+            <h2 className="font-bold text-white mb-3">Paiement</h2>
+            <div className="flex items-center gap-3 rounded-xl p-4" style={{ background: '#0f172a', border: '1px solid #334155' }}>
+              <span style={{ fontSize: 24 }}>💵</span>
+              <div>
+                <p className="font-semibold text-white text-sm">Paiement sur place</p>
+                <p className="text-xs mt-0.5" style={{ color: '#64748b' }}>Règlement à la caisse lors du retrait de votre commande</p>
+              </div>
             </div>
           </div>
 
