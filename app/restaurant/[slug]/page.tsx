@@ -300,8 +300,8 @@ export default function RestaurantPage() {
         {/* Infos restaurant sur le hero */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 20px 24px', display: 'flex', alignItems: 'flex-end', gap: 16 }}>
           {restaurant.logo_url
-            ? <div style={{ width: 72, height: 72, borderRadius: 18, flexShrink: 0, background: 'white', padding: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
-                <img src={restaurant.logo_url} alt={restaurant.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 14 }} />
+            ? <div style={{ width: 72, height: 72, borderRadius: 18, flexShrink: 0, background: 'white', padding: 6, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src={restaurant.logo_url} alt={restaurant.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
             : <div style={{ width: 72, height: 72, borderRadius: 18, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, flexShrink: 0, border: '3px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 32px rgba(99,102,241,0.4)' }}>🍽️</div>
           }
