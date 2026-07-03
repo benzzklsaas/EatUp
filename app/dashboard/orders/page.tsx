@@ -148,19 +148,19 @@ export default function OrdersPage() {
   }, [])
 
   useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth/login'); return }
 
-      const { data: resto, error: restoError } = await supabase
+      const { data: resto } = await supabase
         .from('restaurants')
         .select('id')
         .eq('owner_id', user.id)
         .single()
 
-      if (!resto) {
-        router.push('/dashboard'); return
-      }
+      if (!resto) { router.push('/dashboard'); return }
       restaurantId.current = resto.id
 
       const { data: restoFull } = await supabase.from('restaurants').select('name').eq('id', resto.id).single()
@@ -175,13 +175,11 @@ export default function OrdersPage() {
       setOrders(data || [])
       setLoading(false)
 
-      // Demander permission notifs navigateur
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission()
       }
 
-      // Supabase Realtime
-      const channel = supabase
+      channel = supabase
         .channel(`orders-${resto.id}`)
         .on('postgres_changes', {
           event: 'INSERT',
@@ -195,10 +193,10 @@ export default function OrdersPage() {
           if (autoPrint) fetchItemsAndPrint(newOrder)
         })
         .subscribe()
-
-      return () => { supabase.removeChannel(channel) }
     }
+
     load()
+    return () => { if (channel) supabase.removeChannel(channel) }
   }, [])
 
   async function updateStatus(orderId: string, status: string) {

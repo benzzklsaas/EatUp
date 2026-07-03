@@ -9,10 +9,10 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   const { order, items } = await req.json()
 
-  // Vérifie que le restaurant existe bien avant d'insérer
-  if (!order?.restaurant_id) {
-    return NextResponse.json({ error: 'restaurant_id manquant' }, { status: 400 })
+  if (!order?.restaurant_id || !items?.length) {
+    return NextResponse.json({ error: 'Données manquantes' }, { status: 400 })
   }
+
   const { data: resto } = await supabase
     .from('restaurants')
     .select('id')
@@ -22,9 +22,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Restaurant introuvable' }, { status: 403 })
   }
 
+  // Recalcul des prix côté serveur — les prix client ne sont pas acceptés tels quels
+  const productIds = [...new Set(items.map((i: any) => i.product_id))]
+  const { data: products } = await supabase
+    .from('products')
+    .select('id, price')
+    .in('id', productIds)
+    .eq('restaurant_id', order.restaurant_id)
+
+  if (!products || products.length !== productIds.length) {
+    return NextResponse.json({ error: 'Produit introuvable' }, { status: 400 })
+  }
+
+  const priceMap: Record<string, number> = {}
+  for (const p of products) priceMap[p.id] = Number(p.price)
+
+  const verifiedItems = items.map((i: any) => {
+    const basePrice = priceMap[i.product_id]
+    if (basePrice === undefined) throw new Error('Produit invalide')
+    const extraPrice = Math.max(0, Math.min(Number(i.price) - basePrice, 50)) // extra option max 50€
+    const unitPrice = basePrice + extraPrice
+    return { ...i, price: unitPrice }
+  })
+
+  const recalculatedTotal = verifiedItems.reduce(
+    (sum: number, i: any) => sum + i.price * Number(i.quantity), 0
+  )
+
   const { data, error } = await supabase
     .from('orders')
-    .insert(order)
+    .insert({ ...order, total_price: recalculatedTotal })
     .select()
     .single()
 
@@ -33,7 +60,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { error: itemsError } = await supabase.from('order_items').insert(
-    items.map((i: any) => ({ ...i, order_id: data.id }))
+    verifiedItems.map((i: any) => ({ ...i, order_id: data.id }))
   )
 
   if (itemsError) {

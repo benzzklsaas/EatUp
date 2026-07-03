@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Données manquantes' }, { status: 400 })
   }
 
-  // Vérifie que le restaurant existe et est ouvert
   const { data: resto } = await supabase
     .from('restaurants')
     .select('id')
@@ -24,24 +23,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Restaurant introuvable ou fermé' }, { status: 403 })
   }
 
-  // Valide les montants (évite des prix négatifs ou aberrants)
-  for (const item of items) {
-    if (typeof item.price !== 'number' || item.price < 0 || item.price > 500) {
-      return NextResponse.json({ error: 'Prix invalide' }, { status: 400 })
-    }
+  // Recalcul des prix depuis la base — les prix client sont ignorés
+  const productIds = [...new Set(items.map((i: any) => i.product_id))]
+  const { data: products } = await supabase
+    .from('products')
+    .select('id, price')
+    .in('id', productIds)
+    .eq('restaurant_id', resto.id)
+
+  if (!products || products.length !== productIds.length) {
+    return NextResponse.json({ error: 'Produit introuvable' }, { status: 400 })
   }
 
-  const lineItems = items.map((i: any) => ({
-    price_data: {
-      currency: 'eur',
-      product_data: {
-        name: `${i.product_name} × ${i.quantity}`,
-        description: restaurantName,
+  const priceMap: Record<string, number> = {}
+  for (const p of products) priceMap[p.id] = Number(p.price)
+
+  const lineItems = items.map((i: any) => {
+    const basePrice = priceMap[i.product_id]
+    const extraPrice = Math.max(0, Math.min(Number(i.price || 0) - basePrice, 50))
+    const unitPrice = basePrice + extraPrice
+    return {
+      price_data: {
+        currency: 'eur',
+        product_data: {
+          name: `${i.product_name} × ${i.quantity}`,
+          description: restaurantName,
+        },
+        unit_amount: Math.round(unitPrice * 100),
       },
-      unit_amount: Math.round(i.price * 100),
-    },
-    quantity: i.quantity,
-  }))
+      quantity: i.quantity,
+    }
+  })
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',

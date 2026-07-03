@@ -90,7 +90,7 @@ export default function CheckoutPage() {
   const total = cart.reduce((sum: number, i: any) => sum + (i.product.price + (i.extraPrice || 0)) * i.quantity, 0)
 
   function generateOrderNumber() {
-    return 'EAT-' + Date.now().toString().slice(-6)
+    return 'EAT-' + Math.random().toString(36).slice(2, 8).toUpperCase()
   }
 
   async function handleSubmit(e: React.FormEvent) {
