@@ -147,10 +147,14 @@ export default function OnboardingPage() {
         input:focus, textarea:focus { border-color: rgba(99,102,241,0.5) !important; }
       `}</style>
 
-      {/* Logo */}
+      {/* Logo + chrono */}
       <div style={{ position: 'fixed', top: 24, left: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🍽️</div>
         <span style={{ fontWeight: 800, color: 'white', fontSize: 16 }}>EatUp</span>
+      </div>
+      <div style={{ position: 'fixed', top: 28, right: 24, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 14 }}>⏱️</span>
+        <span style={{ fontSize: 13, color: '#4b5563', fontWeight: 600 }}>~5 min</span>
       </div>
 
       {/* Steps indicator */}
@@ -308,16 +312,46 @@ export default function OnboardingPage() {
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 64, marginBottom: 20 }}>🎉</div>
             <h2 style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 12px' }}>Votre restaurant est prêt !</h2>
-            <p style={{ fontSize: 15, color: '#4b5563', margin: '0 0 32px', lineHeight: 1.7 }}>
-              Vous pouvez maintenant recevoir des commandes.<br />
-              Configurez vos horaires et activez le statut <strong style={{ color: '#4ade80' }}>Ouvert</strong> dans les paramètres.
+            <p style={{ fontSize: 15, color: '#4b5563', margin: '0 0 24px', lineHeight: 1.7 }}>
+              Partagez ce lien à vos clients pour qu'ils puissent commander.
+            </p>
+
+            {/* Lien de la page */}
+            {restaurant?.slug && (
+              <div style={{ borderRadius: 14, padding: '14px 16px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 13, color: '#818cf8', flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  eat-up-sepia.vercel.app/restaurant/{restaurant.slug}
+                </span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://eat-up-sepia.vercel.app/restaurant/${restaurant.slug}`)
+                    alert('Lien copié !')
+                  }}
+                  style={{ padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.3)', color: '#818cf8', fontWeight: 700, fontSize: 12, flexShrink: 0 }}
+                >
+                  Copier
+                </button>
+              </div>
+            )}
+
+            <p style={{ fontSize: 13, color: '#374151', margin: '0 0 24px', lineHeight: 1.6 }}>
+              💡 Configurez vos horaires et activez le statut <strong style={{ color: '#4ade80' }}>Ouvert</strong> dans les paramètres pour recevoir vos premières commandes.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {restaurant?.slug && (
+                <a
+                  href={`/restaurant/${restaurant.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ display: 'block', padding: '13px', borderRadius: 14, border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.08)', color: '#818cf8', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}
+                >
+                  👁️ Voir ma page client
+                </a>
+              )}
               <button onClick={finish} style={{ padding: '15px', borderRadius: 16, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15, boxShadow: '0 8px 30px rgba(99,102,241,0.3)' }}>
                 Accéder à mon dashboard →
               </button>
-              <p style={{ fontSize: 12, color: '#1f2937' }}>Vous pouvez compléter votre menu à tout moment</p>
             </div>
           </div>
         )}

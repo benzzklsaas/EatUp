@@ -31,7 +31,7 @@ type OptionGroup = {
   items: OptionItem[]
 }
 
-type SelectedOptions = Record<string, OptionItem[]> // group_id -> selected items
+type SelectedOptions = Record<string, OptionItem[]>
 
 type Category = { id: string; name: string; emoji: string; position: number }
 
@@ -57,8 +57,9 @@ export default function RestaurantPage() {
   const [activeCategory, setActiveCategory] = useState<string>('')
   const [dbCategories, setDbCategories] = useState<Category[]>([])
   const [nextOpening, setNextOpening] = useState<string | null>(null)
+  const [scrolled, setScrolled] = useState(false)
+  const [cartBounce, setCartBounce] = useState(false)
 
-  // Options modal
   const [optionsModal, setOptionsModal] = useState<{ product: Product; groups: OptionGroup[] } | null>(null)
   const [selectedOptions, setSelectedOptions] = useState<SelectedOptions>({})
   const [loadingOptions, setLoadingOptions] = useState(false)
@@ -78,7 +79,6 @@ export default function RestaurantPage() {
       setRestaurant(resto)
 
       if (!resto.is_open) {
-        // Cherche la prochaine ouverture dans les 7 prochains jours
         const DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
         const { data: schedules } = await supabase
           .from('restaurant_schedule')
@@ -130,9 +130,17 @@ export default function RestaurantPage() {
     }
   }, [products])
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 160)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   function saveCart(newCart: CartItem[]) {
     setCart(newCart)
     localStorage.setItem(`cart_${slug}`, JSON.stringify(newCart))
+    setCartBounce(true)
+    setTimeout(() => setCartBounce(false), 350)
   }
 
   async function handleAddToCart(product: Product) {
@@ -174,7 +182,6 @@ export default function RestaurantPage() {
       setSelectedOptions({ ...selectedOptions, [group.id]: current.filter(i => i.id !== item.id) })
     } else {
       if (current.length >= group.max_choices) {
-        // Replace oldest if max reached (for single choice)
         const next = group.max_choices === 1 ? [item] : [...current.slice(1), item]
         setSelectedOptions({ ...selectedOptions, [group.id]: next })
       } else {
@@ -186,9 +193,7 @@ export default function RestaurantPage() {
   function confirmOptions() {
     if (!optionsModal) return
     const { product, groups } = optionsModal
-    const extra = groups.reduce((sum, g) => {
-      return sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0)
-    }, 0)
+    const extra = groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
     addToCart(product, selectedOptions, groups, extra)
     setOptionsModal(null)
   }
@@ -206,77 +211,124 @@ export default function RestaurantPage() {
     : productCategories
   const getCatEmoji = (name: string) => dbCategories.find(c => c.name === name)?.emoji || ''
 
+  // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080c14' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>🍽️</div>
-        <p style={{ color: '#374151', fontSize: 14, fontFamily: 'system-ui' }}>Chargement du menu...</p>
+        <div style={{ width: 56, height: 56, borderRadius: '50%', margin: '0 auto 16px', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, animation: 'pulse 1.5s ease-in-out infinite' }}>🍽️</div>
+        <p style={{ color: '#374151', fontSize: 13, fontFamily: 'system-ui', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Chargement du menu</p>
       </div>
+      <style>{`@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.95)}}`}</style>
     </div>
   )
 
+  // ── 404 ──────────────────────────────────────────────────────────────────
   if (!restaurant) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080c14' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-        <p style={{ color: 'white', fontSize: 18, fontWeight: 700, marginBottom: 8, fontFamily: 'system-ui' }}>Restaurant introuvable</p>
+        <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
+        <p style={{ color: 'white', fontSize: 20, fontWeight: 800, marginBottom: 8, fontFamily: 'system-ui' }}>Restaurant introuvable</p>
         <p style={{ color: '#374151', fontSize: 14, fontFamily: 'system-ui' }}>Ce lien ne correspond à aucun restaurant.</p>
       </div>
     </div>
   )
 
+  // ── Fermé ─────────────────────────────────────────────────────────────────
   if (!restaurant.is_open) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-      <div style={{ position: 'fixed', top: '30%', left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, background: 'radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ textAlign: 'center', maxWidth: 380, padding: '0 24px' }}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          🌙
-        </div>
-        <h1 style={{ fontSize: 26, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 10px' }}>{restaurant.name}</h1>
-        <p style={{ fontSize: 16, fontWeight: 700, color: '#ef4444', margin: '0 0 8px' }}>Fermé pour le moment</p>
-        {nextOpening ? (
-          <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 32px', lineHeight: 1.6 }}>
-            Prochain service :<br />
-            <span style={{ color: '#818cf8', fontWeight: 700, fontSize: 16 }}>{nextOpening}</span>
-          </p>
-        ) : (
-          <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 32px' }}>Revenez bientôt !</p>
-        )}
-        {restaurant.address && (
-          <p style={{ fontSize: 13, color: '#374151' }}>📍 {restaurant.address}</p>
-        )}
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#080c14', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '24px' }}>
+      {restaurant.cover_image_url && (
+        <div style={{ position: 'fixed', inset: 0, backgroundImage: `url(${restaurant.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.15) blur(4px)', zIndex: 0 }} />
+      )}
+      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 360 }}>
+        {restaurant.logo_url
+          ? <img src={restaurant.logo_url} alt={restaurant.name} style={{ width: 88, height: 88, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 20px', display: 'block', border: '3px solid rgba(255,255,255,0.15)' }} />
+          : <div style={{ width: 88, height: 88, borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, background: 'linear-gradient(135deg,rgba(99,102,241,.3),rgba(139,92,246,.3))', border: '2px solid rgba(99,102,241,0.4)' }}>🌙</div>
+        }
+        <h1 style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>{restaurant.name}</h1>
+        <p style={{ fontSize: 15, fontWeight: 700, color: '#ef4444', margin: '0 0 12px' }}>Fermé pour le moment</p>
+        {nextOpening
+          ? <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.7 }}>Prochain service :<br /><span style={{ color: '#818cf8', fontWeight: 800, fontSize: 16 }}>{nextOpening}</span></p>
+          : <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px' }}>Revenez bientôt !</p>
+        }
+        {restaurant.address && <p style={{ fontSize: 13, color: '#4b5563' }}>📍 {restaurant.address}</p>}
       </div>
     </div>
   )
 
+  // ── Page principale ───────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', paddingBottom: cartCount > 0 ? 100 : 32 }}>
+    <div style={{ minHeight: '100vh', background: '#080c14', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', paddingBottom: cartCount > 0 ? 110 : 48 }}>
+      <style>{`
+        @keyframes slideUp { from { transform:translateY(20px);opacity:0 } to { transform:translateY(0);opacity:1 } }
+        @keyframes bounceIn { 0%{transform:scale(1)} 30%{transform:scale(1.12)} 60%{transform:scale(0.95)} 100%{transform:scale(1)} }
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { display: none; }
+      `}</style>
 
-      {/* Hero header */}
-      <div style={{ position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ padding: '48px 24px 32px', textAlign: 'center', position: 'relative' }}>
-          <div style={{ width: 72, height: 72, borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2))', border: '2px solid rgba(99,102,241,0.3)' }}>
-            🍽️
-          </div>
-          <h1 style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>{restaurant.name}</h1>
-          {restaurant.description && (
-            <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 16px', maxWidth: 360, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>{restaurant.description}</p>
-          )}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 100, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 8px #4ade80' }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#4ade80' }}>Ouvert · Click & Collect</span>
-          </div>
-          {restaurant.address && (
-            <p style={{ fontSize: 12, color: '#374151', marginTop: 10 }}>📍 {restaurant.address}</p>
-          )}
+      {/* ── Header sticky (apparaît au scroll) ── */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        background: 'rgba(8,12,20,0.92)', backdropFilter: 'blur(24px)',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12,
+        transform: scrolled ? 'translateY(0)' : 'translateY(-100%)',
+        transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
+      }}>
+        {restaurant.logo_url
+          ? <img src={restaurant.logo_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+          : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🍽️</div>
+        }
+        <span style={{ fontWeight: 800, fontSize: 15, color: 'white' }}>{restaurant.name}</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 8px #4ade80' }} />
+          <span style={{ fontSize: 12, color: '#4ade80', fontWeight: 700 }}>Ouvert</span>
         </div>
       </div>
 
-      {/* Barre de catégories sticky */}
+      {/* ── Hero ── */}
+      <div style={{ position: 'relative', height: restaurant.cover_image_url ? 260 : 200, overflow: 'hidden' }}>
+        {restaurant.cover_image_url
+          ? <>
+              <img src={restaurant.cover_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(8,12,20,0.2) 0%, rgba(8,12,20,0.95) 100%)' }} />
+            </>
+          : <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' }}>
+              <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 400, height: 400, background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            </div>
+        }
+
+        {/* Infos restaurant sur le hero */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 20px 24px', display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+          {restaurant.logo_url
+            ? <img src={restaurant.logo_url} alt={restaurant.name} style={{ width: 72, height: 72, borderRadius: 18, objectFit: 'cover', border: '3px solid rgba(255,255,255,0.15)', flexShrink: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }} />
+            : <div style={{ width: 72, height: 72, borderRadius: 18, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, flexShrink: 0, border: '3px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 32px rgba(99,102,241,0.4)' }}>🍽️</div>
+          }
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', margin: '0 0 6px', letterSpacing: '-0.5px', lineHeight: 1.1 }}>{restaurant.name}</h1>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 100, background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80', display: 'inline-block' }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#4ade80' }}>Ouvert · Click & Collect</span>
+              </div>
+              {restaurant.address && (
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>📍 {restaurant.address}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Description */}
+      {restaurant.description && (
+        <div style={{ padding: '16px 20px 0' }}>
+          <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.6, margin: 0, maxWidth: 560 }}>{restaurant.description}</p>
+        </div>
+      )}
+
+      {/* ── Barre catégories sticky ── */}
       {orderedCategories.length > 1 && (
-        <div style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(5,8,16,0.97)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '10px 0' }}>
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 16px', scrollbarWidth: 'none' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(8,12,20,0.97)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)', marginTop: 16 }}>
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '10px 16px', scrollbarWidth: 'none' }}>
             {orderedCategories.map(cat => {
               const emoji = getCatEmoji(cat)
               const isActive = activeCategory === cat
@@ -288,14 +340,15 @@ export default function RestaurantPage() {
                     document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }}
                   style={{
-                    flexShrink: 0, padding: '9px 18px', borderRadius: 14, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, transition: 'all 0.2s',
-                    background: isActive ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.06)',
+                    flexShrink: 0, padding: '8px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
+                    background: isActive ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.05)',
                     color: isActive ? 'white' : '#6b7280',
-                    boxShadow: isActive ? '0 4px 20px rgba(99,102,241,0.35)' : 'none',
+                    boxShadow: isActive ? '0 4px 16px rgba(99,102,241,0.4)' : 'none',
+                    transition: 'all 0.2s',
                     display: 'flex', alignItems: 'center', gap: 6,
                   }}
                 >
-                  {emoji && <span style={{ fontSize: 16 }}>{emoji}</span>}
+                  {emoji && <span style={{ fontSize: 15 }}>{emoji}</span>}
                   {cat}
                 </button>
               )
@@ -304,79 +357,121 @@ export default function RestaurantPage() {
         </div>
       )}
 
-      {/* Menu */}
-      <main style={{ padding: '24px 16px', maxWidth: 680, margin: '0 auto' }}>
+      {/* ── Menu ── */}
+      <main style={{ padding: '20px 16px', maxWidth: 700, margin: '0 auto' }}>
+        {products.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '60px 0' }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>🍽️</div>
+            <p style={{ color: '#374151', fontSize: 14 }}>Le menu arrive bientôt…</p>
+          </div>
+        )}
+
         {orderedCategories.map(cat => (
-          <div key={cat} id={`cat-${cat}`} style={{ marginBottom: 40, scrollMarginTop: 70 }}>
-            {/* En-tête de catégorie bien visible */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px', padding: '14px 18px', borderRadius: 16, background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08))', border: '1px solid rgba(99,102,241,0.2)' }}>
-              {getCatEmoji(cat) && <span style={{ fontSize: 22 }}>{getCatEmoji(cat)}</span>}
-              <span style={{ fontSize: 16, fontWeight: 800, color: 'white', letterSpacing: '-0.2px' }}>{cat}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 12, color: '#6366f1', fontWeight: 600 }}>{products.filter(p => (p.category || 'Autres') === cat).length} plats</span>
+          <div key={cat} id={`cat-${cat}`} style={{ marginBottom: 36, scrollMarginTop: 80 }}>
+
+            {/* En-tête catégorie */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              {getCatEmoji(cat) && <span style={{ fontSize: 20 }}>{getCatEmoji(cat)}</span>}
+              <span style={{ fontSize: 18, fontWeight: 900, color: 'white', letterSpacing: '-0.3px' }}>{cat}</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)', marginLeft: 4 }} />
+              <span style={{ fontSize: 11, color: '#374151', fontWeight: 600 }}>{products.filter(p => (p.category || 'Autres') === cat).length} plats</span>
             </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {products.filter(p => (p.category || 'Autres') === cat).map(product => {
                 const cartItems = cart.filter(i => i.product.id === product.id)
                 const totalQty = cartItems.reduce((s, i) => s + i.quantity, 0)
+                const unavailable = !product.is_available
+
                 return (
                   <div key={product.id} style={{
                     borderRadius: 20, overflow: 'hidden', position: 'relative',
-                    background: !product.is_available ? 'linear-gradient(145deg, #0a0a0a, #111)' : totalQty > 0 ? 'linear-gradient(145deg, #0f172a, rgba(99,102,241,0.08))' : 'linear-gradient(145deg, #0f172a, #111827)',
-                    border: !product.is_available ? '1px solid rgba(255,255,255,0.04)' : totalQty > 0 ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.06)',
-                    transition: 'all 0.2s',
-                    opacity: product.is_available ? 1 : 0.75,
+                    background: unavailable ? '#0a0d15' : totalQty > 0 ? 'linear-gradient(145deg, #0d1526, #10192e)' : '#0d1424',
+                    border: unavailable ? '1px solid rgba(255,255,255,0.04)' : totalQty > 0 ? '1.5px solid rgba(99,102,241,0.4)' : '1px solid rgba(255,255,255,0.07)',
+                    transition: 'border-color 0.2s',
+                    opacity: unavailable ? 0.6 : 1,
                   }}>
-                    {/* Bande rupture de stock */}
-                    {!product.is_available && (
-                      <div style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)', padding: '5px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 13 }}>🔥</span>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: 'white', letterSpacing: '0.05em' }}>Victime de son succès</span>
-                        <span style={{ fontSize: 13 }}>🔥</span>
+                    {unavailable && (
+                      <div style={{ background: 'linear-gradient(90deg,#7f1d1d,#991b1b)', padding: '5px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 12 }}>🔥</span>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: '#fecaca', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Victime de son succès</span>
+                        <span style={{ fontSize: 12 }}>🔥</span>
                       </div>
                     )}
-                    <div style={{ padding: '16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                    {product.image_url && (
-                      <img src={product.image_url} alt={product.name} style={{ width: 76, height: 76, objectFit: 'cover', borderRadius: 14, flexShrink: 0, filter: product.is_available ? 'none' : 'grayscale(0.6) brightness(0.6)' }} />
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 15, fontWeight: 700, color: product.is_available ? 'white' : '#4b5563', margin: '0 0 4px' }}>{product.name}</p>
-                      {product.description && (
-                        <p style={{ fontSize: 13, color: '#374151', margin: '0 0 12px', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{product.description}</p>
-                      )}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <p style={{ fontSize: 16, fontWeight: 900, color: product.is_available ? '#818cf8' : '#374151', margin: 0, letterSpacing: '-0.3px' }}>{Number(product.price).toFixed(2)}€</p>
-                        {product.is_available ? (
-                        <button
-                          onClick={() => handleAddToCart(product)}
-                          disabled={loadingOptions}
-                          style={{ padding: '8px 18px', borderRadius: 100, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: 'rgba(99,102,241,0.15)', color: '#818cf8', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
-                        >
-                          {totalQty > 0 && <span style={{ background: '#6366f1', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{totalQty}</span>}
-                          + Ajouter
-                        </button>
-                        ) : (
-                          <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, padding: '6px 12px', borderRadius: 100, background: 'rgba(255,255,255,0.04)' }}>Indisponible</span>
+
+                    <div style={{ padding: '14px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 15, fontWeight: 700, color: unavailable ? '#4b5563' : 'white', margin: '0 0 4px', lineHeight: 1.3 }}>{product.name}</p>
+                        {product.description && (
+                          <p style={{ fontSize: 13, color: '#4b5563', margin: '0 0 12px', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{product.description}</p>
+                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: 17, fontWeight: 900, color: unavailable ? '#374151' : '#818cf8', letterSpacing: '-0.3px' }}>{Number(product.price).toFixed(2)}€</span>
+
+                          {unavailable ? (
+                            <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, padding: '6px 12px', borderRadius: 100, background: 'rgba(255,255,255,0.04)' }}>Indisponible</span>
+                          ) : totalQty > 0 && cartItems.every(ci => !ci.optionGroups?.length) ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <button
+                                onClick={() => removeFromCart(cartItems[cartItems.length - 1].cartKey)}
+                                style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(99,102,241,0.4)', cursor: 'pointer', background: 'rgba(99,102,241,0.1)', color: '#818cf8', fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >−</button>
+                              <span style={{ fontSize: 15, fontWeight: 800, color: 'white', minWidth: 20, textAlign: 'center' }}>{totalQty}</span>
+                              <button
+                                onClick={() => handleAddToCart(product)}
+                                style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: 'white', fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.4)' }}
+                              >+</button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleAddToCart(product)}
+                              disabled={loadingOptions}
+                              style={{
+                                padding: '9px 20px', borderRadius: 100, border: 'none', cursor: 'pointer',
+                                background: totalQty > 0 ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(99,102,241,0.12)',
+                                color: totalQty > 0 ? 'white' : '#818cf8',
+                                fontSize: 13, fontWeight: 700,
+                                display: 'flex', alignItems: 'center', gap: 6,
+                                boxShadow: totalQty > 0 ? '0 4px 16px rgba(99,102,241,0.35)' : 'none',
+                                transition: 'all 0.2s',
+                              }}
+                            >
+                              {totalQty > 0 && <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{totalQty}</span>}
+                              + Ajouter
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Options sélectionnées dans le panier */}
+                        {cartItems.length > 0 && cartItems.some(i => i.optionGroups && i.optionGroups.length > 0) && (
+                          <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                            {cartItems.map(ci => (
+                              <div key={ci.cartKey} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 12px', borderRadius: 12, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                                <span style={{ fontSize: 12, color: '#818cf8', flex: 1 }}>
+                                  {Object.values(ci.selectedOptions || {}).flat().map((i: any) => i.name).join(' · ')}
+                                  {ci.extraPrice > 0 && <span style={{ color: '#f59e0b' }}> +{ci.extraPrice.toFixed(2)}€</span>}
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 10 }}>
+                                  <button onClick={() => removeFromCart(ci.cartKey)} style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', background: 'transparent', color: '#6b7280', fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                                  <span style={{ fontSize: 12, color: 'white', fontWeight: 700 }}>{ci.quantity}</span>
+                                  <button onClick={() => handleAddToCart(product)} style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', cursor: 'pointer', background: '#6366f1', color: 'white', fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
-                      {/* Show cart items with options */}
-                      {cartItems.length > 0 && cartItems.some(i => i.optionGroups && i.optionGroups.length > 0) && (
-                        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          {cartItems.map(ci => (
-                            <div key={ci.cartKey} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', borderRadius: 10, background: 'rgba(99,102,241,0.08)' }}>
-                              <span style={{ fontSize: 11, color: '#818cf8' }}>
-                                {ci.optionGroups?.map(g => (selectedOptions[g.id] || ci.selectedOptions?.[g.id] || []).map(i => i.name).join(', ')).filter(Boolean).join(' · ') || Object.values(ci.selectedOptions || {}).flat().map((i: any) => i.name).join(', ')}
-                                {ci.extraPrice > 0 && ` +${ci.extraPrice.toFixed(2)}€`}
-                              </span>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <button onClick={() => removeFromCart(ci.cartKey)} style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.08)', color: 'white', fontWeight: 800 }}>−</button>
-                                <span style={{ fontSize: 12, color: 'white', fontWeight: 700 }}>{ci.quantity}</span>
-                                <button onClick={() => handleAddToCart(product)} style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', cursor: 'pointer', background: '#6366f1', color: 'white', fontWeight: 800 }}>+</button>
-                              </div>
-                            </div>
-                          ))}
+
+                      {/* Image produit */}
+                      {product.image_url && (
+                        <div style={{ flexShrink: 0 }}>
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 16, filter: unavailable ? 'grayscale(0.7) brightness(0.5)' : 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
+                          />
                         </div>
                       )}
-                    </div>
                     </div>
                   </div>
                 )
@@ -386,44 +481,52 @@ export default function RestaurantPage() {
         ))}
       </main>
 
-      {/* Bouton panier sticky */}
+      {/* ── Bouton panier sticky ── */}
       {cartCount > 0 && (
-        <div style={{ position: 'fixed', bottom: 20, left: 16, right: 16, zIndex: 50, maxWidth: 640, margin: '0 auto' }}>
+        <div style={{ position: 'fixed', bottom: 20, left: 16, right: 16, zIndex: 60, maxWidth: 680, margin: '0 auto', animation: 'slideUp 0.3s ease' }}>
           <button
             onClick={() => router.push(`/restaurant/${slug}/checkout`)}
             style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '16px 20px', borderRadius: 20, border: 'none', cursor: 'pointer',
+              padding: '15px 20px', borderRadius: 20, border: 'none', cursor: 'pointer',
               background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              boxShadow: '0 8px 40px rgba(99,102,241,0.5)',
-              color: 'white',
+              boxShadow: '0 8px 40px rgba(99,102,241,0.55), 0 2px 8px rgba(0,0,0,0.3)',
+              animation: cartBounce ? 'bounceIn 0.35s ease' : 'none',
             }}
           >
-            <span style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800 }}>{cartCount}</span>
-            <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.2px' }}>Voir mon panier</span>
-            <span style={{ fontSize: 15, fontWeight: 900 }}>{total.toFixed(2)}€</span>
+            <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'white' }}>{cartCount}</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: 'white', letterSpacing: '-0.2px' }}>Voir mon panier</span>
+            <span style={{ fontSize: 15, fontWeight: 900, color: 'white' }}>{total.toFixed(2)}€</span>
           </button>
         </div>
       )}
 
-      {/* Modal sélection options */}
+      {/* ── Modal options ── */}
       {optionsModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ width: '100%', maxWidth: 540, borderRadius: '24px 24px 0 0', padding: '28px 20px 36px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '80vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setOptionsModal(null) }}
+          style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+        >
+          <div style={{ width: '100%', maxWidth: 560, borderRadius: '24px 24px 0 0', padding: '8px 20px 36px', background: '#0d1424', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '85vh', overflowY: 'auto', animation: 'slideUp 0.3s ease' }}>
+
+            {/* Handle */}
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.15)', margin: '12px auto 20px' }} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
               <div>
-                <h3 style={{ color: 'white', fontWeight: 800, fontSize: 17, margin: 0 }}>{optionsModal.product.name}</h3>
-                <p style={{ color: '#4b5563', fontSize: 12, margin: '4px 0 0' }}>Personnalisez votre commande</p>
+                <h3 style={{ color: 'white', fontWeight: 800, fontSize: 18, margin: '0 0 4px' }}>{optionsModal.product.name}</h3>
+                <p style={{ color: '#4b5563', fontSize: 13, margin: 0 }}>Personnalisez votre commande</p>
               </div>
-              <button onClick={() => setOptionsModal(null)} style={{ color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', fontSize: 20 }}>✕</button>
+              <button onClick={() => setOptionsModal(null)} style={{ color: '#4b5563', background: 'rgba(255,255,255,0.06)', border: 'none', cursor: 'pointer', fontSize: 16, width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
 
             {optionsModal.groups.map(group => (
               <div key={group.id} style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: 0 }}>{group.name}</p>
-                  <span style={{ fontSize: 11, color: '#4b5563', background: 'rgba(255,255,255,0.05)', padding: '3px 10px', borderRadius: 100 }}>
+                  <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>{group.name}</p>
+                  <span style={{ fontSize: 11, color: '#4b5563', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>
                     {group.max_choices === 1 ? '1 choix' : `Jusqu'à ${group.max_choices} choix`}
+                    {group.min_choices > 0 && ' · Requis'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -437,29 +540,20 @@ export default function RestaurantPage() {
                         disabled={unavailable}
                         style={{
                           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          padding: '14px 16px', borderRadius: 14, border: 'none', cursor: unavailable ? 'not-allowed' : 'pointer', textAlign: 'left',
-                          background: unavailable ? 'rgba(255,255,255,0.02)' : selected ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
-                          outline: unavailable ? '1px solid rgba(255,255,255,0.04)' : selected ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)',
-                          opacity: unavailable ? 0.5 : 1,
-                          transition: 'all 0.15s',
+                          padding: '13px 15px', borderRadius: 14, border: 'none', cursor: unavailable ? 'not-allowed' : 'pointer', textAlign: 'left',
+                          background: unavailable ? 'rgba(255,255,255,0.02)' : selected ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
+                          outline: unavailable ? 'none' : selected ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)',
+                          opacity: unavailable ? 0.4 : 1, transition: 'all 0.15s',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{
-                            width: 20, height: 20, borderRadius: group.max_choices === 1 ? '50%' : 6,
-                            border: `2px solid ${selected ? '#6366f1' : 'rgba(255,255,255,0.2)'}`,
-                            background: selected ? '#6366f1' : 'transparent',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                          }}>
+                          <div style={{ width: 20, height: 20, borderRadius: group.max_choices === 1 ? '50%' : 6, border: `2px solid ${selected ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selected ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             {selected && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
                           </div>
-                          <div>
-                            <span style={{ fontSize: 14, color: unavailable ? '#4b5563' : selected ? 'white' : '#d1d5db', fontWeight: selected ? 600 : 400, textDecoration: unavailable ? 'line-through' : 'none' }}>{item.name}</span>
-                            {unavailable && <span style={{ display: 'block', fontSize: 10, color: '#dc2626', fontWeight: 700, marginTop: 1 }}>Victime de son succès</span>}
-                          </div>
+                          <span style={{ fontSize: 14, color: unavailable ? '#374151' : selected ? 'white' : '#d1d5db', fontWeight: selected ? 600 : 400, textDecoration: unavailable ? 'line-through' : 'none' }}>{item.name}</span>
                         </div>
                         {item.extra_price > 0 && (
-                          <span style={{ fontSize: 13, color: unavailable ? '#4b5563' : '#f59e0b', fontWeight: 700 }}>+{Number(item.extra_price).toFixed(2)}€</span>
+                          <span style={{ fontSize: 13, color: unavailable ? '#374151' : '#f59e0b', fontWeight: 700 }}>+{Number(item.extra_price).toFixed(2)}€</span>
                         )}
                       </button>
                     )
@@ -468,20 +562,20 @@ export default function RestaurantPage() {
               </div>
             ))}
 
-            {/* Récap prix */}
             {(() => {
               const extra = optionsModal.groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
               const totalItem = optionsModal.product.price + extra
+              const valid = optionsValid()
               return (
                 <button
                   onClick={confirmOptions}
-                  disabled={!optionsValid()}
+                  disabled={!valid}
                   style={{
-                    width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: optionsValid() ? 'pointer' : 'default',
-                    background: optionsValid() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.05)',
-                    color: optionsValid() ? 'white' : '#4b5563',
-                    fontWeight: 800, fontSize: 15, marginTop: 8,
+                    width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: valid ? 'pointer' : 'default',
+                    background: valid ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.05)',
+                    color: valid ? 'white' : '#374151', fontWeight: 800, fontSize: 15, marginTop: 4,
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    boxShadow: valid ? '0 4px 20px rgba(99,102,241,0.4)' : 'none',
                     transition: 'all 0.2s',
                   }}
                 >
