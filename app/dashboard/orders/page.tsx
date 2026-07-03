@@ -66,10 +66,60 @@ export default function OrdersPage() {
   const [selected, setSelected] = useState<Order | null>(null)
   const [toast, setToast] = useState<{ name: string; amount: string } | null>(null)
   const [soundEnabled, setSoundEnabled] = useState(true)
+  const [autoPrint, setAutoPrint] = useState(true)
+  const [restaurantName, setRestaurantName] = useState('')
   const router = useRouter()
   const supabase = createClient()
   const restaurantId = useRef<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const printRef = useRef<HTMLDivElement>(null)
+
+  async function fetchItemsAndPrint(order: Order) {
+    const { data: items } = await supabase
+      .from('order_items')
+      .select('*')
+      .eq('order_id', order.id)
+
+    const pickupTime = new Date(order.pickup_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+    if (!printRef.current) return
+    printRef.current.innerHTML = `
+      <div style="font-family: monospace; font-size: 14px; width: 280px; padding: 12px;">
+        <div style="text-align:center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
+          <div style="font-size: 18px; font-weight: bold;">${restaurantName || 'EatUp'}</div>
+          <div style="font-size: 11px; color: #555;">Reçu le ${now}</div>
+        </div>
+        <div style="text-align:center; font-size: 28px; font-weight: 900; letter-spacing: 2px; margin: 8px 0;">
+          #${order.order_number}
+        </div>
+        <div style="text-align:center; font-size: 13px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
+          ⏰ Retrait à ${pickupTime}
+        </div>
+        <div style="font-size: 13px; margin-bottom: 8px;">
+          <strong>${order.first_name} ${order.last_name}</strong><br/>
+          ${order.phone || ''}
+        </div>
+        <div style="border-top: 1px dashed #000; padding-top: 8px; margin-bottom: 8px;">
+          ${(items || []).map((item: any) => `
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span><strong>${item.quantity}x</strong> ${item.product_name}</span>
+              <span>${Number(item.price * item.quantity).toFixed(2)}€</span>
+            </div>
+            ${item.options ? `<div style="font-size:11px; color:#555; padding-left:16px;">→ ${item.options}</div>` : ''}
+          `).join('')}
+        </div>
+        <div style="border-top: 2px dashed #000; padding-top: 8px; display:flex; justify-content:space-between; font-size:15px; font-weight:bold;">
+          <span>TOTAL</span>
+          <span>${Number(order.total_price).toFixed(2)}€</span>
+        </div>
+        <div style="text-align:center; margin-top:10px; font-size:11px; color:#555;">
+          Paiement en caisse · Merci !
+        </div>
+      </div>
+    `
+    window.print()
+  }
 
   const showToast = useCallback((order: Order) => {
     if (soundEnabled) playNotificationSound()
@@ -107,6 +157,9 @@ export default function OrdersPage() {
       }
       restaurantId.current = resto.id
 
+      const { data: restoFull } = await supabase.from('restaurants').select('name').eq('id', resto.id).single()
+      if (restoFull) setRestaurantName(restoFull.name)
+
       const { data } = await supabase
         .from('orders')
         .select('*')
@@ -133,6 +186,7 @@ export default function OrdersPage() {
           const newOrder = payload.new as Order
           setOrders(prev => [newOrder, ...prev])
           showToast(newOrder)
+          if (autoPrint) fetchItemsAndPrint(newOrder)
         })
         .subscribe()
 
@@ -184,7 +238,12 @@ export default function OrdersPage() {
           from { transform: translateX(100px); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
+        @media print {
+          body > *:not(#print-ticket) { display: none !important; }
+          #print-ticket { display: block !important; }
+        }
       `}</style>
+      <div id="print-ticket" ref={printRef} style={{ display: 'none' }} />
 
       <header className="px-6 py-4 flex items-center justify-between" style={{ background: '#1e293b', borderBottom: '1px solid #334155' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -192,13 +251,22 @@ export default function OrdersPage() {
           <h1 className="font-bold text-white text-lg">Commandes</h1>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px #4ade80' }} title="Temps réel actif" />
         </div>
-        <button
-          onClick={() => setSoundEnabled(!soundEnabled)}
-          style={{ fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', opacity: soundEnabled ? 1 : 0.3 }}
-          title={soundEnabled ? 'Son activé' : 'Son désactivé'}
-        >
-          {soundEnabled ? '🔊' : '🔇'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            onClick={() => setAutoPrint(!autoPrint)}
+            style={{ fontSize: 13, padding: '5px 12px', borderRadius: 100, border: 'none', cursor: 'pointer', fontWeight: 600, background: autoPrint ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.05)', color: autoPrint ? '#4ade80' : '#475569' }}
+            title={autoPrint ? 'Impression auto activée' : 'Impression auto désactivée'}
+          >
+            🖨️ {autoPrint ? 'Auto' : 'Off'}
+          </button>
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            style={{ fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', opacity: soundEnabled ? 1 : 0.3 }}
+            title={soundEnabled ? 'Son activé' : 'Son désactivé'}
+          >
+            {soundEnabled ? '🔊' : '🔇'}
+          </button>
+        </div>
       </header>
 
       <main className="p-6 max-w-4xl mx-auto">
@@ -303,13 +371,22 @@ export default function OrdersPage() {
               ))}
             </div>
 
-            <button
-              onClick={() => setSelected(null)}
-              className="w-full py-3 rounded-xl font-medium"
-              style={{ background: '#0f172a', color: '#94a3b8', border: '1px solid #334155' }}
-            >
-              Fermer
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => fetchItemsAndPrint(selected)}
+                className="py-3 rounded-xl font-medium"
+                style={{ flex: 1, background: '#1d4ed8', color: 'white', border: 'none', cursor: 'pointer' }}
+              >
+                🖨️ Imprimer ticket
+              </button>
+              <button
+                onClick={() => setSelected(null)}
+                className="py-3 rounded-xl font-medium"
+                style={{ flex: 1, background: '#0f172a', color: '#94a3b8', border: '1px solid #334155', cursor: 'pointer' }}
+              >
+                Fermer
+              </button>
+            </div>
           </div>
         </div>
       )}
