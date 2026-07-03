@@ -52,12 +52,13 @@ export default function RegisterPage() {
     if (error) { setError(error.message); setLoading(false); return }
 
     if (data.user) {
-      const slug = form.restaurantName.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      const baseSlug = form.restaurantName.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      const slug = baseSlug + '-' + Math.random().toString(36).slice(2, 6)
       const { error: restoError } = await supabase.from('restaurants').insert({
         name: form.restaurantName, email: form.email, phone: form.phone,
         address: form.address, description: form.description, owner_id: data.user.id, slug,
       })
-      if (restoError) { setError('Erreur création restaurant : ' + restoError.message); setLoading(false); return }
+      if (restoError) { setError('Erreur lors de la création — veuillez réessayer.'); setLoading(false); return }
     }
 
     router.push('/subscribe')

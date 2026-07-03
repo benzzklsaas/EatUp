@@ -320,11 +320,11 @@ export default function OnboardingPage() {
             {restaurant?.slug && (
               <div style={{ borderRadius: 14, padding: '14px 16px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 13, color: '#818cf8', flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  eat-up-sepia.vercel.app/restaurant/{restaurant.slug}
+                  {(process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr').replace('https://', '')}/restaurant/{restaurant.slug}
                 </span>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(`https://eat-up-sepia.vercel.app/restaurant/${restaurant.slug}`)
+                    navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr'}/restaurant/${restaurant.slug}`)
                     alert('Lien copié !')
                   }}
                   style={{ padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.3)', color: '#818cf8', fontWeight: 700, fontSize: 12, flexShrink: 0 }}

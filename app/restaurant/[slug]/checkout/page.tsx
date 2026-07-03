@@ -100,7 +100,7 @@ export default function CheckoutPage() {
     if (cart.length === 0) { setError('Votre panier est vide — retournez au menu.'); return }
     setLoading(true)
 
-    const orderNumber = generateOrderNumber()
+    let orderNumber = generateOrderNumber()
 
     const items = cart.map((i: any) => ({
       product_id: i.product.id,
@@ -136,8 +136,22 @@ export default function CheckoutPage() {
       }),
     })
 
-    const json = await res.json()
-    if (!res.ok || json.error) { setError('Erreur : ' + (json.error || 'réessayez.')); setLoading(false); return }
+    let json = await res.json()
+    // Retry si collision sur order_number (très rare)
+    if (!res.ok && json.error?.includes('duplicate')) {
+      orderNumber = generateOrderNumber()
+      const retry = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order: { restaurant_id: restaurant.id, order_number: orderNumber, first_name: form.firstName, last_name: form.lastName, phone: form.phone, email: form.email, total_price: total, pickup_time: pickupTime, payment_method: paymentMethod, payment_status: 'unpaid', status: 'pending' },
+          items,
+          emailData: { customerEmail: form.email, restaurantEmail: restaurant.email, restaurantName: restaurant.name },
+        }),
+      })
+      json = await retry.json()
+    }
+    if (json.error) { setError('Erreur : ' + json.error); setLoading(false); return }
 
     localStorage.removeItem(`cart_${slug}`)
     setSuccess(orderNumber)

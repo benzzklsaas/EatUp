@@ -67,6 +67,7 @@ export default function OrdersPage() {
   const [toast, setToast] = useState<{ name: string; amount: string } | null>(null)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [autoPrint, setAutoPrint] = useState(true)
+  const autoPrintRef = useRef(true)
   const [restaurantName, setRestaurantName] = useState('')
   const router = useRouter()
   const supabase = createClient()
@@ -190,7 +191,7 @@ export default function OrdersPage() {
           const newOrder = payload.new as Order
           setOrders(prev => [newOrder, ...prev])
           showToast(newOrder)
-          if (autoPrint) fetchItemsAndPrint(newOrder)
+          if (autoPrintRef.current) fetchItemsAndPrint(newOrder)
         })
         .subscribe()
     }
@@ -257,7 +258,7 @@ export default function OrdersPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
-            onClick={() => setAutoPrint(!autoPrint)}
+            onClick={() => { setAutoPrint(v => { autoPrintRef.current = !v; return !v }) }}
             style={{ fontSize: 13, padding: '5px 12px', borderRadius: 100, border: 'none', cursor: 'pointer', fontWeight: 600, background: autoPrint ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.05)', color: autoPrint ? '#4ade80' : '#475569' }}
             title={autoPrint ? 'Impression auto activée' : 'Impression auto désactivée'}
           >
