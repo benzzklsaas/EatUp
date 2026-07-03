@@ -71,6 +71,9 @@ export default function MenuPage() {
   const [newGroupMax, setNewGroupMax] = useState('1')
   const [newItemName, setNewItemName] = useState<Record<string, string>>({})
   const [newItemPrice, setNewItemPrice] = useState<Record<string, string>>({})
+  const [showCopyFrom, setShowCopyFrom] = useState(false)
+  const [copyingFrom, setCopyingFrom] = useState(false)
+  const [allOptionGroups, setAllOptionGroups] = useState<(OptionGroup & { product_name: string })[]>([])
 
   const router = useRouter()
   const supabase = createClient()
@@ -156,12 +159,17 @@ export default function MenuPage() {
   async function openOptions(p: Product) {
     setOptionsProduct(p)
     setLoadingOptions(true)
-    const { data: groups } = await supabase
-      .from('product_option_groups')
-      .select('*, items:product_option_items(*)')
-      .eq('product_id', p.id)
-      .order('created_at')
+    setShowCopyFrom(false)
+    const [{ data: groups }, { data: allGroups }] = await Promise.all([
+      supabase.from('product_option_groups').select('*, items:product_option_items(*)').eq('product_id', p.id).order('created_at'),
+      supabase.from('product_option_groups').select('*, items:product_option_items(*)').in('product_id', products.map(x => x.id)),
+    ])
     setOptionGroups((groups || []).map((g: any) => ({ ...g, items: g.items || [] })))
+    setAllOptionGroups((allGroups || []).map((g: any) => ({
+      ...g,
+      items: g.items || [],
+      product_name: products.find(x => x.id === g.product_id)?.name || '',
+    })))
     setLoadingOptions(false)
   }
 
@@ -241,6 +249,32 @@ export default function MenuPage() {
   async function deleteItem(groupId: string, itemId: string) {
     await supabase.from('product_option_items').delete().eq('id', itemId)
     setOptionGroups(optionGroups.map(g => g.id === groupId ? { ...g, items: g.items.filter(i => i.id !== itemId) } : g))
+  }
+
+  async function copyOptionsFrom(sourceGroupId: string) {
+    if (!optionsProduct) return
+    setCopyingFrom(true)
+    const source = allOptionGroups.find(g => g.id === sourceGroupId)
+    if (source) {
+      const { data: newGroup } = await supabase.from('product_option_groups').insert({
+        product_id: optionsProduct.id,
+        name: source.name,
+        min_choices: source.min_choices,
+        max_choices: source.max_choices,
+      }).select().single()
+      if (newGroup) {
+        let newItems: any[] = []
+        if (source.items?.length) {
+          const { data } = await supabase.from('product_option_items').insert(
+            source.items.map((i: any) => ({ group_id: newGroup.id, name: i.name, extra_price: i.extra_price }))
+          ).select()
+          newItems = data || []
+        }
+        setOptionGroups(prev => [...prev, { ...newGroup, items: newItems }])
+      }
+    }
+    setShowCopyFrom(false)
+    setCopyingFrom(false)
   }
 
   if (loading) return (
@@ -554,6 +588,45 @@ export default function MenuPage() {
                     </div>
                   </div>
                 ))}
+
+                {/* Options existantes à ajouter */}
+                {(() => {
+                  const currentIds = new Set(optionGroups.map(g => g.name.toLowerCase()))
+                  const available = allOptionGroups.filter(g => g.product_id !== optionsProduct?.id && !currentIds.has(g.name.toLowerCase()))
+                  if (!available.length) return null
+                  return (
+                    <div style={{ marginBottom: 10 }}>
+                      {!showCopyFrom ? (
+                        <button
+                          onClick={() => setShowCopyFrom(true)}
+                          style={{ width: '100%', padding: '11px', borderRadius: 12, border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.08)', color: '#818cf8', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+                        >
+                          + Ajouter une option existante
+                        </button>
+                      ) : (
+                        <div style={{ padding: 14, borderRadius: 14, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
+                          <p style={{ fontSize: 12, color: '#818cf8', fontWeight: 700, margin: '0 0 10px' }}>Options déjà créées :</p>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
+                            {available.map(g => (
+                              <button
+                                key={g.id}
+                                onClick={() => copyOptionsFrom(g.id)}
+                                disabled={copyingFrom}
+                                style={{ textAlign: 'left', padding: '10px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.04)', color: 'white', fontSize: 13, fontWeight: 600 }}
+                              >
+                                {g.name}
+                                <span style={{ color: '#4b5563', fontWeight: 400, fontSize: 12, marginLeft: 8 }}>
+                                  {g.items.length} choix · depuis {g.product_name}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                          <button onClick={() => setShowCopyFrom(false)} style={{ marginTop: 8, fontSize: 12, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>Annuler</button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 <button
                   onClick={() => setOptionsProduct(null)}
