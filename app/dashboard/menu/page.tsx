@@ -316,7 +316,12 @@ export default function MenuPage() {
           </div>
         ) : (
           <div>
-            {(categories.length > 0 ? categories.map(c => c.name) : ['']).map(cat => (
+            {(() => {
+              const catNames = categories.map(c => c.name)
+              const orphanCats = [...new Set(products.map(p => p.category).filter(c => c && !catNames.includes(c)))]
+              const allCats = categories.length > 0 ? [...catNames, ...orphanCats] : ['']
+              return allCats
+            })().map(cat => (
               <div key={cat} style={{ marginBottom: 32 }}>
                 {cat && (() => {
                   const catObj = categories.find(c => c.name === cat)
