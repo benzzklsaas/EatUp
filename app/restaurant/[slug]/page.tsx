@@ -312,8 +312,21 @@ export default function RestaurantPage() {
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80', display: 'inline-block' }} />
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#4ade80' }}>Ouvert · Click & Collect</span>
               </div>
+            </div>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
               {restaurant.address && (
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>📍 {restaurant.address}</span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+                  📍 {(() => {
+                    const parts = restaurant.address.split(',')
+                    const short = parts.slice(0, 3).join(',').trim()
+                    return short || restaurant.address
+                  })()}
+                </span>
+              )}
+              {restaurant.phone && (
+                <a href={`tel:${restaurant.phone}`} style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
+                  📞 {restaurant.phone}
+                </a>
               )}
             </div>
           </div>
