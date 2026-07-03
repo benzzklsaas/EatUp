@@ -212,7 +212,7 @@ export default function LandingPage() {
           {[
             { icon: '🍽️', title: 'Menu digital', desc: 'Gérez votre carte en temps réel : photos, prix, catégories, disponibilités. Vos clients voient toujours les bonnes infos.' },
             { icon: '🛒', title: 'Click & Collect fluide', desc: 'Interface mobile-first pensée pour convertir. Panier, créneaux horaires, confirmation en un clic.' },
-            { icon: '💳', title: 'Paiement Stripe intégré', desc: "Carte bancaire, Apple Pay, Google Pay. L'argent arrive directement sur votre compte. Zéro commission EatUp." },
+            { icon: '💳', title: 'Paiement flexible', desc: "Paiement sur place à la caisse, ou en ligne par carte. Vous choisissez. Zéro commission EatUp sur vos ventes." },
             { icon: '📊', title: 'Dashboard temps réel', desc: "Commandes entrantes, revenus du jour, analytics hebdomadaires. Tout ce qu'il faut pour piloter votre activité." },
             { icon: '📧', title: 'Emails automatisés', desc: 'Confirmations de commande, notifications de paiement. Vos clients sont toujours informés, sans effort de votre part.' },
             { icon: '🕐', title: 'Horaires intelligents', desc: "Configurez vos horaires par jour, 2 services (midi/soir), fermetures exceptionnelles. Les créneaux s'adaptent automatiquement." },
@@ -300,7 +300,7 @@ export default function LandingPage() {
               {[
                 'Menu en ligne illimité',
                 'Commandes click & collect',
-                'Paiement en ligne Stripe',
+                'Paiement sur place ou en ligne',
                 'Dashboard & analytics',
                 'Emails de confirmation automatiques',
                 'Gestion des horaires & fermetures',
@@ -320,7 +320,7 @@ export default function LandingPage() {
             }}>
               Commencer pour 19,99€/mois →
             </Link>
-            <p style={{ textAlign: 'center', fontSize: 12, color: '#1f2937', marginTop: 14 }}>Résiliable à tout moment · Paiement sécurisé</p>
+            <p style={{ textAlign: 'center', fontSize: 12, color: '#1f2937', marginTop: 14 }}>Résiliable à tout moment · Sans engagement</p>
           </div>
         </div>
       </section>
