@@ -128,29 +128,16 @@ export default function CheckoutPage() {
           status: 'pending',
         },
         items,
+        emailData: {
+          customerEmail: form.email,
+          restaurantEmail: restaurant.email,
+          restaurantName: restaurant.name,
+        },
       }),
     })
 
     const json = await res.json()
     if (!res.ok || json.error) { setError('Erreur : ' + (json.error || 'réessayez.')); setLoading(false); return }
-    const order = json.order
-
-    try {
-      await fetch('/api/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerEmail: form.email,
-          customerName: `${form.firstName} ${form.lastName}`,
-          restaurantEmail: restaurant.email,
-          restaurantName: restaurant.name,
-          orderNumber,
-          items: cart.map((i: any) => ({ name: i.product.name, quantity: i.quantity, price: i.product.price })),
-          total: total.toFixed(2),
-          pickupTime,
-        }),
-      })
-    } catch (_) {}
 
     localStorage.removeItem(`cart_${slug}`)
     setSuccess(orderNumber)

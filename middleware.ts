@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const SUPERADMIN_EMAIL = process.env.SUPERADMIN_EMAIL || 'ben.kacel7@gmail.com'
+const SUPERADMIN_EMAIL = process.env.SUPERADMIN_EMAIL
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next()
@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
 
   // Route superadmin — uniquement ben.kacel7@gmail.com
   if (path.startsWith('/superadmin')) {
-    if (!user || user.email !== SUPERADMIN_EMAIL) {
+    if (!user || !SUPERADMIN_EMAIL || user.email !== SUPERADMIN_EMAIL) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
