@@ -33,6 +33,8 @@ export default function SettingsPage() {
   const [infoForm, setInfoForm] = useState({ name: '', description: '', address: '', phone: '', daily_message: '' })
   const [savingInfo, setSavingInfo] = useState(false)
   const [savedInfo, setSavedInfo] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingCover, setUploadingCover] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -72,6 +74,22 @@ export default function SettingsPage() {
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  async function uploadImage(file: File, type: 'logo' | 'cover') {
+    if (!restaurant) return
+    const setUploading = type === 'logo' ? setUploadingLogo : setUploadingCover
+    setUploading(true)
+    const ext = file.name.split('.').pop()
+    const path = `${restaurant.id}/${type}.${ext}`
+    const { error } = await supabase.storage.from('logos').upload(path, file, { upsert: true, contentType: file.type })
+    if (!error) {
+      const { data: { publicUrl } } = supabase.storage.from('logos').getPublicUrl(path)
+      const field = type === 'logo' ? 'logo_url' : 'cover_image_url'
+      await supabase.from('restaurants').update({ [field]: publicUrl }).eq('id', restaurant.id)
+      setRestaurant({ ...restaurant, [field]: publicUrl })
+    }
+    setUploading(false)
   }
 
   async function handleSaveInfo() {
@@ -140,6 +158,46 @@ export default function SettingsPage() {
             >
               {restaurant.is_open ? 'Fermer maintenant' : 'Ouvrir maintenant'}
             </button>
+          </div>
+        </div>
+
+        {/* Visuels du restaurant */}
+        <div style={{ ...section }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>🖼️ Visuels</p>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+
+            {/* Logo */}
+            <div style={{ flex: 1, minWidth: 140 }}>
+              <p style={{ ...label }}>Logo</p>
+              <label style={{ display: 'block', cursor: 'pointer' }}>
+                <div style={{ width: 96, height: 96, borderRadius: 20, background: '#000', border: '2px dashed rgba(99,102,241,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+                  {restaurant.logo_url
+                    ? <img src={restaurant.logo_url} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'screen' }} />
+                    : <span style={{ fontSize: 28 }}>🍽️</span>
+                  }
+                  {uploadingLogo && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'white' }}>...</div>}
+                </div>
+                <p style={{ fontSize: 11, color: '#6366f1', marginTop: 8, fontWeight: 600 }}>Cliquer pour changer</p>
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], 'logo')} />
+              </label>
+            </div>
+
+            {/* Photo de couverture */}
+            <div style={{ flex: 2, minWidth: 200 }}>
+              <p style={{ ...label }}>Photo de couverture</p>
+              <label style={{ display: 'block', cursor: 'pointer' }}>
+                <div style={{ height: 96, borderRadius: 16, border: '2px dashed rgba(99,102,241,0.4)', overflow: 'hidden', position: 'relative', background: '#0d1424', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {restaurant.cover_image_url
+                    ? <img src={restaurant.cover_image_url} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <span style={{ fontSize: 13, color: '#374151' }}>Aucune photo</span>
+                  }
+                  {uploadingCover && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'white' }}>Envoi...</div>}
+                </div>
+                <p style={{ fontSize: 11, color: '#6366f1', marginTop: 8, fontWeight: 600 }}>Cliquer pour changer</p>
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], 'cover')} />
+              </label>
+            </div>
+
           </div>
         </div>
 
