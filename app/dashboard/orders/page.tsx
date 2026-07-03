@@ -96,9 +96,12 @@ export default function OrdersPage() {
         <div style="text-align:center; font-size: 13px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
           ⏰ Retrait à ${pickupTime}
         </div>
-        <div style="font-size: 13px; margin-bottom: 8px;">
-          <strong>${order.first_name} ${order.last_name}</strong><br/>
-          ${order.phone || ''}
+        <div style="font-size: 13px; margin-bottom: 8px; display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <strong>${order.first_name} ${order.last_name}</strong><br/>
+            ${order.phone || ''}
+          </div>
+          <div style="font-size:12px; font-weight:bold; border: 2px solid #000; padding: 2px 6px; white-space:nowrap;">NON RÉGLÉ</div>
         </div>
         <div style="border-top: 1px dashed #000; padding-top: 8px; margin-bottom: 8px;">
           ${(items || []).map((item: any) => `
