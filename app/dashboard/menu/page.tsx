@@ -62,6 +62,8 @@ export default function MenuPage() {
   const [editCatName, setEditCatName] = useState('')
   const [editCatEmoji, setEditCatEmoji] = useState('')
 
+  const [catInput, setCatInput] = useState('')
+  const [showCatDropdown, setShowCatDropdown] = useState(false)
   const [optionsProduct, setOptionsProduct] = useState<Product | null>(null)
   const [optionGroups, setOptionGroups] = useState<OptionGroup[]>([])
   const [loadingOptions, setLoadingOptions] = useState(false)
@@ -89,8 +91,8 @@ export default function MenuPage() {
     load()
   }, [])
 
-  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' }); setShowForm(true) }
-  function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '' }); setShowForm(true) }
+  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(''); setShowForm(true) }
+  function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '' }); setCatInput(p.category || ''); setShowForm(true) }
 
   async function handleImageUpload(file: File) {
     setUploadingImage(true)
@@ -101,6 +103,20 @@ export default function MenuPage() {
     const { data: { publicUrl } } = supabase.storage.from('products').getPublicUrl(data.path)
     setForm(f => ({ ...f, image_url: publicUrl }))
     setUploadingImage(false)
+  }
+
+  async function selectOrCreateCategory(name: string) {
+    const trimmed = name.trim()
+    if (!trimmed) { setForm(f => ({ ...f, category: '' })); setCatInput(''); return }
+    const existing = categories.find(c => c.name.toLowerCase() === trimmed.toLowerCase())
+    if (existing) {
+      setForm(f => ({ ...f, category: existing.name }))
+      setCatInput(existing.name)
+    } else {
+      const { data } = await supabase.from('categories').insert({ restaurant_id: restaurantId, name: trimmed, emoji: '🍽️', position: categories.length }).select().single()
+      if (data) { setCategories(prev => [...prev, data]); setForm(f => ({ ...f, category: trimmed })); setCatInput(trimmed) }
+    }
+    setShowCatDropdown(false)
   }
 
   async function handleSave() {
@@ -383,27 +399,46 @@ export default function MenuPage() {
               <input placeholder="Nom du produit *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={inputStyle} />
               <textarea placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} style={{ ...inputStyle, resize: 'none' }} />
               <input placeholder="Prix (ex: 9.90) *" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} type="number" step="0.01" style={inputStyle} />
-              <div>
-                <input placeholder="Catégorie (ex: Burgers, Boissons...)" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} style={inputStyle} />
-                {categories.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                    {categories.map(cat => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setForm({ ...form, category: cat.name })}
-                        style={{
-                          fontSize: 11, padding: '4px 12px', borderRadius: 100, cursor: 'pointer', fontWeight: 600,
-                          background: form.category === cat.name ? 'rgba(99,102,241,0.25)' : 'rgba(255,255,255,0.05)',
-                          color: form.category === cat.name ? '#818cf8' : '#6b7280',
-                          border: `1px solid ${form.category === cat.name ? '#6366f1' : 'rgba(255,255,255,0.08)'}`,
-                        }}
-                      >
-                        {cat.emoji} {cat.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <div style={{ position: 'relative' }}>
+                <input
+                  placeholder="Catégorie (ex: Burgers, Parfums...)"
+                  value={catInput}
+                  onChange={e => { setCatInput(e.target.value); setForm(f => ({ ...f, category: e.target.value })); setShowCatDropdown(true) }}
+                  onFocus={() => setShowCatDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowCatDropdown(false), 150)}
+                  style={inputStyle}
+                  autoComplete="off"
+                />
+                {showCatDropdown && (() => {
+                  const filtered = categories.filter(c => c.name.toLowerCase().includes(catInput.toLowerCase()))
+                  const exactMatch = categories.some(c => c.name.toLowerCase() === catInput.trim().toLowerCase())
+                  const showCreate = catInput.trim().length > 0 && !exactMatch
+                  if (!filtered.length && !showCreate) return null
+                  return (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, marginTop: 4, overflow: 'hidden' }}>
+                      {filtered.map(cat => (
+                        <button key={cat.id} type="button"
+                          onMouseDown={() => { setForm(f => ({ ...f, category: cat.name })); setCatInput(cat.name); setShowCatDropdown(false) }}
+                          style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: 'white', fontSize: 13, cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.1)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                        >
+                          {cat.emoji} {cat.name}
+                        </button>
+                      ))}
+                      {showCreate && (
+                        <button type="button"
+                          onMouseDown={() => selectOrCreateCategory(catInput)}
+                          style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: '#818cf8', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.1)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                        >
+                          + Créer &quot;{catInput.trim()}&quot;
+                        </button>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
                 <label style={{ display: 'block', fontSize: 12, color: '#4b5563', marginBottom: 8, fontWeight: 600 }}>Option Menu (facultatif)</label>
