@@ -387,47 +387,62 @@ export default function MenuPage() {
 
         {/* Onglet Catégories */}
         {tab === 'categories' && (
-          <div>
-            <div style={{ borderRadius: 20, padding: 24, background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)', marginBottom: 16 }}>
-              <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: '0 0 16px' }}>Vos catégories</p>
-              {categories.length === 0 && <p style={{ color: '#374151', fontSize: 13 }}>Aucune catégorie — ajoutez-en ci-dessous</p>}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {categories.map((cat) => (
-                  <div
-                    key={cat.id}
-                    draggable
-                    onDragStart={() => setDraggedCatId(cat.id)}
-                    onDragOver={e => { e.preventDefault(); setDragOverCatId(cat.id) }}
-                    onDrop={() => draggedCatId && dropCat(draggedCatId, cat.id)}
-                    onDragEnd={() => { setDraggedCatId(null); setDragOverCatId(null) }}
-                    style={{ borderRadius: 14, overflow: 'hidden', background: 'rgba(255,255,255,0.03)', border: `1px solid ${dragOverCatId === cat.id && draggedCatId !== cat.id ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.07)'}`, opacity: draggedCatId === cat.id ? 0.4 : 1, cursor: 'grab', transition: 'border-color 0.15s, opacity 0.15s' }}>
-                    {editCat?.id === cat.id ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px' }}>
-                        <input value={editCatEmoji} onChange={e => setEditCatEmoji(e.target.value)} style={{ width: 52, borderRadius: 8, padding: '6px', fontSize: 20, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none', textAlign: 'center' }} />
-                        <input value={editCatName} onChange={e => setEditCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditCat()} style={{ flex: 1, borderRadius: 8, padding: '7px 12px', fontSize: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none' }} />
-                        <button onClick={saveEditCat} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#6366f1', color: 'white', fontWeight: 700, fontSize: 13 }}>✓</button>
-                        <button onClick={() => setEditCat(null)} style={{ padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', color: '#6b7280', fontSize: 13 }}>✕</button>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
-                        <span style={{ fontSize: 22 }}>{cat.emoji}</span>
-                        <span style={{ color: 'white', fontWeight: 600, fontSize: 14, flex: 1 }}>{cat.name}</span>
-                        <span style={{ fontSize: 12, color: '#374151' }}>{products.filter(p => p.category === cat.name).length} produits</span>
-                        <span style={{ color: '#374151', fontSize: 16, cursor: 'grab' }}>⠿</span>
-                        <button onClick={() => { setEditCat(cat); setEditCatName(cat.name); setEditCatEmoji(cat.emoji) }} style={{ fontSize: 12, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Modifier</button>
-                        <button onClick={() => deleteCategory(cat.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Supprimer</button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ color: 'white', fontWeight: 800, fontSize: 18, margin: '0 0 4px' }}>Catégories</p>
+                <p style={{ color: '#4b5563', fontSize: 13, margin: 0 }}>{categories.length} catégorie{categories.length !== 1 ? 's' : ''} · glissez pour réordonner</p>
               </div>
             </div>
-            <div style={{ borderRadius: 20, padding: 24, background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: '0 0 14px' }}>+ Nouvelle catégorie</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input placeholder="Emoji" value={newCatEmoji} onChange={e => setNewCatEmoji(e.target.value)} style={{ width: 60, borderRadius: 10, padding: '10px', fontSize: 20, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none', textAlign: 'center' }} />
-                <input placeholder="Nom (ex: Crousty, Burgers...)" value={newCatName} onChange={e => setNewCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} style={{ flex: 1, borderRadius: 10, padding: '10px 14px', fontSize: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }} />
-                <button onClick={addCategory} style={{ padding: '10px 20px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700 }}>Ajouter</button>
+
+            {/* Liste */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {categories.length === 0 && (
+                <div style={{ borderRadius: 16, padding: '32px 24px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.08)', color: '#374151', fontSize: 14 }}>
+                  Aucune catégorie — créez-en une ci-dessous
+                </div>
+              )}
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  draggable
+                  onDragStart={() => setDraggedCatId(cat.id)}
+                  onDragOver={e => { e.preventDefault(); setDragOverCatId(cat.id) }}
+                  onDrop={() => draggedCatId && dropCat(draggedCatId, cat.id)}
+                  onDragEnd={() => { setDraggedCatId(null); setDragOverCatId(null) }}
+                  style={{ borderRadius: 16, background: dragOverCatId === cat.id && draggedCatId !== cat.id ? 'rgba(99,102,241,0.08)' : 'rgba(255,255,255,0.03)', border: `1.5px solid ${dragOverCatId === cat.id && draggedCatId !== cat.id ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.07)'}`, opacity: draggedCatId === cat.id ? 0.35 : 1, cursor: 'grab', transition: 'all 0.15s' }}
+                >
+                  {editCat?.id === cat.id ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px' }}>
+                      <input value={editCatEmoji} onChange={e => setEditCatEmoji(e.target.value)} style={{ width: 52, borderRadius: 10, padding: '8px', fontSize: 20, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none', textAlign: 'center' }} />
+                      <input value={editCatName} onChange={e => setEditCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditCat()} style={{ flex: 1, borderRadius: 10, padding: '9px 14px', fontSize: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none' }} />
+                      <button onClick={saveEditCat} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: '#6366f1', color: 'white', fontWeight: 700, fontSize: 13 }}>✓</button>
+                      <button onClick={() => setEditCat(null)} style={{ padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', color: '#6b7280', fontSize: 13 }}>✕</button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px' }}>
+                      <span style={{ fontSize: 26, flexShrink: 0 }}>{cat.emoji}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: '0 0 2px' }}>{cat.name}</p>
+                        <p style={{ color: '#4b5563', fontSize: 12, margin: 0 }}>{products.filter(p => p.category === cat.name).length} produit{products.filter(p => p.category === cat.name).length !== 1 ? 's' : ''}</p>
+                      </div>
+                      <span style={{ color: '#2d3748', fontSize: 18, cursor: 'grab', flexShrink: 0 }}>⠿</span>
+                      <button onClick={() => { setEditCat(cat); setEditCatName(cat.name); setEditCatEmoji(cat.emoji) }} style={{ fontSize: 12, color: '#6366f1', background: 'rgba(99,102,241,0.1)', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '6px 14px', borderRadius: 8 }}>Modifier</button>
+                      <button onClick={() => deleteCategory(cat.id)} style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: '6px 14px', borderRadius: 8 }}>Supprimer</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Nouvelle catégorie */}
+            <div style={{ borderRadius: 20, padding: '20px 22px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p style={{ color: '#818cf8', fontWeight: 700, fontSize: 13, margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>+ Nouvelle catégorie</p>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <input placeholder="🍔" value={newCatEmoji} onChange={e => setNewCatEmoji(e.target.value)} style={{ width: 56, borderRadius: 12, padding: '11px', fontSize: 20, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: 'white', outline: 'none', textAlign: 'center' }} />
+                <input placeholder="Nom (ex: Burgers, Tacos...)" value={newCatName} onChange={e => setNewCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} style={{ flex: 1, borderRadius: 12, padding: '11px 16px', fontSize: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: 'white', outline: 'none' }} />
+                <button onClick={addCategory} style={{ padding: '11px 22px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 14, boxShadow: '0 4px 16px rgba(99,102,241,0.35)' }}>Ajouter</button>
               </div>
             </div>
           </div>
@@ -539,8 +554,7 @@ export default function MenuPage() {
       </main>
 
       {/* Bouton enregistrer global */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: 'rgba(5,8,16,0.92)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 50 }}>
-        <p style={{ margin: 0, fontSize: 13, color: '#374151' }}>Les modifications de position sont sauvegardées automatiquement.</p>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '14px 24px', background: 'rgba(5,8,16,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
         <button
           onClick={async () => {
             setGlobalSaving(true)
@@ -552,7 +566,7 @@ export default function MenuPage() {
             setTimeout(() => setGlobalSaved(false), 3000)
           }}
           disabled={globalSaving}
-          style={{ padding: '10px 24px', borderRadius: 12, border: 'none', cursor: globalSaving ? 'default' : 'pointer', background: globalSaved ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: globalSaved ? '#4ade80' : 'white', fontWeight: 700, fontSize: 14, transition: 'all 0.3s', boxShadow: globalSaved ? 'none' : '0 4px 20px rgba(99,102,241,0.4)', flexShrink: 0 }}
+          style={{ padding: '12px 40px', borderRadius: 14, border: 'none', cursor: globalSaving ? 'default' : 'pointer', background: globalSaved ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: globalSaved ? '#4ade80' : 'white', fontWeight: 700, fontSize: 14, transition: 'all 0.3s', boxShadow: globalSaved ? 'none' : '0 6px 24px rgba(99,102,241,0.45)' }}
         >
           {globalSaving ? 'Enregistrement...' : globalSaved ? '✓ Enregistré' : 'Enregistrer les modifications'}
         </button>
