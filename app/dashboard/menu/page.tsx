@@ -302,6 +302,12 @@ export default function MenuPage() {
     setOptionGroups(optionGroups.map(g => g.id === groupId ? { ...g, max_choices: max } : g))
   }
 
+  async function toggleGroupRequired(groupId: string, currentMin: number) {
+    const min = currentMin > 0 ? 0 : 1
+    await supabase.from('product_option_groups').update({ min_choices: min }).eq('id', groupId)
+    setOptionGroups(optionGroups.map(g => g.id === groupId ? { ...g, min_choices: min } : g))
+  }
+
   async function addItem(groupId: string) {
     const name = (newItemName[groupId] || '').trim()
     if (!name) return
@@ -688,6 +694,12 @@ export default function MenuPage() {
                             {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} choix</option>)}
                           </select>
                         </div>
+                        <button
+                          onClick={() => toggleGroupRequired(group.id, group.min_choices)}
+                          style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', transition: 'all 0.15s', background: group.min_choices > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.06)', color: group.min_choices > 0 ? '#ef4444' : '#4b5563' }}
+                        >
+                          {group.min_choices > 0 ? '● Requis' : '○ Optionnel'}
+                        </button>
                         <button onClick={() => deleteGroup(group.id)} style={{ fontSize: 11, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>Supprimer</button>
                       </div>
                     </div>
