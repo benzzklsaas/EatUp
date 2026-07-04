@@ -57,6 +57,8 @@ export default function MenuPage() {
   const [uploadingImage, setUploadingImage] = useState(false)
 
   const [tab, setTab] = useState<'produits' | 'categories'>('produits')
+  const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [newCatName, setNewCatName] = useState('')
   const [newCatEmoji, setNewCatEmoji] = useState('🍽️')
@@ -100,18 +102,18 @@ export default function MenuPage() {
   function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '' }); setCatInput(p.category || ''); setShowForm(true) }
   function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(catName); setShowForm(true) }
 
-  async function moveProduct(id: string, catName: string, dir: -1 | 1) {
-    const catProducts = products.filter(p => (p.category || '') === catName)
-    const idx = catProducts.findIndex(p => p.id === id)
-    const newIdx = idx + dir
-    if (newIdx < 0 || newIdx >= catProducts.length) return
+  async function dropProduct(dragId: string, overId: string, catName: string) {
+    if (dragId === overId) return
+    const catProducts = products.filter(p => (p.category || '') === catName).sort((a, b) => (a.position ?? 999) - (b.position ?? 999))
+    const from = catProducts.findIndex(p => p.id === dragId)
+    const to = catProducts.findIndex(p => p.id === overId)
+    if (from < 0 || to < 0) return
     const updated = [...catProducts]
-    ;[updated[idx], updated[newIdx]] = [updated[newIdx], updated[idx]]
+    const [moved] = updated.splice(from, 1)
+    updated.splice(to, 0, moved)
     const reordered = updated.map((p, i) => ({ ...p, position: i }))
-    setProducts(products.map(p => {
-      const found = reordered.find(r => r.id === p.id)
-      return found ? found : p
-    }))
+    setProducts(products.map(p => reordered.find(r => r.id === p.id) ?? p))
+    setDraggedId(null); setDragOverId(null)
     for (const p of reordered) {
       await supabase.from('products').update({ position: p.position }).eq('id', p.id)
     }
@@ -426,14 +428,26 @@ export default function MenuPage() {
                   )
                 })()}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
-                  {products.filter(p => p.category === cat || (!cat && !p.category)).sort((a, b) => (a.position ?? 999) - (b.position ?? 999)).map((p, idx, arr) => (
-                    <div key={p.id} style={{ borderRadius: 18, padding: '16px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 10, alignItems: 'stretch' }}>
-                      {arr.length > 1 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, justifyContent: 'center', flexShrink: 0 }}>
-                          <button onClick={() => moveProduct(p.id, cat, -1)} disabled={idx === 0} style={{ background: idx === 0 ? 'transparent' : 'rgba(255,255,255,0.06)', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#1f2937' : '#6b7280', fontSize: 10, borderRadius: 4, padding: '4px 5px', lineHeight: 1 }} title="Monter">▲</button>
-                          <button onClick={() => moveProduct(p.id, cat, 1)} disabled={idx === arr.length - 1} style={{ background: idx === arr.length - 1 ? 'transparent' : 'rgba(255,255,255,0.06)', border: 'none', cursor: idx === arr.length - 1 ? 'default' : 'pointer', color: idx === arr.length - 1 ? '#1f2937' : '#6b7280', fontSize: 10, borderRadius: 4, padding: '4px 5px', lineHeight: 1 }} title="Descendre">▼</button>
-                        </div>
-                      )}
+                  {products.filter(p => p.category === cat || (!cat && !p.category)).sort((a, b) => (a.position ?? 999) - (b.position ?? 999)).map((p) => (
+                    <div
+                      key={p.id}
+                      draggable
+                      onDragStart={() => setDraggedId(p.id)}
+                      onDragOver={e => { e.preventDefault(); setDragOverId(p.id) }}
+                      onDrop={() => draggedId && dropProduct(draggedId, p.id, cat)}
+                      onDragEnd={() => { setDraggedId(null); setDragOverId(null) }}
+                      style={{
+                        borderRadius: 18, padding: '16px',
+                        background: 'linear-gradient(145deg, #0f172a, #111827)',
+                        border: `1px solid ${dragOverId === p.id && draggedId !== p.id ? 'rgba(99,102,241,0.6)' : 'rgba(255,255,255,0.06)'}`,
+                        display: 'flex', gap: 10, alignItems: 'stretch',
+                        opacity: draggedId === p.id ? 0.4 : 1,
+                        transition: 'border-color 0.15s, opacity 0.15s',
+                        cursor: 'grab',
+                      }}>
+                      <div style={{ display: 'flex', alignItems: 'center', paddingRight: 4, flexShrink: 0, cursor: 'grab' }}>
+                        <span style={{ color: '#374151', fontSize: 16, letterSpacing: '-1px', lineHeight: 1 }}>⠿</span>
+                      </div>
                       {p.image_url && (
                         <img src={p.image_url} alt={p.name} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }} />
                       )}
