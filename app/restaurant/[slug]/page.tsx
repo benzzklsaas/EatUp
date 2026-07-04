@@ -457,10 +457,7 @@ export default function RestaurantPage() {
                         {!unavailable && (product as any).menu_extra_price > 0 && (
                           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 10, padding: '4px 10px', borderRadius: 100, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)' }}>
                             <span style={{ fontSize: 12 }}>🍟</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b' }}>
-                              Menu +{Number((product as any).menu_extra_price).toFixed(2)}€
-                              {(product as any).menu_label ? ` · ${(product as any).menu_label}` : ''}
-                            </span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b' }}>Formule disponible</span>
                           </div>
                         )}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
