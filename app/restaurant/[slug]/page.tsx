@@ -595,7 +595,7 @@ export default function RestaurantPage() {
                         <span style={{ fontSize: 9, fontWeight: 800, background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Recommandé</span>
                       </div>
                       {menuLabel && <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{menuLabel}</div>}
-                      <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2, color: wantsMenu ? '#818cf8' : '#4b5563' }}>{menuPrice.toFixed(2)}€ <span style={{ fontWeight: 400, fontSize: 11, color: '#f59e0b' }}>(+{Math.max(0, menuPrice - Number(optionsModal.product.price)).toFixed(2)}€)</span></div>
+                      <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2, color: '#f59e0b' }}>+{Math.max(0, menuPrice - Number(optionsModal.product.price)).toFixed(2)}€</div>
                     </button>
                   </div>
                 </div>
@@ -718,8 +718,7 @@ export default function RestaurantPage() {
                     <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{(menuOnlyModal as any).menu_label}</div>
                   )}
                   <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2, color: wantsMenu ? '#818cf8' : '#4b5563' }}>
-                    {Number((menuOnlyModal as any).menu_extra_price).toFixed(2)}€
-                    <span style={{ fontWeight: 400, fontSize: 11, color: '#f59e0b' }}> (+{Math.max(0, Number((menuOnlyModal as any).menu_extra_price) - Number(menuOnlyModal.price)).toFixed(2)}€)</span>
+                    +{Math.max(0, Number((menuOnlyModal as any).menu_extra_price) - Number(menuOnlyModal.price)).toFixed(2)}€
                   </div>
                 </button>
               </div>
