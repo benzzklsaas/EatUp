@@ -59,6 +59,12 @@ export default function MenuPage() {
   const [tab, setTab] = useState<'produits' | 'categories'>('produits')
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [draggedCatId, setDraggedCatId] = useState<string | null>(null)
+  const [dragOverCatId, setDragOverCatId] = useState<string | null>(null)
+  const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
+  const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
+  const [draggedItemKey, setDraggedItemKey] = useState<string | null>(null)
+  const [dragOverItemKey, setDragOverItemKey] = useState<string | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [newCatName, setNewCatName] = useState('')
   const [newCatEmoji, setNewCatEmoji] = useState('🍽️')
@@ -224,15 +230,50 @@ export default function MenuPage() {
     setCategories(categories.filter(c => c.id !== id))
   }
 
-  async function moveCat(id: string, dir: -1 | 1) {
-    const idx = categories.findIndex(c => c.id === id)
-    const newIdx = idx + dir
-    if (newIdx < 0 || newIdx >= categories.length) return
+  async function dropCat(dragId: string, overId: string) {
+    if (dragId === overId) return
+    const from = categories.findIndex(c => c.id === dragId)
+    const to = categories.findIndex(c => c.id === overId)
+    if (from < 0 || to < 0) return
     const updated = [...categories]
-    ;[updated[idx], updated[newIdx]] = [updated[newIdx], updated[idx]]
+    const [moved] = updated.splice(from, 1)
+    updated.splice(to, 0, moved)
     const reordered = updated.map((c, i) => ({ ...c, position: i }))
     setCategories(reordered)
+    setDraggedCatId(null); setDragOverCatId(null)
     for (const c of reordered) await supabase.from('categories').update({ position: c.position }).eq('id', c.id)
+  }
+
+  async function dropGroup(dragId: string, overId: string) {
+    if (dragId === overId) return
+    const from = optionGroups.findIndex(g => g.id === dragId)
+    const to = optionGroups.findIndex(g => g.id === overId)
+    if (from < 0 || to < 0) return
+    const updated = [...optionGroups]
+    const [moved] = updated.splice(from, 1)
+    updated.splice(to, 0, moved)
+    setOptionGroups(updated)
+    setDraggedGroupId(null); setDragOverGroupId(null)
+    for (let i = 0; i < updated.length; i++) {
+      await supabase.from('product_option_groups').update({ position: i }).eq('id', updated[i].id)
+    }
+  }
+
+  async function dropItem(dragKey: string, overKey: string, groupId: string) {
+    if (dragKey === overKey) return
+    const group = optionGroups.find(g => g.id === groupId)
+    if (!group) return
+    const from = group.items.findIndex(i => i.id === dragKey)
+    const to = group.items.findIndex(i => i.id === overKey)
+    if (from < 0 || to < 0) return
+    const updated = [...group.items]
+    const [moved] = updated.splice(from, 1)
+    updated.splice(to, 0, moved)
+    setOptionGroups(optionGroups.map(g => g.id === groupId ? { ...g, items: updated } : g))
+    setDraggedItemKey(null); setDragOverItemKey(null)
+    for (let i = 0; i < updated.length; i++) {
+      await supabase.from('product_option_items').update({ position: i }).eq('id', updated[i].id)
+    }
   }
 
   async function addGroup() {
@@ -343,8 +384,15 @@ export default function MenuPage() {
               <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: '0 0 16px' }}>Vos catégories</p>
               {categories.length === 0 && <p style={{ color: '#374151', fontSize: 13 }}>Aucune catégorie — ajoutez-en ci-dessous</p>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {categories.map((cat, idx) => (
-                  <div key={cat.id} style={{ borderRadius: 14, overflow: 'hidden', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                {categories.map((cat) => (
+                  <div
+                    key={cat.id}
+                    draggable
+                    onDragStart={() => setDraggedCatId(cat.id)}
+                    onDragOver={e => { e.preventDefault(); setDragOverCatId(cat.id) }}
+                    onDrop={() => draggedCatId && dropCat(draggedCatId, cat.id)}
+                    onDragEnd={() => { setDraggedCatId(null); setDragOverCatId(null) }}
+                    style={{ borderRadius: 14, overflow: 'hidden', background: 'rgba(255,255,255,0.03)', border: `1px solid ${dragOverCatId === cat.id && draggedCatId !== cat.id ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.07)'}`, opacity: draggedCatId === cat.id ? 0.4 : 1, cursor: 'grab', transition: 'border-color 0.15s, opacity 0.15s' }}>
                     {editCat?.id === cat.id ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px' }}>
                         <input value={editCatEmoji} onChange={e => setEditCatEmoji(e.target.value)} style={{ width: 52, borderRadius: 8, padding: '6px', fontSize: 20, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none', textAlign: 'center' }} />
@@ -357,10 +405,7 @@ export default function MenuPage() {
                         <span style={{ fontSize: 22 }}>{cat.emoji}</span>
                         <span style={{ color: 'white', fontWeight: 600, fontSize: 14, flex: 1 }}>{cat.name}</span>
                         <span style={{ fontSize: 12, color: '#374151' }}>{products.filter(p => p.category === cat.name).length} produits</span>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button onClick={() => moveCat(cat.id, -1)} disabled={idx === 0} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 16 }}>↑</button>
-                          <button onClick={() => moveCat(cat.id, 1)} disabled={idx === categories.length - 1} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 16 }}>↓</button>
-                        </div>
+                        <span style={{ color: '#374151', fontSize: 16, cursor: 'grab' }}>⠿</span>
                         <button onClick={() => { setEditCat(cat); setEditCatName(cat.name); setEditCatEmoji(cat.emoji) }} style={{ fontSize: 12, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Modifier</button>
                         <button onClick={() => deleteCategory(cat.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Supprimer</button>
                       </div>
@@ -397,8 +442,18 @@ export default function MenuPage() {
               const hasUncategorized = products.some(p => !p.category)
               const allCats = [...catNames, ...orphanCats, ...(hasUncategorized ? [''] : [])]
               return allCats.length > 0 ? allCats : ['']
-            })().map(cat => (
-              <div key={cat} style={{ marginBottom: 32 }}>
+            })().map(cat => {
+              const catObj = categories.find(c => c.name === cat)
+              return (
+              <div
+                key={cat}
+                style={{ marginBottom: 32 }}
+                draggable={!!catObj}
+                onDragStart={() => catObj && setDraggedCatId(catObj.id)}
+                onDragOver={e => { e.preventDefault(); catObj && setDragOverCatId(catObj.id) }}
+                onDrop={() => draggedCatId && catObj && dropCat(draggedCatId, catObj.id)}
+                onDragEnd={() => { setDraggedCatId(null); setDragOverCatId(null) }}
+              >
                 {(cat !== undefined) && (() => {
                   if (!cat) return <p style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 12px' }}>Sans catégorie</p>
                   const catObj = categories.find(c => c.name === cat)
@@ -412,10 +467,7 @@ export default function MenuPage() {
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       {catObj && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          <button onClick={() => moveCat(catObj.id, -1)} disabled={categories.indexOf(catObj) === 0} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 10, padding: '1px 3px', lineHeight: 1 }} title="Monter la catégorie">▲</button>
-                          <button onClick={() => moveCat(catObj.id, 1)} disabled={categories.indexOf(catObj) === categories.length - 1} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 10, padding: '1px 3px', lineHeight: 1 }} title="Descendre la catégorie">▼</button>
-                        </div>
+                        <span style={{ color: '#374151', fontSize: 16, cursor: 'grab', paddingRight: 2 }}>⠿</span>
                       )}
                       <p style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>{catObj?.emoji} {cat}</p>
                       {catObj && <button onClick={() => { setEditCat(catObj); setEditCatName(catObj.name); setEditCatEmoji(catObj.emoji) }} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Modifier</button>}
@@ -473,7 +525,7 @@ export default function MenuPage() {
                   ))}
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         ))}
       </main>
@@ -590,9 +642,19 @@ export default function MenuPage() {
             ) : (
               <>
                 {optionGroups.map(group => (
-                  <div key={group.id} style={{ marginBottom: 20, borderRadius: 16, padding: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div
+                    key={group.id}
+                    draggable
+                    onDragStart={() => setDraggedGroupId(group.id)}
+                    onDragOver={e => { e.preventDefault(); setDragOverGroupId(group.id) }}
+                    onDrop={() => draggedGroupId && dropGroup(draggedGroupId, group.id)}
+                    onDragEnd={() => { setDraggedGroupId(null); setDragOverGroupId(null) }}
+                    style={{ marginBottom: 20, borderRadius: 16, padding: 16, background: 'rgba(255,255,255,0.03)', border: `1px solid ${dragOverGroupId === group.id && draggedGroupId !== group.id ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.07)'}`, opacity: draggedGroupId === group.id ? 0.4 : 1, transition: 'border-color 0.15s, opacity 0.15s', cursor: 'grab' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <p style={{ color: 'white', fontWeight: 700, margin: 0, fontSize: 14 }}>{group.name}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ color: '#374151', fontSize: 16, cursor: 'grab' }}>⠿</span>
+                        <p style={{ color: 'white', fontWeight: 700, margin: 0, fontSize: 14 }}>{group.name}</p>
+                      </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span style={{ fontSize: 11, color: '#4b5563' }}>Max :</span>
@@ -610,8 +672,18 @@ export default function MenuPage() {
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
                       {group.items.map(item => (
-                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: item.is_available !== false ? 'rgba(255,255,255,0.04)' : 'rgba(239,68,68,0.07)', border: item.is_available !== false ? 'none' : '1px solid rgba(239,68,68,0.2)' }}>
-                          <span style={{ fontSize: 13, color: item.is_available !== false ? '#d1d5db' : '#6b7280', textDecoration: item.is_available !== false ? 'none' : 'line-through' }}>{item.name}</span>
+                        <div
+                          key={item.id}
+                          draggable
+                          onDragStart={e => { e.stopPropagation(); setDraggedItemKey(item.id) }}
+                          onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOverItemKey(item.id) }}
+                          onDrop={e => { e.stopPropagation(); draggedItemKey && dropItem(draggedItemKey, item.id, group.id) }}
+                          onDragEnd={() => { setDraggedItemKey(null); setDragOverItemKey(null) }}
+                          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: item.is_available !== false ? 'rgba(255,255,255,0.04)' : 'rgba(239,68,68,0.07)', border: dragOverItemKey === item.id && draggedItemKey !== item.id ? '1px solid rgba(99,102,241,0.5)' : item.is_available !== false ? 'none' : '1px solid rgba(239,68,68,0.2)', opacity: draggedItemKey === item.id ? 0.4 : 1, cursor: 'grab', transition: 'border 0.1s, opacity 0.1s' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ color: '#374151', fontSize: 14, cursor: 'grab' }}>⠿</span>
+                            <span style={{ fontSize: 13, color: item.is_available !== false ? '#d1d5db' : '#6b7280', textDecoration: item.is_available !== false ? 'none' : 'line-through' }}>{item.name}</span>
+                          </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             {item.extra_price > 0 && <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 700 }}>+{Number(item.extra_price).toFixed(2)}€</span>}
                             <button
