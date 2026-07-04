@@ -173,10 +173,10 @@ export default function RestaurantPage() {
     const hasMenu = (product as any).menu_extra_price > 0
     if (optGroups.length > 0) {
       setSelectedOptions({})
-      setWantsMenu(false)
+      setWantsMenu(hasMenu)
       setOptionsModal({ product, groups: optGroups })
     } else if (hasMenu) {
-      setWantsMenu(false)
+      setWantsMenu(true)
       setMenuOnlyModal(product)
     } else {
       addToCart(product, {}, [], 0)
@@ -573,8 +573,11 @@ export default function RestaurantPage() {
                       <div style={{ fontWeight: 800, fontSize: 14 }}>Plat seul</div>
                       <div style={{ fontWeight: 700, fontSize: 13, marginTop: 3, color: !wantsMenu ? '#818cf8' : '#4b5563' }}>{Number(optionsModal.product.price).toFixed(2)}€</div>
                     </button>
-                    <button onClick={() => setWantsMenu(true)} style={{ flex: 1, padding: '14px 10px', border: 'none', cursor: 'pointer', textAlign: 'center', background: wantsMenu ? 'rgba(99,102,241,0.18)' : 'transparent', color: wantsMenu ? '#818cf8' : '#6b7280', transition: 'all 0.2s' }}>
-                      <div style={{ fontWeight: 800, fontSize: 14 }}>En menu</div>
+                    <button onClick={() => setWantsMenu(true)} style={{ flex: 1, padding: '14px 10px', border: 'none', cursor: 'pointer', textAlign: 'center', background: wantsMenu ? 'rgba(99,102,241,0.18)' : 'transparent', color: wantsMenu ? '#818cf8' : '#6b7280', transition: 'all 0.2s', position: 'relative' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        <span style={{ fontWeight: 800, fontSize: 14 }}>En menu</span>
+                        <span style={{ fontSize: 9, fontWeight: 800, background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.04em' }}>⭐ Pop</span>
+                      </div>
                       {menuLabel && <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{menuLabel}</div>}
                       <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2, color: wantsMenu ? '#818cf8' : '#4b5563' }}>{menuPrice.toFixed(2)}€ <span style={{ fontWeight: 400, fontSize: 11, color: '#f59e0b' }}>(+{Number((optionsModal.product as any).menu_extra_price).toFixed(2)}€)</span></div>
                     </button>
@@ -666,32 +669,44 @@ export default function RestaurantPage() {
             <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 24 }}>{menuOnlyModal.description}</p>
 
             {/* Toggle Plat seul / En menu */}
-            <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 24 }}>
-              <button
-                onClick={() => setWantsMenu(false)}
-                style={{
-                  width: '50%', padding: '14px 8px', border: 'none', cursor: 'pointer', textAlign: 'center',
-                  background: !wantsMenu ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.04)',
-                  color: !wantsMenu ? 'white' : '#9ca3af', transition: 'all 0.2s',
-                }}
-              >
-                <div style={{ fontWeight: 700, fontSize: 14 }}>Plat seul</div>
-                <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>{Number(menuOnlyModal.price).toFixed(2)}€</div>
-              </button>
-              <button
-                onClick={() => setWantsMenu(true)}
-                style={{
-                  width: '50%', padding: '14px 8px', border: 'none', cursor: 'pointer', textAlign: 'center',
-                  background: wantsMenu ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.04)',
-                  color: wantsMenu ? 'white' : '#9ca3af', transition: 'all 0.2s',
-                }}
-              >
-                <div style={{ fontWeight: 700, fontSize: 14 }}>En menu</div>
-                <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>
-                  +{Number((menuOnlyModal as any).menu_extra_price).toFixed(2)}€
-                  {(menuOnlyModal as any).menu_label ? ` · ${(menuOnlyModal as any).menu_label}` : ''}
-                </div>
-              </button>
+            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1.5px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.05)', marginBottom: 24 }}>
+              <div style={{ padding: '7px 14px 5px', borderBottom: '1px solid rgba(245,158,11,0.15)' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🍟 Formule disponible</span>
+              </div>
+              <div style={{ display: 'flex' }}>
+                <button
+                  onClick={() => setWantsMenu(false)}
+                  style={{
+                    flex: 1, padding: '14px 8px', border: 'none', cursor: 'pointer', textAlign: 'center',
+                    background: !wantsMenu ? 'rgba(99,102,241,0.18)' : 'transparent',
+                    color: !wantsMenu ? '#818cf8' : '#6b7280', transition: 'all 0.2s',
+                    borderRight: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <div style={{ fontWeight: 800, fontSize: 14 }}>Plat seul</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginTop: 3, color: !wantsMenu ? '#818cf8' : '#4b5563' }}>{Number(menuOnlyModal.price).toFixed(2)}€</div>
+                </button>
+                <button
+                  onClick={() => setWantsMenu(true)}
+                  style={{
+                    flex: 1, padding: '14px 8px', border: 'none', cursor: 'pointer', textAlign: 'center',
+                    background: wantsMenu ? 'rgba(99,102,241,0.18)' : 'transparent',
+                    color: wantsMenu ? '#818cf8' : '#6b7280', transition: 'all 0.2s',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                    <span style={{ fontWeight: 800, fontSize: 14 }}>En menu</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.04em' }}>⭐ Pop</span>
+                  </div>
+                  {(menuOnlyModal as any).menu_label && (
+                    <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{(menuOnlyModal as any).menu_label}</div>
+                  )}
+                  <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2, color: wantsMenu ? '#818cf8' : '#4b5563' }}>
+                    {(Number(menuOnlyModal.price) + Number((menuOnlyModal as any).menu_extra_price)).toFixed(2)}€
+                    <span style={{ fontWeight: 400, fontSize: 11, color: '#f59e0b' }}> (+{Number((menuOnlyModal as any).menu_extra_price).toFixed(2)}€)</span>
+                  </div>
+                </button>
+              </div>
             </div>
 
             <button
