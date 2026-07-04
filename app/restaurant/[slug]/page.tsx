@@ -64,6 +64,8 @@ export default function RestaurantPage() {
   const [optionsModal, setOptionsModal] = useState<{ product: Product; groups: OptionGroup[] } | null>(null)
   const [selectedOptions, setSelectedOptions] = useState<SelectedOptions>({})
   const [loadingOptions, setLoadingOptions] = useState(false)
+  const [wantsMenu, setWantsMenu] = useState(false)
+  const [menuOnlyModal, setMenuOnlyModal] = useState<Product | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem(`cart_${slug}`)
@@ -168,9 +170,14 @@ export default function RestaurantPage() {
     const optGroups: OptionGroup[] = (groups || []).map((g: any) => ({ ...g, items: g.items || [] }))
     setLoadingOptions(false)
 
+    const hasMenu = (product as any).menu_extra_price > 0
     if (optGroups.length > 0) {
       setSelectedOptions({})
+      setWantsMenu(false)
       setOptionsModal({ product, groups: optGroups })
+    } else if (hasMenu) {
+      setWantsMenu(false)
+      setMenuOnlyModal(product)
     } else {
       addToCart(product, {}, [], 0)
     }
@@ -207,9 +214,11 @@ export default function RestaurantPage() {
   function confirmOptions() {
     if (!optionsModal) return
     const { product, groups } = optionsModal
-    const extra = groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
-    addToCart(product, selectedOptions, groups, extra)
+    const optExtra = groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
+    const menuExtra = wantsMenu ? Number((product as any).menu_extra_price || 0) : 0
+    addToCart(product, selectedOptions, groups, optExtra + menuExtra)
     setOptionsModal(null)
+    setWantsMenu(false)
   }
 
   function optionsValid() {
@@ -541,6 +550,18 @@ export default function RestaurantPage() {
               <button onClick={() => setOptionsModal(null)} style={{ color: '#4b5563', background: 'rgba(255,255,255,0.06)', border: 'none', cursor: 'pointer', fontSize: 16, width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
             </div>
 
+            {/* Toggle menu / plat seul */}
+            {(optionsModal.product as any).menu_extra_price > 0 && (
+              <div style={{ marginBottom: 20, borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <button onClick={() => setWantsMenu(false)} style={{ width: '50%', padding: '12px', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, background: !wantsMenu ? 'rgba(99,102,241,0.2)' : 'transparent', color: !wantsMenu ? '#818cf8' : '#4b5563', transition: 'all 0.2s' }}>
+                  Plat seul<br /><span style={{ fontWeight: 400, fontSize: 11 }}>{Number(optionsModal.product.price).toFixed(2)}€</span>
+                </button>
+                <button onClick={() => setWantsMenu(true)} style={{ width: '50%', padding: '12px', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, background: wantsMenu ? 'rgba(99,102,241,0.2)' : 'transparent', color: wantsMenu ? '#818cf8' : '#4b5563', transition: 'all 0.2s' }}>
+                  En menu<br /><span style={{ fontWeight: 400, fontSize: 11 }}>+{Number((optionsModal.product as any).menu_extra_price).toFixed(2)}€ · {(optionsModal.product as any).menu_label}</span>
+                </button>
+              </div>
+            )}
+
             {optionsModal.groups.map(group => (
               <div key={group.id} style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -605,6 +626,70 @@ export default function RestaurantPage() {
                 </button>
               )
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* Mini-modal : Plat seul / En menu (produits sans groupes d'options) */}
+      {menuOnlyModal && (
+        <div
+          onClick={() => setMenuOnlyModal(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#1a1a2e', borderRadius: '24px 24px 0 0', padding: '28px 20px 36px', width: '100%', maxWidth: 480 }}
+          >
+            <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '0 auto 24px' }} />
+            <p style={{ fontSize: 18, fontWeight: 800, color: 'white', marginBottom: 6 }}>{menuOnlyModal.name}</p>
+            <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 24 }}>{menuOnlyModal.description}</p>
+
+            {/* Toggle Plat seul / En menu */}
+            <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', marginBottom: 24 }}>
+              <button
+                onClick={() => setWantsMenu(false)}
+                style={{
+                  width: '50%', padding: '14px 8px', border: 'none', cursor: 'pointer', textAlign: 'center',
+                  background: !wantsMenu ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.04)',
+                  color: !wantsMenu ? 'white' : '#9ca3af', transition: 'all 0.2s',
+                }}
+              >
+                <div style={{ fontWeight: 700, fontSize: 14 }}>Plat seul</div>
+                <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>{Number(menuOnlyModal.price).toFixed(2)}€</div>
+              </button>
+              <button
+                onClick={() => setWantsMenu(true)}
+                style={{
+                  width: '50%', padding: '14px 8px', border: 'none', cursor: 'pointer', textAlign: 'center',
+                  background: wantsMenu ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.04)',
+                  color: wantsMenu ? 'white' : '#9ca3af', transition: 'all 0.2s',
+                }}
+              >
+                <div style={{ fontWeight: 700, fontSize: 14 }}>En menu</div>
+                <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>
+                  +{Number((menuOnlyModal as any).menu_extra_price).toFixed(2)}€
+                  {(menuOnlyModal as any).menu_label ? ` · ${(menuOnlyModal as any).menu_label}` : ''}
+                </div>
+              </button>
+            </div>
+
+            <button
+              onClick={() => {
+                const menuExtra = wantsMenu ? Number((menuOnlyModal as any).menu_extra_price || 0) : 0
+                addToCart(menuOnlyModal, {}, [], menuExtra)
+                setMenuOnlyModal(null)
+                setWantsMenu(false)
+              }}
+              style={{
+                width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: 'white',
+                fontWeight: 800, fontSize: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                boxShadow: '0 4px 20px rgba(99,102,241,0.4)',
+              }}
+            >
+              <span>Ajouter au panier</span>
+              <span>{(Number(menuOnlyModal.price) + (wantsMenu ? Number((menuOnlyModal as any).menu_extra_price || 0) : 0)).toFixed(2)}€</span>
+            </button>
           </div>
         </div>
       )}
