@@ -57,6 +57,8 @@ export default function MenuPage() {
   const [uploadingImage, setUploadingImage] = useState(false)
 
   const [tab, setTab] = useState<'produits' | 'categories'>('produits')
+  const [globalSaving, setGlobalSaving] = useState(false)
+  const [globalSaved, setGlobalSaved] = useState(false)
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [draggedCatId, setDraggedCatId] = useState<string | null>(null)
@@ -529,6 +531,26 @@ export default function MenuPage() {
           </div>
         ))}
       </main>
+
+      {/* Bouton enregistrer global */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: 'rgba(5,8,16,0.92)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 50 }}>
+        <p style={{ margin: 0, fontSize: 13, color: '#374151' }}>Les modifications de position sont sauvegardées automatiquement.</p>
+        <button
+          onClick={async () => {
+            setGlobalSaving(true)
+            setGlobalSaved(false)
+            for (const p of products) await supabase.from('products').update({ position: p.position ?? 0, category: p.category }).eq('id', p.id)
+            for (const c of categories) await supabase.from('categories').update({ position: c.position }).eq('id', c.id)
+            setGlobalSaving(false)
+            setGlobalSaved(true)
+            setTimeout(() => setGlobalSaved(false), 3000)
+          }}
+          disabled={globalSaving}
+          style={{ padding: '10px 24px', borderRadius: 12, border: 'none', cursor: globalSaving ? 'default' : 'pointer', background: globalSaved ? 'rgba(74,222,128,0.15)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: globalSaved ? '#4ade80' : 'white', fontWeight: 700, fontSize: 14, transition: 'all 0.3s', boxShadow: globalSaved ? 'none' : '0 4px 20px rgba(99,102,241,0.4)', flexShrink: 0 }}
+        >
+          {globalSaving ? 'Enregistrement...' : globalSaved ? '✓ Enregistré' : 'Enregistrer les modifications'}
+        </button>
+      </div>
 
       {/* Modal produit */}
       {showForm && (
