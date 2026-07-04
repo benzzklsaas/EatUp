@@ -19,13 +19,7 @@ export default function SuperAdminPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth/login'); return }
 
-      const { data: admin } = await supabase
-        .from('superadmins')
-        .select('id')
-        .eq('id', user.id)
-        .single()
-
-      if (!admin) { router.push('/dashboard'); return }
+      // Le middleware garantit déjà que seul le superadmin peut atteindre cette page
       setAuthorized(true)
 
       const { data: restos } = await supabase

@@ -8,7 +8,26 @@ const supabase = createClient(
 )
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+// Rate limiting: 5 commandes max par IP par heure
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip)
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 3600_000 })
+    return true
+  }
+  if (entry.count >= 5) return false
+  entry.count++
+  return true
+}
+
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json({ error: 'Trop de commandes. Réessayez dans une heure.' }, { status: 429 })
+  }
   const { order, items, emailData } = await req.json()
 
   if (!order?.restaurant_id || !items?.length) {
@@ -69,31 +88,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: itemsError.message }, { status: 500 })
   }
 
-  // Envoi des emails côté serveur (jamais exposé au client)
-  if (emailData?.customerEmail && emailData?.restaurantEmail) {
+  // Récupération des emails depuis la DB — jamais depuis le client
+  const { data: restoFull } = await supabase
+    .from('restaurants')
+    .select('email, name')
+    .eq('id', order.restaurant_id)
+    .single()
+
+  if (restoFull?.email && emailData?.customerEmail) {
     try {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr'
-      const itemsHtml = verifiedItems.map((i: any) => `
-        <tr>
-          <td style="padding:8px 0;color:#cbd5e1;font-size:14px">${i.product_name} <span style="color:#475569">×${i.quantity}</span></td>
-          <td style="padding:8px 0;text-align:right;color:#94a3b8;font-size:14px">${(i.price * i.quantity).toFixed(2)}€</td>
-        </tr>`).join('')
+      const esc = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
       const pickupFormatted = new Date(order.pickup_time).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
       const totalStr = recalculatedTotal.toFixed(2)
-      const customerName = `${order.first_name} ${order.last_name}`
+      const customerName = esc(`${order.first_name} ${order.last_name}`)
+      const restaurantName = esc(restoFull.name)
+      const orderNumber = esc(order.order_number)
 
       await Promise.all([
         resend.emails.send({
           from: 'EatUp <onboarding@resend.dev>',
           to: emailData.customerEmail,
-          subject: `✅ Commande #${order.order_number} confirmée — ${emailData.restaurantName}`,
-          html: `<p>Bonjour ${customerName}, votre commande #${order.order_number} chez ${emailData.restaurantName} est confirmée. Retrait : ${pickupFormatted}. Total : ${totalStr}€</p>`,
+          subject: `✅ Commande #${orderNumber} confirmée — ${restaurantName}`,
+          html: `<p>Bonjour ${customerName}, votre commande #${orderNumber} chez ${restaurantName} est confirmée. Retrait : ${pickupFormatted}. Total : ${totalStr}€</p>`,
         }),
         resend.emails.send({
           from: 'EatUp <onboarding@resend.dev>',
-          to: emailData.restaurantEmail,
-          subject: `🔔 Nouvelle commande #${order.order_number} — ${customerName}`,
-          html: `<p>Nouvelle commande #${order.order_number} de ${customerName}. Retrait : ${pickupFormatted}. Total : ${totalStr}€<br><a href="${appUrl}/dashboard/orders">Voir dans le dashboard</a></p>`,
+          to: restoFull.email,
+          subject: `🔔 Nouvelle commande #${orderNumber} — ${customerName}`,
+          html: `<p>Nouvelle commande #${orderNumber} de ${customerName}. Retrait : ${pickupFormatted}. Total : ${totalStr}€<br><a href="${appUrl}/dashboard/orders">Voir dans le dashboard</a></p>`,
         }),
       ])
     } catch (_) {}

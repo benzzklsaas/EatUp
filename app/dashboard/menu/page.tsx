@@ -12,6 +12,7 @@ type Product = {
   category: string
   image_url: string
   is_available: boolean
+  position?: number
 }
 
 type Category = {
@@ -52,6 +53,7 @@ export default function MenuPage() {
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' })
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
 
   const [tab, setTab] = useState<'produits' | 'categories'>('produits')
@@ -85,7 +87,7 @@ export default function MenuPage() {
       const { data: resto } = await supabase.from('restaurants').select('id').eq('owner_id', user.id).single()
       if (!resto) { router.push('/dashboard'); return }
       setRestaurantId(resto.id)
-      const { data } = await supabase.from('products').select('*').eq('restaurant_id', resto.id).order('category')
+      const { data } = await supabase.from('products').select('*').eq('restaurant_id', resto.id).order('category').order('position', { ascending: true, nullsFirst: true })
       setProducts(data || [])
       const { data: cats } = await supabase.from('categories').select('*').eq('restaurant_id', resto.id).order('position')
       setCategories(cats || [])
@@ -96,6 +98,24 @@ export default function MenuPage() {
 
   function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(''); setShowForm(true) }
   function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '' }); setCatInput(p.category || ''); setShowForm(true) }
+  function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(catName); setShowForm(true) }
+
+  async function moveProduct(id: string, catName: string, dir: -1 | 1) {
+    const catProducts = products.filter(p => (p.category || '') === catName)
+    const idx = catProducts.findIndex(p => p.id === id)
+    const newIdx = idx + dir
+    if (newIdx < 0 || newIdx >= catProducts.length) return
+    const updated = [...catProducts]
+    ;[updated[idx], updated[newIdx]] = [updated[newIdx], updated[idx]]
+    const reordered = updated.map((p, i) => ({ ...p, position: i }))
+    setProducts(products.map(p => {
+      const found = reordered.find(r => r.id === p.id)
+      return found ? found : p
+    }))
+    for (const p of reordered) {
+      await supabase.from('products').update({ position: p.position }).eq('id', p.id)
+    }
+  }
 
   async function handleImageUpload(file: File) {
     setUploadingImage(true)
@@ -125,6 +145,7 @@ export default function MenuPage() {
   async function handleSave() {
     if (!form.name || !form.price) return
     setSaving(true)
+    setSaveError(null)
     const fields = {
       name: form.name,
       description: form.description,
@@ -135,11 +156,13 @@ export default function MenuPage() {
       menu_label: form.menu_label,
     }
     if (editProduct) {
-      await supabase.from('products').update(fields).eq('id', editProduct.id)
+      const { error } = await supabase.from('products').update(fields).eq('id', editProduct.id)
+      if (error) { setSaveError(error.message); setSaving(false); return }
     } else {
-      await supabase.from('products').insert({ restaurant_id: restaurantId, ...fields })
+      const { error } = await supabase.from('products').insert({ restaurant_id: restaurantId, ...fields })
+      if (error) { setSaveError(error.message); setSaving(false); return }
     }
-    const { data } = await supabase.from('products').select('*').eq('restaurant_id', restaurantId).order('category')
+    const { data } = await supabase.from('products').select('*').eq('restaurant_id', restaurantId).order('category').order('position', { ascending: true, nullsFirst: true })
     setProducts(data || [])
     setShowForm(false)
     setSaving(false)
@@ -358,7 +381,7 @@ export default function MenuPage() {
         {/* Onglet Produits */}
         {tab === 'produits' && (products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-            <p style={{ fontSize: 48, marginBottom: 16 }}>🍽️</p>
+            <img src="/LogoEatUp.PNG" alt="EatUp" style={{ width: 56, height: 56, objectFit: 'contain', marginBottom: 16, opacity: 0.4 }} />
             <p style={{ color: '#374151', fontSize: 16, marginBottom: 24 }}>Votre menu est vide</p>
             <button onClick={openAdd} style={{ padding: '12px 28px', borderRadius: 14, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15 }}>
               Ajouter votre premier produit
@@ -369,11 +392,13 @@ export default function MenuPage() {
             {(() => {
               const catNames = categories.map(c => c.name)
               const orphanCats = [...new Set(products.map(p => p.category).filter(c => c && !catNames.includes(c)))]
-              const allCats = categories.length > 0 ? [...catNames, ...orphanCats] : ['']
-              return allCats
+              const hasUncategorized = products.some(p => !p.category)
+              const allCats = [...catNames, ...orphanCats, ...(hasUncategorized ? [''] : [])]
+              return allCats.length > 0 ? allCats : ['']
             })().map(cat => (
               <div key={cat} style={{ marginBottom: 32 }}>
-                {cat && (() => {
+                {(cat !== undefined) && (() => {
+                  if (!cat) return <p style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 12px' }}>Sans catégorie</p>
                   const catObj = categories.find(c => c.name === cat)
                   return editCat?.id === catObj?.id ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -383,15 +408,32 @@ export default function MenuPage() {
                       <button onClick={() => setEditCat(null)} style={{ padding: '5px 8px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', color: '#6b7280', fontSize: 12 }}>✕</button>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                      {catObj && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <button onClick={() => moveCat(catObj.id, -1)} disabled={categories.indexOf(catObj) === 0} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 10, padding: '1px 3px', lineHeight: 1 }} title="Monter la catégorie">▲</button>
+                          <button onClick={() => moveCat(catObj.id, 1)} disabled={categories.indexOf(catObj) === categories.length - 1} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', fontSize: 10, padding: '1px 3px', lineHeight: 1 }} title="Descendre la catégorie">▼</button>
+                        </div>
+                      )}
                       <p style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>{catObj?.emoji} {cat}</p>
                       {catObj && <button onClick={() => { setEditCat(catObj); setEditCatName(catObj.name); setEditCatEmoji(catObj.emoji) }} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Modifier</button>}
+                      <button
+                        onClick={() => openAddWithCategory(cat)}
+                        title={`Ajouter un produit dans ${cat}`}
+                        style={{ width: 22, height: 22, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.2)', color: '#818cf8', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, flexShrink: 0 }}
+                      >+</button>
                     </div>
                   )
                 })()}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
-                  {products.filter(p => p.category === cat || (!cat && !p.category)).map(p => (
-                    <div key={p.id} style={{ borderRadius: 18, padding: '16px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 14 }}>
+                  {products.filter(p => p.category === cat || (!cat && !p.category)).sort((a, b) => (a.position ?? 999) - (b.position ?? 999)).map((p, idx, arr) => (
+                    <div key={p.id} style={{ borderRadius: 18, padding: '16px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: 10, alignItems: 'stretch' }}>
+                      {arr.length > 1 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, justifyContent: 'center', flexShrink: 0 }}>
+                          <button onClick={() => moveProduct(p.id, cat, -1)} disabled={idx === 0} style={{ background: idx === 0 ? 'transparent' : 'rgba(255,255,255,0.06)', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? '#1f2937' : '#6b7280', fontSize: 10, borderRadius: 4, padding: '4px 5px', lineHeight: 1 }} title="Monter">▲</button>
+                          <button onClick={() => moveProduct(p.id, cat, 1)} disabled={idx === arr.length - 1} style={{ background: idx === arr.length - 1 ? 'transparent' : 'rgba(255,255,255,0.06)', border: 'none', cursor: idx === arr.length - 1 ? 'default' : 'pointer', color: idx === arr.length - 1 ? '#1f2937' : '#6b7280', fontSize: 10, borderRadius: 4, padding: '4px 5px', lineHeight: 1 }} title="Descendre">▼</button>
+                        </div>
+                      )}
                       {p.image_url && (
                         <img src={p.image_url} alt={p.name} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }} />
                       )}
@@ -502,8 +544,13 @@ export default function MenuPage() {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-              <button onClick={() => setShowForm(false)} style={{ flex: 1, padding: '13px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#6b7280', cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
+            {saveError && (
+              <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: '#450a0a', border: '1px solid #7f1d1d', color: '#fca5a5', fontSize: 13 }}>
+                ❌ {saveError}
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <button onClick={() => { setShowForm(false); setSaveError(null) }} style={{ flex: 1, padding: '13px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#6b7280', cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
               <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '13px', borderRadius: 12, border: 'none', cursor: saving ? 'default' : 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700 }}>
                 {saving ? 'Enregistrement...' : 'Enregistrer'}
               </button>

@@ -33,8 +33,12 @@ export default function DashboardPage() {
         router.push('/auth/register'); return
       }
 
-      const { data: sub } = await supabase.from('restaurant_subscriptions').select('status').eq('restaurant_id', resto.id).single()
-      if (!sub || sub.status !== 'active') { router.push('/subscribe'); return }
+      const { data: sub } = await supabase.from('restaurant_subscriptions').select('status, past_due_since').eq('restaurant_id', resto.id).single()
+      const gracePeriodExpired = sub?.status === 'past_due' && sub.past_due_since
+        && (Date.now() - new Date(sub.past_due_since).getTime()) > 2 * 24 * 3600_000
+      if (!sub || (sub.status !== 'active' && sub.status !== 'past_due') || gracePeriodExpired) {
+        router.push('/subscribe'); return
+      }
 
       if (!resto.onboarding_done) { router.push('/dashboard/onboarding'); return }
 

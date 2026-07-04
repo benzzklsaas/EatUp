@@ -29,53 +29,58 @@ export default function CheckoutPage() {
       if (data) {
         setRestaurant(data)
 
-        // Récupérer les horaires du jour
-        const todayIndex = (new Date().getDay() + 6) % 7 // 0=lundi
-        const { data: daySchedule } = await supabase
+        // Récupérer tous les horaires
+        const { data: allSchedules } = await supabase
           .from('restaurant_schedule')
           .select('*')
           .eq('restaurant_id', data.id)
-          .eq('day_of_week', todayIndex)
-          .single()
-
-        // Vérifier les fermetures exceptionnelles
-        const today = new Date().toISOString().split('T')[0]
-        const { data: closure } = await supabase
-          .from('restaurant_closures')
-          .select('id')
-          .eq('restaurant_id', data.id)
-          .eq('closed_date', today)
-          .single()
-
-        if (closure || daySchedule?.is_closed) {
-          setPickupSlots([])
-          return
-        }
+          .order('day_of_week')
 
         const now = new Date()
         const minTime = new Date(now.getTime() + 30 * 60000)
-        const duration = daySchedule?.slot_duration || 15
         const slots: string[] = []
 
-        function addSlots(openStr: string, closeStr: string) {
-          const [oh, om] = openStr.split(':').map(Number)
-          const [ch, cm] = closeStr.split(':').map(Number)
-          const cur = new Date()
-          cur.setHours(oh, om, 0, 0)
-          const closing = new Date()
-          closing.setHours(ch, cm, 0, 0)
-          while (cur <= closing) {
-            if (cur > minTime) slots.push(new Date(cur).toISOString())
-            cur.setMinutes(cur.getMinutes() + duration)
+        // Chercher les créneaux sur les 7 prochains jours
+        for (let dayOffset = 0; dayOffset <= 6; dayOffset++) {
+          const targetDate = new Date(now)
+          targetDate.setDate(now.getDate() + dayOffset)
+          const dayIndex = (targetDate.getDay() + 6) % 7
+
+          const daySchedule = allSchedules?.find((s: any) => s.day_of_week === dayIndex)
+          if (!daySchedule || daySchedule.is_closed) continue
+
+          // Vérifier fermeture exceptionnelle
+          const dateStr = targetDate.toISOString().split('T')[0]
+          const { data: closure } = await supabase
+            .from('restaurant_closures')
+            .select('id')
+            .eq('restaurant_id', data.id)
+            .eq('closed_date', dateStr)
+            .single()
+          if (closure) continue
+
+          const duration = daySchedule.slot_duration || 15
+
+          function addSlots(openStr: string, closeStr: string) {
+            const [oh, om] = openStr.split(':').map(Number)
+            const [ch, cm] = closeStr.split(':').map(Number)
+            const cur = new Date(targetDate)
+            cur.setHours(oh, om, 0, 0)
+            const closing = new Date(targetDate)
+            closing.setHours(ch, cm, 0, 0)
+            while (cur <= closing) {
+              if (cur > minTime) slots.push(new Date(cur).toISOString())
+              cur.setMinutes(cur.getMinutes() + duration)
+            }
           }
-        }
 
-        const open1 = daySchedule?.opening_time_1?.slice(0, 5) || '11:00'
-        const close1 = daySchedule?.closing_time_1?.slice(0, 5) || '15:00'
-        addSlots(open1, close1)
+          if (daySchedule.opening_time_1 && daySchedule.closing_time_1)
+            addSlots(daySchedule.opening_time_1.slice(0, 5), daySchedule.closing_time_1.slice(0, 5))
+          if (daySchedule.opening_time_2 && daySchedule.closing_time_2)
+            addSlots(daySchedule.opening_time_2.slice(0, 5), daySchedule.closing_time_2.slice(0, 5))
 
-        if (daySchedule?.opening_time_2 && daySchedule?.closing_time_2) {
-          addSlots(daySchedule.opening_time_2.slice(0, 5), daySchedule.closing_time_2.slice(0, 5))
+          // Dès qu'on a des créneaux on s'arrête (on ne charge qu'un jour à la fois)
+          if (slots.length > 0) break
         }
 
         if (slots.length > 0) {
@@ -245,9 +250,21 @@ export default function CheckoutPage() {
             <h2 className="font-bold text-white mb-3">Heure de retrait</h2>
             {pickupSlots.length === 0 ? (
               <p className="text-sm py-4 text-center" style={{ color: '#f87171' }}>
-                Le restaurant est fermé aujourd'hui — aucune commande possible.
+                Aucun créneau disponible pour les 7 prochains jours.
               </p>
             ) : (
+            <>
+              {(() => {
+                const slotDate = new Date(pickupSlots[0])
+                const today = new Date()
+                const isToday = slotDate.toDateString() === today.toDateString()
+                if (!isToday) return (
+                  <p style={{ fontSize: 12, color: '#d97706', marginBottom: 10, fontWeight: 600 }}>
+                    🌙 Restaurant fermé — créneaux disponibles le {slotDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  </p>
+                )
+                return null
+              })()}
             <div className="grid grid-cols-3 gap-2">
               {pickupSlots.map(slot => {
                 const date = new Date(slot)
@@ -270,6 +287,7 @@ export default function CheckoutPage() {
                 )
               })}
             </div>
+            </>
             )}
           </div>
 

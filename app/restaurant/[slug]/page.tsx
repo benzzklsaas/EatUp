@@ -57,6 +57,7 @@ export default function RestaurantPage() {
   const [activeCategory, setActiveCategory] = useState<string>('')
   const [dbCategories, setDbCategories] = useState<Category[]>([])
   const [nextOpening, setNextOpening] = useState<string | null>(null)
+  const [isOpenNow, setIsOpenNow] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [cartBounce, setCartBounce] = useState(false)
 
@@ -78,28 +79,41 @@ export default function RestaurantPage() {
       if (!resto) { setLoading(false); return }
       setRestaurant(resto)
 
-      if (!resto.is_open) {
-        const DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
-        const { data: schedules } = await supabase
-          .from('restaurant_schedule')
-          .select('*')
-          .eq('restaurant_id', resto.id)
-          .eq('is_closed', false)
-          .order('day_of_week')
-        if (schedules && schedules.length > 0) {
-          const todayIdx = (new Date().getDay() + 6) % 7
-          for (let i = 1; i <= 7; i++) {
-            const dayIdx = (todayIdx + i) % 7
-            const sched = schedules.find((s: any) => s.day_of_week === dayIdx)
-            if (sched) {
-              const dayName = i === 1 ? 'Demain' : DAY_NAMES[dayIdx]
-              setNextOpening(`${dayName} à ${sched.opening_time_1?.slice(0, 5) || '11:00'}`)
-              break
-            }
+      const DAY_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+      const { data: schedules } = await supabase
+        .from('restaurant_schedule')
+        .select('*')
+        .eq('restaurant_id', resto.id)
+        .order('day_of_week')
+
+      // Calcul ouvert/fermé selon horaires réels
+      const now = new Date()
+      const todayIdx = (now.getDay() + 6) % 7
+      const currentMinutes = now.getHours() * 60 + now.getMinutes()
+      const toMinutes = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
+      const todaySched = schedules?.find((s: any) => s.day_of_week === todayIdx)
+      const openNow = resto.is_open && todaySched && !todaySched.is_closed && (
+        (todaySched.opening_time_1 && todaySched.closing_time_1 &&
+          currentMinutes >= toMinutes(todaySched.opening_time_1) &&
+          currentMinutes < toMinutes(todaySched.closing_time_1)) ||
+        (todaySched.opening_time_2 && todaySched.closing_time_2 &&
+          currentMinutes >= toMinutes(todaySched.opening_time_2) &&
+          currentMinutes < toMinutes(todaySched.closing_time_2))
+      )
+      setIsOpenNow(!!openNow)
+
+      if (!openNow) {
+        // Trouver prochaine ouverture pour l'afficher
+        const openSchedules = (schedules || []).filter((s: any) => !s.is_closed)
+        for (let i = 1; i <= 7; i++) {
+          const dayIdx = (todayIdx + i) % 7
+          const sched = openSchedules.find((s: any) => s.day_of_week === dayIdx)
+          if (sched) {
+            const dayName = i === 1 ? 'Demain' : DAY_NAMES[dayIdx]
+            setNextOpening(`${dayName} à ${sched.opening_time_1?.slice(0, 5) || '11:00'}`)
+            break
           }
         }
-        setLoading(false)
-        return
       }
 
       const { data } = await supabase
@@ -215,7 +229,7 @@ export default function RestaurantPage() {
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080c14' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 56, height: 56, borderRadius: '50%', margin: '0 auto 16px', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, animation: 'pulse 1.5s ease-in-out infinite' }}>🍽️</div>
+        <div style={{ width: 56, height: 56, borderRadius: '50%', margin: '0 auto 16px', background: '#0d1424', border: '1.5px solid rgba(99,102,241,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pulse 1.5s ease-in-out infinite', overflow: 'hidden' }}><img src="/LogoEatUp.PNG" alt="EatUp" style={{ width: 46, height: 46, objectFit: 'contain' }} /></div>
         <p style={{ color: '#374151', fontSize: 13, fontFamily: 'system-ui', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Chargement du menu</p>
       </div>
       <style>{`@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.95)}}`}</style>
@@ -233,27 +247,6 @@ export default function RestaurantPage() {
     </div>
   )
 
-  // ── Fermé ─────────────────────────────────────────────────────────────────
-  if (!restaurant.is_open) return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#080c14', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '24px' }}>
-      {restaurant.cover_image_url && (
-        <div style={{ position: 'fixed', inset: 0, backgroundImage: `url(${restaurant.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.15) blur(4px)', zIndex: 0 }} />
-      )}
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 360 }}>
-        {restaurant.logo_url
-          ? <img src={restaurant.logo_url} alt={restaurant.name} style={{ width: 88, height: 88, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 20px', display: 'block', border: '3px solid rgba(255,255,255,0.15)' }} />
-          : <div style={{ width: 88, height: 88, borderRadius: '50%', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, background: 'linear-gradient(135deg,rgba(99,102,241,.3),rgba(139,92,246,.3))', border: '2px solid rgba(99,102,241,0.4)' }}>🌙</div>
-        }
-        <h1 style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>{restaurant.name}</h1>
-        <p style={{ fontSize: 15, fontWeight: 700, color: '#ef4444', margin: '0 0 12px' }}>Fermé pour le moment</p>
-        {nextOpening
-          ? <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.7 }}>Prochain service :<br /><span style={{ color: '#818cf8', fontWeight: 800, fontSize: 16 }}>{nextOpening}</span></p>
-          : <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px' }}>Revenez bientôt !</p>
-        }
-        {restaurant.address && <p style={{ fontSize: 13, color: '#4b5563' }}>📍 {restaurant.address}</p>}
-      </div>
-    </div>
-  )
 
   // ── Page principale ───────────────────────────────────────────────────────
   return (
@@ -280,8 +273,8 @@ export default function RestaurantPage() {
         }
         <span style={{ fontWeight: 800, fontSize: 15, color: 'white' }}>{restaurant.name}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 8px #4ade80' }} />
-          <span style={{ fontSize: 12, color: '#4ade80', fontWeight: 700 }}>Ouvert</span>
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: isOpenNow ? '#4ade80' : '#ef4444', display: 'inline-block', boxShadow: `0 0 8px ${isOpenNow ? '#4ade80' : '#ef4444'}` }} />
+          <span style={{ fontSize: 12, color: isOpenNow ? '#4ade80' : '#ef4444', fontWeight: 700 }}>{isOpenNow ? 'Ouvert' : 'Fermé'}</span>
         </div>
       </div>
 
@@ -308,9 +301,9 @@ export default function RestaurantPage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', margin: '0 0 6px', letterSpacing: '-0.5px', lineHeight: 1.1 }}>{restaurant.name}</h1>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 100, background: 'rgba(74,222,128,0.15)', border: '1px solid rgba(74,222,128,0.3)' }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80', display: 'inline-block' }} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#4ade80' }}>Ouvert · Click & Collect</span>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 100, background: isOpenNow ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', border: `1px solid ${isOpenNow ? 'rgba(74,222,128,0.3)' : 'rgba(239,68,68,0.3)'}` }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: isOpenNow ? '#4ade80' : '#ef4444', boxShadow: `0 0 6px ${isOpenNow ? '#4ade80' : '#ef4444'}`, display: 'inline-block' }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: isOpenNow ? '#4ade80' : '#ef4444' }}>{isOpenNow ? 'Ouvert · Click & Collect' : 'Fermé'}</span>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
@@ -332,6 +325,19 @@ export default function RestaurantPage() {
           </div>
         </div>
       </div>
+
+      {/* Bannière fermé — commandes programmées */}
+      {!isOpenNow && (
+        <div style={{ margin: '16px 20px 0', padding: '14px 16px', borderRadius: 14, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 20 }}>🌙</span>
+          <div>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fbbf24' }}>Fermé pour le moment</p>
+            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#78716c' }}>
+              {nextOpening ? <>Prochain retrait disponible : <strong style={{ color: '#d97706' }}>{nextOpening}</strong></> : 'Parcourez le menu et commandez pour plus tard'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Description */}
       {restaurant.description && (
@@ -376,7 +382,7 @@ export default function RestaurantPage() {
       <main style={{ padding: '20px 16px', maxWidth: 700, margin: '0 auto' }}>
         {products.length === 0 && (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🍽️</div>
+            <img src="/LogoEatUp.PNG" alt="EatUp" style={{ width: 48, height: 48, objectFit: 'contain', marginBottom: 12, opacity: 0.5 }} />
             <p style={{ color: '#374151', fontSize: 14 }}>Le menu arrive bientôt…</p>
           </div>
         )}
