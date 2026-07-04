@@ -105,15 +105,34 @@ export default function RestaurantPage() {
       setIsOpenNow(!!openNow)
 
       if (!openNow) {
-        // Trouver prochaine ouverture pour l'afficher
-        const openSchedules = (schedules || []).filter((s: any) => !s.is_closed)
-        for (let i = 1; i <= 7; i++) {
-          const dayIdx = (todayIdx + i) % 7
-          const sched = openSchedules.find((s: any) => s.day_of_week === dayIdx)
-          if (sched) {
-            const dayName = i === 1 ? 'Demain' : DAY_NAMES[dayIdx]
-            setNextOpening(`${dayName} à ${sched.opening_time_1?.slice(0, 5) || '11:00'}`)
-            break
+        // Chercher la prochaine ouverture : d'abord plus tard aujourd'hui, puis les jours suivants
+        let found = false
+
+        // Vérifier si le restaurant ouvre encore aujourd'hui (service du soir ou ouverture future)
+        if (todaySched && !todaySched.is_closed) {
+          const slots = [
+            todaySched.opening_time_1,
+            todaySched.opening_time_2,
+          ].filter(Boolean)
+          for (const t of slots) {
+            if (toMinutes(t) > currentMinutes) {
+              setNextOpening(`Aujourd'hui à ${t.slice(0, 5)}`)
+              found = true
+              break
+            }
+          }
+        }
+
+        if (!found) {
+          const openSchedules = (schedules || []).filter((s: any) => !s.is_closed)
+          for (let i = 1; i <= 7; i++) {
+            const dayIdx = (todayIdx + i) % 7
+            const sched = openSchedules.find((s: any) => s.day_of_week === dayIdx)
+            if (sched?.opening_time_1) {
+              const dayName = i === 1 ? 'Demain' : DAY_NAMES[dayIdx]
+              setNextOpening(`${dayName} à ${sched.opening_time_1.slice(0, 5)}`)
+              break
+            }
           }
         }
       }
