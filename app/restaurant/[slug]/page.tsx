@@ -234,7 +234,7 @@ export default function RestaurantPage() {
     if (!optionsModal) return
     const { product, groups } = optionsModal
     const optExtra = groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
-    const menuExtra = wantsMenu ? Number((product as any).menu_extra_price || 0) : 0
+    const menuExtra = wantsMenu ? Math.max(0, Number((product as any).menu_extra_price || 0) - Number(product.price)) : 0
     addToCart(product, selectedOptions, groups, optExtra + menuExtra)
     setOptionsModal(null)
     setWantsMenu(false)
@@ -577,7 +577,7 @@ export default function RestaurantPage() {
 
             {/* Toggle menu / plat seul */}
             {(optionsModal.product as any).menu_extra_price > 0 && (() => {
-              const menuPrice = Number(optionsModal.product.price) + Number((optionsModal.product as any).menu_extra_price)
+              const menuPrice = Number((optionsModal.product as any).menu_extra_price)
               const menuLabel = (optionsModal.product as any).menu_label
               return (
                 <div style={{ marginBottom: 20, borderRadius: 16, overflow: 'hidden', border: '1.5px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.05)' }}>
@@ -595,7 +595,7 @@ export default function RestaurantPage() {
                         <span style={{ fontSize: 9, fontWeight: 800, background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Recommandé</span>
                       </div>
                       {menuLabel && <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{menuLabel}</div>}
-                      <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2, color: wantsMenu ? '#818cf8' : '#4b5563' }}>{menuPrice.toFixed(2)}€ <span style={{ fontWeight: 400, fontSize: 11, color: '#f59e0b' }}>(+{Number((optionsModal.product as any).menu_extra_price).toFixed(2)}€)</span></div>
+                      <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2, color: wantsMenu ? '#818cf8' : '#4b5563' }}>{menuPrice.toFixed(2)}€ <span style={{ fontWeight: 400, fontSize: 11, color: '#f59e0b' }}>(+{Math.max(0, menuPrice - Number(optionsModal.product.price)).toFixed(2)}€)</span></div>
                     </button>
                   </div>
                 </div>
@@ -718,8 +718,8 @@ export default function RestaurantPage() {
                     <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{(menuOnlyModal as any).menu_label}</div>
                   )}
                   <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2, color: wantsMenu ? '#818cf8' : '#4b5563' }}>
-                    {(Number(menuOnlyModal.price) + Number((menuOnlyModal as any).menu_extra_price)).toFixed(2)}€
-                    <span style={{ fontWeight: 400, fontSize: 11, color: '#f59e0b' }}> (+{Number((menuOnlyModal as any).menu_extra_price).toFixed(2)}€)</span>
+                    {Number((menuOnlyModal as any).menu_extra_price).toFixed(2)}€
+                    <span style={{ fontWeight: 400, fontSize: 11, color: '#f59e0b' }}> (+{Math.max(0, Number((menuOnlyModal as any).menu_extra_price) - Number(menuOnlyModal.price)).toFixed(2)}€)</span>
                   </div>
                 </button>
               </div>
@@ -727,7 +727,7 @@ export default function RestaurantPage() {
 
             <button
               onClick={() => {
-                const menuExtra = wantsMenu ? Number((menuOnlyModal as any).menu_extra_price || 0) : 0
+                const menuExtra = wantsMenu ? Math.max(0, Number((menuOnlyModal as any).menu_extra_price || 0) - Number(menuOnlyModal.price)) : 0
                 addToCart(menuOnlyModal, {}, [], menuExtra)
                 setMenuOnlyModal(null)
                 setWantsMenu(false)
@@ -740,7 +740,7 @@ export default function RestaurantPage() {
               }}
             >
               <span>Ajouter au panier</span>
-              <span>{(Number(menuOnlyModal.price) + (wantsMenu ? Number((menuOnlyModal as any).menu_extra_price || 0) : 0)).toFixed(2)}€</span>
+              <span>{(wantsMenu ? Number((menuOnlyModal as any).menu_extra_price || 0) : Number(menuOnlyModal.price)).toFixed(2)}€</span>
             </button>
           </div>
         </div>
