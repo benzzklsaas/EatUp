@@ -592,7 +592,7 @@ export default function RestaurantPage() {
                     <button onClick={() => setWantsMenu(true)} style={{ flex: 1, padding: '14px 10px', border: 'none', cursor: 'pointer', textAlign: 'center', background: wantsMenu ? 'rgba(99,102,241,0.18)' : 'transparent', color: wantsMenu ? '#818cf8' : '#6b7280', transition: 'all 0.2s', position: 'relative' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                         <span style={{ fontWeight: 800, fontSize: 14 }}>En menu</span>
-                        <span style={{ fontSize: 9, fontWeight: 800, background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.04em' }}>⭐ Pop</span>
+                        <span style={{ fontSize: 9, fontWeight: 800, background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Recommandé</span>
                       </div>
                       {menuLabel && <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{menuLabel}</div>}
                       <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2, color: wantsMenu ? '#818cf8' : '#4b5563' }}>{menuPrice.toFixed(2)}€ <span style={{ fontWeight: 400, fontSize: 11, color: '#f59e0b' }}>(+{Number((optionsModal.product as any).menu_extra_price).toFixed(2)}€)</span></div>
@@ -712,7 +712,7 @@ export default function RestaurantPage() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                     <span style={{ fontWeight: 800, fontSize: 14 }}>En menu</span>
-                    <span style={{ fontSize: 9, fontWeight: 800, background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.04em' }}>⭐ Pop</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Recommandé</span>
                   </div>
                   {(menuOnlyModal as any).menu_label && (
                     <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{(menuOnlyModal as any).menu_label}</div>
