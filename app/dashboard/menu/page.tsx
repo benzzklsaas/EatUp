@@ -439,7 +439,7 @@ export default function MenuPage() {
         ) : (
           <div>
             {(() => {
-              const catNames = categories.map(c => c.name)
+              const catNames = [...new Set(categories.map(c => c.name))]
               const orphanCats = [...new Set(products.map(p => p.category).filter(c => c && !catNames.includes(c)))]
               const hasUncategorized = products.some(p => !p.category)
               const allCats = [...catNames, ...orphanCats, ...(hasUncategorized ? [''] : [])]
