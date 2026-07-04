@@ -112,7 +112,7 @@ export default function CheckoutPage() {
       product_name: i.product.name,
       quantity: i.quantity,
       price: i.product.price + (i.extraPrice || 0),
-      options: i.selectedOptions ? Object.values(i.selectedOptions).flat().map((o: any) => o.name).join(', ') : '',
+      options: [i.selectedOptions ? Object.values(i.selectedOptions).flat().map((o: any) => o.name).join(', ') : '', i.menuBoisson ? `🥤 ${i.menuBoisson}` : ''].filter(Boolean).join(', '),
     }))
 
     const res = await fetch('/api/orders', {

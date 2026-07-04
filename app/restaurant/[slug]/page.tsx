@@ -42,6 +42,7 @@ type CartItem = {
   optionGroups?: OptionGroup[]
   extraPrice: number
   cartKey: string
+  menuBoisson?: string
 }
 
 export default function RestaurantPage() {
@@ -66,6 +67,7 @@ export default function RestaurantPage() {
   const [loadingOptions, setLoadingOptions] = useState(false)
   const [wantsMenu, setWantsMenu] = useState(false)
   const [menuOnlyModal, setMenuOnlyModal] = useState<Product | null>(null)
+  const [selectedBoisson, setSelectedBoisson] = useState<Product | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem(`cart_${slug}`)
@@ -193,18 +195,20 @@ export default function RestaurantPage() {
     if (optGroups.length > 0) {
       setSelectedOptions({})
       setWantsMenu(hasMenu)
+      setSelectedBoisson(null)
       setOptionsModal({ product, groups: optGroups })
     } else if (hasMenu) {
       setWantsMenu(true)
+      setSelectedBoisson(null)
       setMenuOnlyModal(product)
     } else {
       addToCart(product, {}, [], 0)
     }
   }
 
-  function addToCart(product: Product, selOpts: SelectedOptions, groups: OptionGroup[], extra: number) {
+  function addToCart(product: Product, selOpts: SelectedOptions, groups: OptionGroup[], extra: number, menuBoisson?: string) {
     const cartKey = product.id + JSON.stringify(selOpts) + Date.now()
-    saveCart([...cart, { product, quantity: 1, selectedOptions: selOpts, optionGroups: groups, extraPrice: extra, cartKey }])
+    saveCart([...cart, { product, quantity: 1, selectedOptions: selOpts, optionGroups: groups, extraPrice: extra, cartKey, menuBoisson }])
   }
 
   function removeFromCart(cartKey: string) {
@@ -235,14 +239,17 @@ export default function RestaurantPage() {
     const { product, groups } = optionsModal
     const optExtra = groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
     const menuExtra = wantsMenu ? Math.max(0, Number((product as any).menu_extra_price || 0) - Number(product.price)) : 0
-    addToCart(product, selectedOptions, groups, optExtra + menuExtra)
+    addToCart(product, selectedOptions, groups, optExtra + menuExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined)
     setOptionsModal(null)
     setWantsMenu(false)
+    setSelectedBoisson(null)
   }
 
   function optionsValid() {
     if (!optionsModal) return false
-    return optionsModal.groups.every(g => (selectedOptions[g.id] || []).length >= g.min_choices)
+    const optsOk = optionsModal.groups.every(g => (selectedOptions[g.id] || []).length >= g.min_choices)
+    if (wantsMenu && !selectedBoisson) return false
+    return optsOk
   }
 
   const total = cart.reduce((sum, i) => sum + (i.product.price + i.extraPrice) * i.quantity, 0)
@@ -504,6 +511,7 @@ export default function RestaurantPage() {
                               <div key={ci.cartKey} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 12px', borderRadius: 12, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
                                 <span style={{ fontSize: 12, color: '#818cf8', flex: 1 }}>
                                   {Object.values(ci.selectedOptions || {}).flat().map((i: any) => i.name).join(' · ')}
+                                  {ci.menuBoisson && <span style={{ color: '#f59e0b' }}> · 🥤 {ci.menuBoisson}</span>}
                                   {ci.extraPrice > 0 && <span style={{ color: '#f59e0b' }}> +{ci.extraPrice.toFixed(2)}€</span>}
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 10 }}>
@@ -597,6 +605,34 @@ export default function RestaurantPage() {
                       {menuLabel && <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{menuLabel}</div>}
                       <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2, color: '#f59e0b' }}>+{Math.max(0, menuPrice - Number(optionsModal.product.price)).toFixed(2)}€</div>
                     </button>
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Sélecteur de boisson obligatoire si En menu */}
+            {wantsMenu && (() => {
+              const boissons = products.filter(p => p.category === 'Boissons' && p.is_available !== false)
+              if (!boissons.length) return null
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🥤 Choisir votre boisson</p>
+                    <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {boissons.map(b => (
+                      <button key={b.id} onClick={() => setSelectedBoisson(b)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedBoisson?.id === b.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedBoisson?.id === b.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedBoisson?.id === b.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedBoisson?.id === b.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {selectedBoisson?.id === b.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
+                          </div>
+                          <span style={{ fontSize: 14, color: selectedBoisson?.id === b.id ? 'white' : '#d1d5db', fontWeight: selectedBoisson?.id === b.id ? 600 : 400 }}>{b.name}</span>
+                        </div>
+                        <span style={{ fontSize: 12, color: '#6b7280' }}>Incluse</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )
@@ -724,18 +760,51 @@ export default function RestaurantPage() {
               </div>
             </div>
 
+            {/* Sélecteur de boisson obligatoire si En menu */}
+            {wantsMenu && (() => {
+              const boissons = products.filter(p => p.category === 'Boissons' && p.is_available !== false)
+              if (!boissons.length) return null
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🥤 Choisir votre boisson</p>
+                    <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {boissons.map(b => (
+                      <button key={b.id} onClick={() => setSelectedBoisson(b)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedBoisson?.id === b.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedBoisson?.id === b.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedBoisson?.id === b.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedBoisson?.id === b.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {selectedBoisson?.id === b.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
+                          </div>
+                          <span style={{ fontSize: 14, color: selectedBoisson?.id === b.id ? 'white' : '#d1d5db', fontWeight: selectedBoisson?.id === b.id ? 600 : 400 }}>{b.name}</span>
+                        </div>
+                        <span style={{ fontSize: 12, color: '#6b7280' }}>Incluse</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
             <button
               onClick={() => {
+                if (wantsMenu && !selectedBoisson) return
                 const menuExtra = wantsMenu ? Math.max(0, Number((menuOnlyModal as any).menu_extra_price || 0) - Number(menuOnlyModal.price)) : 0
-                addToCart(menuOnlyModal, {}, [], menuExtra)
+                addToCart(menuOnlyModal, {}, [], menuExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined)
                 setMenuOnlyModal(null)
                 setWantsMenu(false)
+                setSelectedBoisson(null)
               }}
+              disabled={wantsMenu && !selectedBoisson}
               style={{
-                width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: 'pointer',
-                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: 'white',
+                width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: wantsMenu && !selectedBoisson ? 'default' : 'pointer',
+                background: wantsMenu && !selectedBoisson ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                color: wantsMenu && !selectedBoisson ? '#374151' : 'white',
                 fontWeight: 800, fontSize: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                boxShadow: '0 4px 20px rgba(99,102,241,0.4)',
+                boxShadow: wantsMenu && !selectedBoisson ? 'none' : '0 4px 20px rgba(99,102,241,0.4)',
+                transition: 'all 0.2s',
               }}
             >
               <span>Ajouter au panier</span>
