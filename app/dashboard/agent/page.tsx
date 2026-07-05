@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase'
 
 const TONES = [
   { value: 'friendly', label: 'Chaleureux', desc: 'Proche et authentique' },
