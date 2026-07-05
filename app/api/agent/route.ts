@@ -1,9 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
+  // Vérification auth — seuls les abonnés actifs peuvent appeler l'agent
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  )
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
+  const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  const { data: resto } = await supabaseAdmin.from('restaurants').select('id').eq('owner_id', user.id).single()
+  if (!resto) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+
+  const { data: sub } = await supabaseAdmin.from('restaurant_subscriptions').select('status').eq('restaurant_id', resto.id).single()
+  if (!sub || (sub.status !== 'active' && sub.status !== 'past_due')) {
+    return NextResponse.json({ error: 'Abonnement requis' }, { status: 403 })
+  }
   const { review, restaurantName, tone } = await req.json()
 
   if (!review?.trim()) {
