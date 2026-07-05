@@ -11,6 +11,7 @@ const NAV = [
   { label: 'Menu', href: '/dashboard/menu', icon: '🍽️', desc: 'Gérer vos produits' },
   { label: 'Clients', href: '/dashboard/customers', icon: '👥', desc: 'Base clients' },
   { label: 'Analytics', href: '/dashboard/analytics', icon: '📊', desc: 'Revenus & stats' },
+  { label: 'Agent IA', href: '/dashboard/agent', icon: '🤖', desc: 'Répondre aux avis', badge: 'BETA' },
   { label: 'Paramètres', href: '/dashboard/settings', icon: '⚙️', desc: 'Horaires & config' },
 ]
 
@@ -110,7 +111,10 @@ export default function DashboardPage() {
           {NAV.map(item => (
             <Link key={item.href} href={item.href} style={{ borderRadius: 18, padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 8, transition: 'all 0.2s' }}>
               <span style={{ fontSize: 24 }}>{item.icon}</span>
-              <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: 0 }}>{item.label}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: 0 }}>{item.label}</p>
+                {(item as any).badge && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(245,158,11,0.2)', color: '#f59e0b', padding: '2px 6px', borderRadius: 100 }}>{(item as any).badge}</span>}
+              </div>
               <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>{item.desc}</p>
             </Link>
           ))}
