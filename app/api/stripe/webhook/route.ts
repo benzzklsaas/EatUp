@@ -55,6 +55,19 @@ export async function POST(req: NextRequest) {
           plan: 'launch',
         })
       }
+
+      const { data: newResto } = await supabase
+        .from('restaurants')
+        .select('name, email')
+        .eq('id', restaurant_id)
+        .single()
+
+      await resend.emails.send({
+        from: 'EatUp <onboarding@resend.dev>',
+        to: 'ben.kacel7@gmail.com',
+        subject: `🎉 Nouveau client — ${newResto?.name || 'Restaurant inconnu'}`,
+        html: `<p>Nouveau client EatUp !</p><p><strong>${newResto?.name || ''}</strong> (${newResto?.email || ''}) vient de souscrire à EatUp Pro à 29,99€/mois.</p>`,
+      }).catch(() => {})
     }
   }
 
@@ -85,7 +98,7 @@ export async function POST(req: NextRequest) {
             from: 'EatUp <onboarding@resend.dev>',
             to: resto.email,
             subject: '⚠️ Paiement échoué — votre abonnement EatUp',
-            html: `<p>Bonjour,</p><p>Le renouvellement de votre abonnement EatUp pour <strong>${resto.name}</strong> a échoué.</p><p>Vous avez <strong>2 jours</strong> pour mettre à jour votre moyen de paiement, sinon votre accès sera suspendu.</p><p><a href="https://eatup-app.fr/subscribe">Mettre à jour mon abonnement</a></p>`,
+            html: `<p>Bonjour,</p><p>Le renouvellement de votre abonnement EatUp pour <strong>${resto.name}</strong> a échoué.</p><p>Vous avez <strong>2 jours</strong> pour mettre à jour votre moyen de paiement, sinon votre accès sera suspendu.</p><p><a href="${process.env.NEXT_PUBLIC_APP_URL}/subscribe">Mettre à jour mon abonnement</a></p>`,
           }).catch(() => {})
         }
       }

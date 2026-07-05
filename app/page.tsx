@@ -122,7 +122,7 @@ export default function LandingPage() {
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', opacity: 0.6 }} />
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981', opacity: 0.6 }} />
             <div style={{ flex: 1, margin: '0 12px', background: '#0f172a', borderRadius: 6, padding: '4px 12px', fontSize: 12, color: '#475569', border: '1px solid #334155' }}>
-              eat-up-sepia.vercel.app/dashboard
+              eatup-app.fr/dashboard
             </div>
           </div>
           {/* Fake dashboard */}

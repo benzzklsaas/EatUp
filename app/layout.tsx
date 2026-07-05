@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description: "EatUp permet aux restaurants de recevoir des commandes en ligne et de gérer leur click & collect en quelques minutes.",
   keywords: ["click and collect", "restaurant", "commande en ligne", "SaaS restaurant"],
   authors: [{ name: "EatUp" }],
-  metadataBase: new URL("https://eat-up-sepia.vercel.app"),
+  metadataBase: new URL("https://eatup-app.fr"),
   openGraph: {
     title: "EatUp — Click & Collect pour restaurants",
     description: "Lancez votre click & collect en 5 minutes. Menu en ligne, commandes, paiement, emails automatiques.",
