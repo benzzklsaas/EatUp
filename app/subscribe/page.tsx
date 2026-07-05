@@ -49,11 +49,10 @@ export default function SubscribePage() {
         }}>
 <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginBottom: 6 }}>
-              <span style={{ fontSize: 64, fontWeight: 900, color: 'white', letterSpacing: '-2px', lineHeight: 1 }}>19,99</span>
+              <span style={{ fontSize: 64, fontWeight: 900, color: 'white', letterSpacing: '-2px', lineHeight: 1 }}>29,99</span>
               <span style={{ fontSize: 20, color: '#6b7280' }}>€/mois</span>
             </div>
-            <p style={{ fontSize: 14, color: '#9ca3af', fontWeight: 500, margin: '0 0 4px' }}>pendant les 2 premiers mois</p>
-            <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>puis 29,99€/mois · Sans engagement</p>
+            <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>Sans engagement · Résiliable à tout moment</p>
           </div>
 
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>

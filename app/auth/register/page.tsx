@@ -72,7 +72,7 @@ export default function RegisterPage() {
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <Image src="/LogoEatUp.PNG" alt="EatUp" width={56} height={56} style={{ borderRadius: '50%', margin: '0 auto 16px' }} />
           <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>Créez votre restaurant</h1>
-          <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>Prêt en 5 minutes · 19,99€/mois sans engagement</p>
+          <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>Prêt en 5 minutes · 29,99€/mois sans engagement</p>
         </div>
 
         <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

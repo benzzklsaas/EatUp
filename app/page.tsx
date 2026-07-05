@@ -106,7 +106,7 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p style={{ marginTop: 20, fontSize: 13, color: '#1f2937' }}>À partir de 19,99€/mois · Sans engagement</p>
+        <p style={{ marginTop: 20, fontSize: 13, color: '#1f2937' }}>29,99€/mois · Sans engagement</p>
 
         {/* Dashboard mockup */}
         <div style={{
@@ -240,7 +240,7 @@ export default function LandingPage() {
         <div style={{ display: 'flex', justifyContent: 'center', gap: 0, maxWidth: 900, margin: '0 auto', flexWrap: 'wrap' }}>
           {[
             { n: '1', title: 'Créez votre compte', desc: 'Renseignez votre restaurant en 2 minutes.' },
-            { n: '2', title: 'Choisissez votre offre', desc: 'Starter à 19,99€ ou Pro à 29,99€/mois.' },
+            { n: '2', title: 'Choisissez votre offre', desc: '29,99€/mois, sans engagement.' },
             { n: '3', title: 'Ajoutez votre menu', desc: 'Photos, prix, catégories. Simple et rapide.' },
             { n: '4', title: 'Partagez le lien', desc: 'Vos clients commandent directement depuis leur mobile.' },
           ].map((step, i) => (
@@ -284,16 +284,15 @@ export default function LandingPage() {
               background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
               padding: '4px 20px', borderRadius: 100, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', color: 'white',
             }}>
-              OFFRE DE LANCEMENT
+              SANS ENGAGEMENT
             </div>
 
             <div style={{ textAlign: 'center', marginBottom: 36 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 4, marginBottom: 6 }}>
-                <span style={{ fontSize: 72, fontWeight: 900, letterSpacing: '-3px', lineHeight: 1 }}>19,99</span>
+                <span style={{ fontSize: 72, fontWeight: 900, letterSpacing: '-3px', lineHeight: 1 }}>29,99</span>
                 <span style={{ fontSize: 22, color: '#6b7280' }}>€/mois</span>
               </div>
-              <p style={{ fontSize: 15, color: '#818cf8', fontWeight: 600, margin: '0 0 4px' }}>pendant les 2 premiers mois</p>
-              <p style={{ fontSize: 14, color: '#374151', margin: 0 }}>puis 29,99€/mois · Sans engagement</p>
+              <p style={{ fontSize: 14, color: '#374151', margin: 0 }}>Sans engagement · Résiliable à tout moment</p>
             </div>
 
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 36px', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -318,7 +317,7 @@ export default function LandingPage() {
               color: 'white', fontWeight: 700, fontSize: 16, textDecoration: 'none',
               boxShadow: '0 8px 40px rgba(99,102,241,0.4)',
             }}>
-              Commencer pour 19,99€/mois →
+              Commencer pour 29,99€/mois →
             </Link>
             <p style={{ textAlign: 'center', fontSize: 12, color: '#1f2937', marginTop: 14 }}>Résiliable à tout moment · Sans engagement</p>
           </div>
