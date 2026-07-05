@@ -153,7 +153,8 @@ export default function MenuPage() {
   }
 
   async function handleSave() {
-    if (!form.name || !form.price) return
+    if (!form.name.trim()) { setSaveError('Le nom du produit est requis.'); return }
+    if (!form.price || isNaN(parseFloat(form.price))) { setSaveError('Le prix est requis.'); return }
     setSaving(true)
     setSaveError(null)
     const fields = {
