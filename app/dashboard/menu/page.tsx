@@ -54,6 +54,7 @@ export default function MenuPage() {
   const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<{ name?: boolean; price?: boolean }>({})
   const [uploadingImage, setUploadingImage] = useState(false)
 
   const [tab, setTab] = useState<'produits' | 'categories'>('produits')
@@ -106,9 +107,9 @@ export default function MenuPage() {
     load()
   }, [])
 
-  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(''); setShowForm(true) }
-  function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '' }); setCatInput(p.category || ''); setShowForm(true) }
-  function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(catName); setShowForm(true) }
+  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(''); setFieldErrors({}); setShowForm(true) }
+  function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '' }); setCatInput(p.category || ''); setFieldErrors({}); setShowForm(true) }
+  function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(catName); setFieldErrors({}); setShowForm(true) }
 
   async function dropProduct(dragId: string, overId: string, catName: string) {
     if (dragId === overId) return
@@ -153,8 +154,11 @@ export default function MenuPage() {
   }
 
   async function handleSave() {
-    if (!form.name.trim()) { setSaveError('Le nom du produit est requis.'); return }
-    if (!form.price || isNaN(parseFloat(form.price))) { setSaveError('Le prix est requis.'); return }
+    const errors: { name?: boolean; price?: boolean } = {}
+    if (!form.name.trim()) errors.name = true
+    if (!form.price || isNaN(parseFloat(form.price))) errors.price = true
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); return }
+    setFieldErrors({})
     setSaving(true)
     setSaveError(null)
     const fields = {
@@ -581,9 +585,15 @@ export default function MenuPage() {
               {editProduct ? 'Modifier le produit' : 'Nouveau produit'}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input placeholder="Nom du produit *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={inputStyle} />
+              <div>
+                <input placeholder="Nom du produit *" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setFieldErrors(fe => ({ ...fe, name: false })) }} style={{ ...inputStyle, ...(fieldErrors.name ? { borderColor: '#ef4444' } : {}) }} />
+                {fieldErrors.name && <p style={{ color: '#ef4444', fontSize: 11, marginTop: 4, fontFamily: 'sans-serif' }}>Champ manquant</p>}
+              </div>
               <textarea placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} style={{ ...inputStyle, resize: 'none' }} />
-              <input placeholder="Prix (ex: 9.90) *" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} type="number" step="0.01" style={inputStyle} />
+              <div>
+                <input placeholder="Prix (ex: 9.90) *" value={form.price} onChange={e => { setForm({ ...form, price: e.target.value }); setFieldErrors(fe => ({ ...fe, price: false })) }} type="number" step="0.01" style={{ ...inputStyle, ...(fieldErrors.price ? { borderColor: '#ef4444' } : {}) }} />
+                {fieldErrors.price && <p style={{ color: '#ef4444', fontSize: 11, marginTop: 4, fontFamily: 'sans-serif' }}>Champ manquant</p>}
+              </div>
               <div style={{ position: 'relative' }}>
                 <input
                   placeholder="Catégorie (ex: Burgers, Parfums...)"
