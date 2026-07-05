@@ -108,7 +108,7 @@ CONTRAINTES ABSOLUES :
 - Reprends obligatoirement un élément concret de l'avis (nom d'un plat, attente, accueil, ambiance…)
 - Zéro formule générique qu'on voit dans toutes les réponses de restaurants
 - Zéro répétition mot pour mot de l'avis
-- Termine TOUJOURS par la signature : "La Team ${restaurantName}" sur une nouvelle ligne
+- Termine TOUJOURS par la signature : "La Team - ${restaurantName}" sur une nouvelle ligne
 - Réponds UNIQUEMENT avec le texte final, prêt à coller sur Google — aucune intro, aucun commentaire`,
       },
     ],
