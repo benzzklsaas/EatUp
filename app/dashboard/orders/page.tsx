@@ -64,6 +64,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState<Order | null>(null)
+  const [selectedItems, setSelectedItems] = useState<any[]>([])
   const [toast, setToast] = useState<{ name: string; amount: string } | null>(null)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [autoPrint, setAutoPrint] = useState(true)
@@ -303,7 +304,11 @@ export default function OrdersPage() {
             {filtered.map(order => (
               <div
                 key={order.id}
-                onClick={() => setSelected(order)}
+                onClick={async () => {
+                  setSelected(order)
+                  const { data: items } = await supabase.from('order_items').select('*').eq('order_id', order.id)
+                  setSelectedItems(items || [])
+                }}
                 className="rounded-2xl p-4 flex items-center justify-between cursor-pointer transition"
                 style={{ background: '#1e293b', border: `1px solid ${order.status === 'pending' ? '#f59e0b' : '#334155'}` }}
               >
@@ -356,6 +361,21 @@ export default function OrdersPage() {
                 </p>
               ))}
             </div>
+
+            {selectedItems.length > 0 && (
+              <div style={{ background: '#0f172a', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
+                <p className="text-sm font-bold text-white mb-2">🛒 Articles commandés</p>
+                {selectedItems.map((item: any, i: number) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: i < selectedItems.length - 1 ? '1px solid #1e293b' : 'none' }}>
+                    <div>
+                      <span style={{ color: 'white', fontWeight: 600 }}>{item.quantity}x {item.product_name}</span>
+                      {item.options && <p style={{ color: '#64748b', fontSize: 11, margin: '2px 0 0' }}>→ {item.options}</p>}
+                    </div>
+                    <span style={{ color: '#94a3b8', fontWeight: 600 }}>{(item.price * item.quantity).toFixed(2)}€</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <p className="text-sm mb-2" style={{ color: '#64748b' }}>Changer le statut :</p>
             <div className="grid grid-cols-2 gap-2 mb-4">
