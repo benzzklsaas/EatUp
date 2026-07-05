@@ -31,49 +31,84 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Avis manquant' }, { status: 400 })
   }
 
+  const isNegative = /décevant|nul|mauvais|froid|attente|lent|problème|dommage|déçu|catastrophe|horrible|inacceptable|scandaleux|insupportable|désagréable|impoli|sale|écœurant|trop cher|cher pour|commandé.*jamais|jamais arrivé|1 étoile|pas bon/i.test(review)
+  const isMixed = /mais|cependant|cela dit|en revanche|dommage que|malheureusement|malgré|par contre/i.test(review)
+
+  const systemPrompt = `Tu es un expert en réputation en ligne pour les restaurants. Tu rédiges des réponses aux avis Google qui semblent écrites par un vrai gérant — jamais par un robot, jamais par une IA.
+
+TON STYLE SIGNATURE :
+- Phrases courtes, naturelles, avec le rythme d'un humain qui parle
+- Toujours personnaliser en reprenant un détail concret de l'avis (le plat mentionné, l'attente, le service, l'ambiance…)
+- Jamais de formules génériques comme "Nous vous remercions de votre avis" seul en début — ça fait template
+- Jamais de "Nous espérons vous revoir prochainement" en fin — trop vu, trop froid
+- Une touche d'émotion sincère : fierté, regret, enthousiasme — selon le contexte
+- Varie la structure d'une réponse à l'autre, aucune n'est identique`
+
   const toneInstructions: Record<string, string> = {
-    friendly: `TON — Chaleureux et humain :
-- Tutoie le client si l'avis est positif, vouvoie si négatif ou neutre
-- Utilise des formules chaleureuses ("Merci du fond du cœur", "Ça nous touche vraiment", "On a adoré vous accueillir")
-- Montre de la personnalité, de l'authenticité — pas de langue de bois
-- Termine sur une note enthousiaste et sincère`,
+    friendly: isNegative
+      ? `TON chaleureux pour un avis négatif :
+- Vouvoie le client, mais avec chaleur — pas de distance froide
+- Commence par reconnaître le problème spécifique qu'il cite, sans excuses excessives ni justifications longues
+- Montre que ça compte vraiment pour toi, que ce n'est pas la norme
+- Propose concrètement : invite à revenir, offre de contact direct si pertinent
+- Termine avec une formule humaine et sincère, jamais froide
+Exemple de registre : "C'est un retour qui nous touche, et honnêtement, ce n'est pas l'expérience qu'on veut vous offrir."`
+      : `TON chaleureux pour un avis positif :
+- Tutoie si l'avis est enthousiaste et informel, vouvoie si plus réservé
+- Reprends un détail précis de l'avis pour montrer que tu l'as vraiment lu
+- Exprime une fierté authentique, pas de l'auto-congratulation
+- Donne envie de revenir en mentionnant quelque chose de concret (un nouveau plat, une saison, une prochaine fois)
+- Fin chaleureuse, courte, mémorable
+Exemple de registre : "Ça fait vraiment plaisir de lire ça — c'est exactement pour ça qu'on fait ce boulot."`,
 
-    neutral: `TON — Neutre et équilibré :
-- Vouvoie toujours le client
-- Formules professionnelles sans être froid ("Nous vous remercions", "Votre retour est précieux")
-- Factuel, sans excès d'enthousiasme ni de familiarité
-- Répond précisément au contenu de l'avis`,
+    neutral: isMixed || isNegative
+      ? `TON neutre pour un avis négatif ou mitigé :
+- Vouvoie, ton professionnel sans être distant
+- Commence par le positif s'il y en a, puis adresse le point négatif avec précision
+- Factuel et concis — reconnaître, pas se justifier longuement
+- Montrer que le retour a été entendu et pris au sérieux
+- Conclure avec une invitation sobre mais sincère`
+      : `TON neutre pour un avis positif :
+- Vouvoie, ton professionnel mais agréable
+- Remercie en reprenant ce que le client a apprécié
+- Sobre, pas de superlatifs — "Nous sommes ravis" plutôt que "Nous sommes absolument enchantés"
+- Fin claire, courte, professionnelle`,
 
-    formal: `TON — Formel et institutionnel :
-- Vouvoiement strict, formules soutenues ("Nous vous adressons nos sincères remerciements", "Nous avons bien pris note de votre retour")
-- Jamais d'expression familière ni d'emoji
-- Style sobre, structuré — comme une réponse officielle d'établissement
-- Conclure avec une formule de politesse complète`,
+    formal: isNegative
+      ? `TON formel pour un avis négatif :
+- Vouvoiement strict, formules soutenues
+- Reconnaître l'insatisfaction avec gravité et respect : "Nous avons pris connaissance de votre retour avec la plus grande attention"
+- Exprimer un regret sincère et mesuré, sans sur-promesses
+- Proposer une suite concrète (contact, retour en établissement)
+- Formule de politesse complète et sobre en clôture`
+      : `TON formel pour un avis positif :
+- Vouvoiement strict, style institutionnel sobre
+- Remercier avec élégance en reprenant l'élément central de l'avis
+- Exprimer la satisfaction de l'établissement avec mesure
+- Conclure avec une formule de politesse complète et soignée`,
   }
 
   const instructions = toneInstructions[tone] || toneInstructions.neutral
 
-  const isNegative = /décevant|nul|mauvais|froid|attente|lent|problème|dommage|déçu|catastrophe|horrible/i.test(review)
-
   const message = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 400,
+    max_tokens: 500,
+    system: systemPrompt,
     messages: [
       {
         role: 'user',
-        content: `Tu es le gérant du restaurant "${restaurantName}". Tu dois répondre à cet avis Google.
+        content: `Restaurant : "${restaurantName}"
+Avis Google reçu :
+"${review}"
 
 ${instructions}
 
-RÈGLES ABSOLUES :
-- 3 à 5 phrases maximum, jamais plus
-- ${isNegative ? 'Reconnais le problème sans te justifier excessivement, propose une amélioration ou une invitation à revenir pour rectifier l\'expérience' : 'Remercie sincèrement et invite à revenir'}
-- Jamais de réponse générique copiée-collée — chaque réponse doit sembler écrite à la main
-- Ne répète pas mot pour mot ce que dit l'avis
-- Réponds uniquement avec la réponse finale, prête à publier sur Google
-
-Avis reçu :
-"${review}"`,
+CONTRAINTES ABSOLUES :
+- 3 à 5 phrases, jamais plus — la concision est une marque de confiance
+- Reprends obligatoirement un élément concret de l'avis (nom d'un plat, attente, accueil, ambiance…)
+- Zéro formule générique qu'on voit dans toutes les réponses de restaurants
+- Zéro répétition mot pour mot de l'avis
+- Réponds UNIQUEMENT avec le texte final, prêt à coller sur Google — aucune intro, aucun commentaire`,
       },
     ],
   })
