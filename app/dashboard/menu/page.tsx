@@ -383,7 +383,7 @@ export default function MenuPage() {
         </div>
       </header>
 
-      <main style={{ padding: '24px', maxWidth: 960, margin: '0 auto' }}>
+      <main style={{ padding: '24px', paddingBottom: '90px', maxWidth: 960, margin: '0 auto' }}>
 
         {/* Onglet Catégories */}
         {tab === 'categories' && (
