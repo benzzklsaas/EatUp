@@ -307,45 +307,123 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* ── STEP 4 : Terminé ── */}
+        {/* ── STEP 4 : Guide de découverte ── */}
         {step === 4 && (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 64, marginBottom: 20 }}>🎉</div>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 12px' }}>Votre restaurant est prêt !</h2>
-            <p style={{ fontSize: 15, color: '#4b5563', margin: '0 0 24px', lineHeight: 1.7 }}>
-              Partagez ce lien à vos clients pour qu'ils puissent commander.
-            </p>
+          <div>
+            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+              <div style={{ fontSize: 52, marginBottom: 12 }}>🎉</div>
+              <h2 style={{ fontSize: 26, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>Votre restaurant est en ligne !</h2>
+              <p style={{ fontSize: 14, color: '#4b5563', margin: 0, lineHeight: 1.6 }}>Voici tout ce qu'EatUp fait pour vous, dès maintenant.</p>
+            </div>
 
             {/* Lien de la page */}
             {restaurant?.slug && (
-              <div style={{ borderRadius: 14, padding: '14px 16px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 13, color: '#818cf8', flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {(process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr').replace('https://', '')}/restaurant/{restaurant.slug}
+              <div style={{ borderRadius: 14, padding: '12px 14px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 12, color: '#818cf8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  eatup.fr/restaurant/{restaurant.slug}
                 </span>
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr'}/restaurant/${restaurant.slug}`)
-                    alert('Lien copié !')
-                  }}
-                  style={{ padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.3)', color: '#818cf8', fontWeight: 700, fontSize: 12, flexShrink: 0 }}
+                  onClick={() => { navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr'}/restaurant/${restaurant.slug}`); alert('Lien copié !') }}
+                  style={{ padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.3)', color: '#818cf8', fontWeight: 700, fontSize: 12, flexShrink: 0 }}
                 >
                   Copier
                 </button>
               </div>
             )}
 
-            <p style={{ fontSize: 13, color: '#374151', margin: '0 0 24px', lineHeight: 1.6 }}>
-              💡 Configurez vos horaires et activez le statut <strong style={{ color: '#4ade80' }}>Ouvert</strong> dans les paramètres pour recevoir vos premières commandes.
-            </p>
+            {/* Feature cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+
+              {[
+                {
+                  icon: '🍽️',
+                  title: 'Menu digital illimité',
+                  desc: 'Ajoutez vos plats, photos, prix et catégories depuis Menu → Produits. Tout se met à jour en temps réel pour vos clients.',
+                  color: '#60a5fa',
+                },
+                {
+                  icon: '🍟',
+                  title: 'Formules Plat + Boisson',
+                  desc: 'Augmentez votre ticket moyen en proposant des menus sur chaque produit. Activez-les depuis Menu → Produits → modifier un plat.',
+                  color: '#f59e0b',
+                  badge: 'NOUVEAU',
+                },
+                {
+                  icon: '⚙️',
+                  title: 'Options & personnalisation',
+                  desc: 'Sauces, cuissons, suppléments… Créez des groupes d\'options obligatoires ou facultatifs pour chaque plat dans Menu → Options.',
+                  color: '#a78bfa',
+                },
+                {
+                  icon: '🕐',
+                  title: 'Horaires intelligents',
+                  desc: 'Configurez vos créneaux d\'ouverture par jour et par service (midi/soir). Vos clients voient la prochaine heure de retrait disponible en direct.',
+                  color: '#4ade80',
+                },
+                {
+                  icon: '📋',
+                  title: 'Commandes en temps réel',
+                  desc: 'Toutes vos commandes arrivent dans le dashboard. Mettez-les à jour (En préparation → Prêt) — vos clients sont notifiés automatiquement.',
+                  color: '#60a5fa',
+                },
+                {
+                  icon: '💳',
+                  title: 'Paiement sur place ou en ligne',
+                  desc: 'Chaque client choisit comment payer. Aucune commission EatUp sur vos ventes — vous gardez 100% de vos revenus.',
+                  color: '#4ade80',
+                },
+                {
+                  icon: '📊',
+                  title: 'Analytics & base clients',
+                  desc: 'Suivez vos revenus, commandes et clients depuis les onglets Analytics et Clients. Identifiez vos meilleurs acheteurs.',
+                  color: '#818cf8',
+                },
+                {
+                  icon: '🤖',
+                  title: 'Agent IA — Réponses Google',
+                  desc: 'Répondez à vos avis Google en 10 secondes. L\'IA rédige une réponse professionnelle et personnalisée selon le ton que vous choisissez.',
+                  color: '#c084fc',
+                  badge: 'PREMIUM',
+                  gradient: true,
+                },
+              ].map((f, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 14, padding: '14px 16px',
+                  borderRadius: 14,
+                  background: f.gradient ? 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08))' : 'rgba(255,255,255,0.02)',
+                  border: f.gradient ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(255,255,255,0.05)',
+                }}>
+                  <div style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>{f.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{f.title}</span>
+                      {f.badge && (
+                        <span style={{
+                          fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 100,
+                          background: f.badge === 'PREMIUM' ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(245,158,11,0.2)',
+                          color: f.badge === 'PREMIUM' ? 'white' : '#f59e0b',
+                          letterSpacing: '0.05em',
+                        }}>{f.badge}</span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: 12, color: '#4b5563', margin: 0, lineHeight: 1.55 }}>{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tip */}
+            <div style={{ borderRadius: 12, padding: '12px 14px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.15)', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>💡</span>
+              <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+                <strong style={{ color: '#4ade80' }}>Pour recevoir vos premières commandes :</strong> allez dans <strong style={{ color: 'white' }}>Paramètres</strong>, configurez vos horaires et activez le statut <strong style={{ color: '#4ade80' }}>Ouvert</strong>.
+              </p>
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {restaurant?.slug && (
-                <a
-                  href={`/restaurant/${restaurant.slug}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ display: 'block', padding: '13px', borderRadius: 14, border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.08)', color: '#818cf8', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}
-                >
+                <a href={`/restaurant/${restaurant.slug}`} target="_blank" rel="noreferrer"
+                  style={{ display: 'block', textAlign: 'center', padding: '12px', borderRadius: 14, border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.08)', color: '#818cf8', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
                   👁️ Voir ma page client
                 </a>
               )}
