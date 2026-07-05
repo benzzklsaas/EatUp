@@ -108,16 +108,28 @@ export default function DashboardPage() {
 
         {/* Nav */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginBottom: 32 }}>
-          {NAV.map(item => (
-            <Link key={item.href} href={item.href} style={{ borderRadius: 18, padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 8, transition: 'all 0.2s' }}>
-              <span style={{ fontSize: 24 }}>{item.icon}</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {NAV.map(item => {
+            const isPremium = !!(item as any).badge
+            return (
+              <Link key={item.href} href={item.href} style={{
+                borderRadius: 18, padding: '20px',
+                background: isPremium ? 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))' : 'rgba(255,255,255,0.02)',
+                border: isPremium ? '1.5px solid rgba(99,102,241,0.35)' : '1px solid rgba(255,255,255,0.05)',
+                textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 8,
+                transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
+                boxShadow: isPremium ? '0 4px 24px rgba(99,102,241,0.15)' : 'none',
+              }}>
+                {isPremium && (
+                  <div style={{ position: 'absolute', top: 0, right: 0, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', padding: '4px 10px', borderRadius: '0 18px 0 12px', fontSize: 9, fontWeight: 800, color: 'white', letterSpacing: '0.05em' }}>
+                    ✦ PREMIUM
+                  </div>
+                )}
+                <span style={{ fontSize: 24 }}>{item.icon}</span>
                 <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: 0 }}>{item.label}</p>
-                {(item as any).badge && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(245,158,11,0.2)', color: '#f59e0b', padding: '2px 6px', borderRadius: 100 }}>{(item as any).badge}</span>}
-              </div>
-              <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>{item.desc}</p>
-            </Link>
-          ))}
+                <p style={{ fontSize: 12, color: isPremium ? '#818cf8' : '#374151', margin: 0 }}>{item.desc}</p>
+              </Link>
+            )
+          })}
         </div>
 
         {/* Dernières commandes */}
