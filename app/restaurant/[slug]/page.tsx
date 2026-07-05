@@ -96,7 +96,7 @@ export default function RestaurantPage() {
       const currentMinutes = now.getHours() * 60 + now.getMinutes()
       const toMinutes = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m }
       const todaySched = schedules?.find((s: any) => s.day_of_week === todayIdx)
-      const openNow = resto.is_open && todaySched && !todaySched.is_closed && (
+      const openNow = todaySched && !todaySched.is_closed && (
         (todaySched.opening_time_1 && todaySched.closing_time_1 &&
           currentMinutes >= toMinutes(todaySched.opening_time_1) &&
           currentMinutes < toMinutes(todaySched.closing_time_1)) ||
