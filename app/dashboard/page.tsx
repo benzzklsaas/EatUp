@@ -9,9 +9,9 @@ import Link from 'next/link'
 const NAV = [
   { label: 'Commandes', href: '/dashboard/orders', icon: '📋', desc: 'Gérer les commandes' },
   { label: 'Menu', href: '/dashboard/menu', icon: '🍽️', desc: 'Gérer vos produits' },
+  { label: 'Agent IA', href: '/dashboard/agent', icon: '🤖', desc: 'Répondre aux avis', badge: 'BETA' },
   { label: 'Clients', href: '/dashboard/customers', icon: '👥', desc: 'Base clients' },
   { label: 'Analytics', href: '/dashboard/analytics', icon: '📊', desc: 'Revenus & stats' },
-  { label: 'Agent IA', href: '/dashboard/agent', icon: '🤖', desc: 'Répondre aux avis', badge: 'BETA' },
   { label: 'Paramètres', href: '/dashboard/settings', icon: '⚙️', desc: 'Horaires & config' },
 ]
 

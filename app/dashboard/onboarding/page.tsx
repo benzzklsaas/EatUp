@@ -319,8 +319,8 @@ export default function OnboardingPage() {
             {/* Lien de la page */}
             {restaurant?.slug && (
               <div style={{ borderRadius: 14, padding: '12px 14px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 12, color: '#818cf8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  eatup.fr/restaurant/{restaurant.slug}
+                <span style={{ fontSize: 12, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#4b5563' }}>
+                  eatup.fr/restaurant/<span style={{ color: '#818cf8', fontWeight: 700 }}>{restaurant.name}</span>
                 </span>
                 <button
                   onClick={() => { navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr'}/restaurant/${restaurant.slug}`); alert('Lien copié !') }}
