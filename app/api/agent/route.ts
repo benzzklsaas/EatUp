@@ -104,10 +104,11 @@ Avis Google reçu :
 ${instructions}
 
 CONTRAINTES ABSOLUES :
-- 3 à 5 phrases, jamais plus — la concision est une marque de confiance
+- 4 à 7 phrases — réponse complète et développée, pas expédiée
 - Reprends obligatoirement un élément concret de l'avis (nom d'un plat, attente, accueil, ambiance…)
 - Zéro formule générique qu'on voit dans toutes les réponses de restaurants
 - Zéro répétition mot pour mot de l'avis
+- Termine TOUJOURS par la signature : "La Team ${restaurantName}" sur une nouvelle ligne
 - Réponds UNIQUEMENT avec le texte final, prêt à coller sur Google — aucune intro, aucun commentaire`,
       },
     ],
