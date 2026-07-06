@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     try {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr'
       const esc = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-      const pickupFormatted = new Date(order.pickup_time).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+      const pickupFormatted = new Date(order.pickup_time).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })
       const totalStr = recalculatedTotal.toFixed(2)
       const customerName = esc(`${order.first_name} ${order.last_name}`)
       const restaurantName = esc(restoFull.name)
