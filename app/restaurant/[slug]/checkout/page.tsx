@@ -69,7 +69,7 @@ export default function CheckoutPage() {
             .single()
           if (closure) continue
 
-          const duration = daySchedule.slot_duration || 5
+          const duration = daySchedule.slot_duration || 10
 
           function addSlots(openStr: string, closeStr: string) {
             const [oh, om] = openStr.split(':').map(Number)
