@@ -25,7 +25,7 @@ export default function CheckoutPage() {
     if (stored) setCart(JSON.parse(stored))
 
     async function loadResto() {
-      const { data } = await supabase.from('restaurants').select('*').eq('slug', slug).single()
+      const { data } = await supabase.from('restaurants').select('id, name, slug, email').eq('slug', slug).single()
       if (data) {
         setRestaurant(data)
 
