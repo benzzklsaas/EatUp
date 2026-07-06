@@ -47,7 +47,12 @@ export default function CheckoutPage() {
           .order('day_of_week')
 
         const now = new Date()
-        const minTime = new Date(now.getTime() + 30 * 60000)
+        // Arrondir à la prochaine dizaine (ex: 13:03 → 13:10)
+        const minTime = new Date(now)
+        const mins = minTime.getMinutes()
+        const nextTen = Math.ceil((mins + 1) / 10) * 10
+        minTime.setMinutes(nextTen, 0, 0)
+        if (nextTen >= 60) { minTime.setHours(minTime.getHours() + 1); minTime.setMinutes(nextTen - 60, 0, 0) }
         const slots: string[] = []
 
         // Chercher les créneaux sur les 7 prochains jours
