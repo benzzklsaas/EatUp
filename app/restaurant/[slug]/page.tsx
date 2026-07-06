@@ -282,8 +282,9 @@ export default function RestaurantPage() {
     if (!optionsModal) return false
     const optsOk = optionsModal.groups.every(g => (selectedOptions[g.id] || []).length >= g.min_choices)
     if (wantsMenu && !selectedBoisson) return false
+    const productWantsAccomp = (optionsModal.product as any).has_accompagnement !== false
     const hasAccomps = products.some(p => p.category === 'Accompagnements' && p.is_available !== false)
-    if (wantsMenu && hasAccomps && !selectedAccomp) return false
+    if (wantsMenu && productWantsAccomp && hasAccomps && !selectedAccomp) return false
     return optsOk
   }
 
@@ -676,7 +677,7 @@ export default function RestaurantPage() {
             })()}
 
             {/* Sélecteur d'accompagnement obligatoire si En menu */}
-            {wantsMenu && (() => {
+            {wantsMenu && (optionsModal.product as any).has_accompagnement !== false && (() => {
               const accomps = products.filter(p => p.category === 'Accompagnements' && p.is_available !== false)
               if (!accomps.length) return null
               return (
@@ -686,7 +687,7 @@ export default function RestaurantPage() {
                   <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {products.filter(p => p.category === 'Accompagnements' && p.is_available !== false).map(a => (
+                  {accomps.map(a => (
                     <button key={a.id} onClick={() => setSelectedAccomp(a)}
                       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedAccomp?.id === a.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedAccomp?.id === a.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -854,7 +855,7 @@ export default function RestaurantPage() {
             })()}
 
             {/* Sélecteur d'accompagnement obligatoire si En menu */}
-            {wantsMenu && (() => {
+            {wantsMenu && (menuOnlyModal as any).has_accompagnement !== false && (() => {
               const accomps = products.filter(p => p.category === 'Accompagnements' && p.is_available !== false)
               if (!accomps.length) return null
               return (
@@ -864,7 +865,7 @@ export default function RestaurantPage() {
                   <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {products.filter(p => p.category === 'Accompagnements' && p.is_available !== false).map(a => (
+                  {accomps.map(a => (
                     <button key={a.id} onClick={() => setSelectedAccomp(a)}
                       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedAccomp?.id === a.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedAccomp?.id === a.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -883,9 +884,10 @@ export default function RestaurantPage() {
 
             <button
               onClick={() => {
+                const productWantsAccomp = (menuOnlyModal as any).has_accompagnement !== false
                 const hasAccomps = products.some(p => p.category === 'Accompagnements' && p.is_available !== false)
                 if (wantsMenu && !selectedBoisson) return
-                if (wantsMenu && hasAccomps && !selectedAccomp) return
+                if (wantsMenu && productWantsAccomp && hasAccomps && !selectedAccomp) return
                 const menuExtra = wantsMenu ? Math.max(0, Number((menuOnlyModal as any).menu_extra_price || 0) - Number(menuOnlyModal.price)) : 0
                 const accompExtra = wantsMenu && selectedAccomp ? Number(selectedAccomp.price) : 0
                 const boissonExtra = wantsMenu && selectedBoisson ? Number((selectedBoisson as any).menu_supplement || 0) : 0
@@ -895,13 +897,13 @@ export default function RestaurantPage() {
                 setSelectedBoisson(null)
                 setSelectedAccomp(null)
               }}
-              disabled={wantsMenu && (!selectedBoisson || (products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp))}
+              disabled={wantsMenu && (!selectedBoisson || ((menuOnlyModal as any).has_accompagnement !== false && products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp))}
               style={{
-                width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: wantsMenu && (!selectedBoisson || (products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? 'default' : 'pointer',
-                background: wantsMenu && (!selectedBoisson || (products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-                color: wantsMenu && (!selectedBoisson || (products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? '#374151' : 'white',
+                width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: wantsMenu && (!selectedBoisson || ((menuOnlyModal as any).has_accompagnement !== false && products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? 'default' : 'pointer',
+                background: wantsMenu && (!selectedBoisson || ((menuOnlyModal as any).has_accompagnement !== false && products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                color: wantsMenu && (!selectedBoisson || ((menuOnlyModal as any).has_accompagnement !== false && products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? '#374151' : 'white',
                 fontWeight: 800, fontSize: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                boxShadow: wantsMenu && (!selectedBoisson || (products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? 'none' : '0 4px 20px rgba(99,102,241,0.4)',
+                boxShadow: wantsMenu && (!selectedBoisson || ((menuOnlyModal as any).has_accompagnement !== false && products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? 'none' : '0 4px 20px rgba(99,102,241,0.4)',
                 transition: 'all 0.2s',
               }}
             >

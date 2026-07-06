@@ -51,7 +51,7 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
-  const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '' })
+  const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '', has_accompagnement: true })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{ name?: boolean; price?: boolean }>({})
@@ -112,9 +112,9 @@ export default function MenuPage() {
     load()
   }, [])
 
-  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '' }); setCatInput(''); setFieldErrors({}); setShowForm(true) }
-  function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '', menu_supplement: String((p as any).menu_supplement || '') }); setCatInput(p.category || ''); setFieldErrors({}); setShowForm(true) }
-  function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '' }); setCatInput(catName); setFieldErrors({}); setShowForm(true) }
+  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '', has_accompagnement: true }); setCatInput(''); setFieldErrors({}); setShowForm(true) }
+  function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '', menu_supplement: String((p as any).menu_supplement || ''), has_accompagnement: (p as any).has_accompagnement !== false }); setCatInput(p.category || ''); setFieldErrors({}); setShowForm(true) }
+  function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '', has_accompagnement: true }); setCatInput(catName); setFieldErrors({}); setShowForm(true) }
 
   async function dropProduct(dragId: string, overId: string, catName: string) {
     if (dragId === overId) return
@@ -175,6 +175,7 @@ export default function MenuPage() {
       menu_extra_price: form.menu_extra_price ? parseFloat(form.menu_extra_price) : 0,
       menu_label: form.menu_label,
       menu_supplement: form.menu_supplement ? parseFloat(form.menu_supplement) : 0,
+      has_accompagnement: form.has_accompagnement,
     }
     if (editProduct) {
       const { error } = await supabase.from('products').update(fields).eq('id', editProduct.id)
@@ -716,6 +717,21 @@ export default function MenuPage() {
                   <input placeholder="Contenu (ex: Frites + Boisson)" value={form.menu_label} onChange={e => setForm({ ...form, menu_label: e.target.value })} style={{ ...inputStyle, flex: 2 }} />
                 </div>
               </div>
+              {form.menu_extra_price && parseFloat(form.menu_extra_price) > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div>
+                    <p style={{ color: 'white', fontWeight: 600, fontSize: 13, margin: 0 }}>🍟 Accompagnement inclus dans le menu</p>
+                    <p style={{ color: '#4b5563', fontSize: 11, margin: '2px 0 0' }}>Le client pourra choisir un accompagnement</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, has_accompagnement: !f.has_accompagnement }))}
+                    style={{ width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: form.has_accompagnement ? '#6366f1' : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+                  >
+                    <span style={{ position: 'absolute', top: 2, left: form.has_accompagnement ? 22 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left 0.2s' }} />
+                  </button>
+                </div>
+              )}
               {(form.category === 'Boissons' || catInput === 'Boissons') && (
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
                   <label style={{ display: 'block', fontSize: 12, color: '#4b5563', marginBottom: 4, fontWeight: 600 }}>Supplément en menu (facultatif)</label>
