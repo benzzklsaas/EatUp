@@ -205,8 +205,14 @@ export default function CheckoutPage() {
           </div>
 
           <button
+            onClick={() => router.push(`/suivi/${success.orderNumber}`)}
+            style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15, marginBottom: 10 }}
+          >
+            📍 Suivre ma commande
+          </button>
+          <button
             onClick={() => router.push(`/restaurant/${slug}`)}
-            style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15 }}
+            style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: 'transparent', color: '#4b5563', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
           >
             Retour au menu
           </button>

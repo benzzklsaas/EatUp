@@ -145,6 +145,11 @@ export async function POST(req: NextRequest) {
           <p style="color:#ffffff;font-size:18px;font-weight:700;margin:0;text-transform:capitalize">🕐 ${pickupFormatted}</p>
         </div>
       </td></tr>
+      <tr><td style="background:#1e293b;padding:0 36px 32px;border-top:1px solid #334155;text-align:center">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL}/suivi/${orderNumber}" style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#ffffff;font-weight:700;font-size:14px;padding:13px 28px;border-radius:12px;text-decoration:none">
+          📍 Suivre ma commande en temps réel
+        </a>
+      </td></tr>
       <tr><td style="background:#0f172a;border-radius:0 0 20px 20px;padding:24px 36px;text-align:center;border-top:1px solid #334155">
         <p style="color:#475569;font-size:13px;margin:0 0 4px">Des questions ? Contactez directement le restaurant.</p>
         <p style="color:#334155;font-size:11px;margin:0">© 2026 EatUp · Click &amp; Collect pour restaurants</p>
