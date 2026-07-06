@@ -21,13 +21,23 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const stored = localStorage.getItem(`cart_${slug}`)
-    if (stored) setCart(JSON.parse(stored))
-
     async function loadResto() {
       const { data } = await supabase.from('restaurants').select('id, name, slug, email').eq('slug', slug).single()
       if (data) {
         setRestaurant(data)
+
+        // Valider le panier : ne garder que les produits qui existent vraiment
+        const stored = localStorage.getItem(`cart_${slug}`)
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          const ids = [...new Set(parsed.map((i: any) => i.product.id))]
+          if (ids.length > 0) {
+            const { data: validProducts } = await supabase.from('products').select('id').in('id', ids).eq('restaurant_id', data.id)
+            const validIds = new Set((validProducts || []).map((p: any) => p.id))
+            const cleaned = parsed.filter((i: any) => validIds.has(i.product.id))
+            setCart(cleaned)
+          }
+        }
 
         // Récupérer tous les horaires
         const { data: allSchedules } = await supabase
