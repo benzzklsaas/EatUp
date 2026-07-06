@@ -648,62 +648,6 @@ export default function RestaurantPage() {
               )
             })()}
 
-            {/* Sélecteur de boisson obligatoire si En menu */}
-            {wantsMenu && (() => {
-              const boissons = products.filter(p => p.category === 'Boissons' && p.is_available !== false)
-              if (!boissons.length) return null
-              return (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🥤 Choisir votre boisson</p>
-                    <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {boissons.map(b => (
-                      <button key={b.id} onClick={() => setSelectedBoisson(b)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedBoisson?.id === b.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedBoisson?.id === b.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedBoisson?.id === b.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedBoisson?.id === b.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            {selectedBoisson?.id === b.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
-                          </div>
-                          <span style={{ fontSize: 14, color: selectedBoisson?.id === b.id ? 'white' : '#d1d5db', fontWeight: selectedBoisson?.id === b.id ? 600 : 400 }}>{b.name}</span>
-                        </div>
-                        <span style={{ fontSize: 12, color: Number((b as any).menu_supplement) > 0 ? '#4ade80' : '#6b7280', fontWeight: Number((b as any).menu_supplement) > 0 ? 600 : 400 }}>{Number((b as any).menu_supplement) > 0 ? `+${Number((b as any).menu_supplement).toFixed(2)}€` : 'Incluse'}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )
-            })()}
-
-            {/* Sélecteur d'accompagnement obligatoire si En menu */}
-            {wantsMenu && (optionsModal.product as any).has_accompagnement !== false && (() => {
-              const accomps = products.filter(p => p.category === 'Accompagnements' && p.is_available !== false)
-              if (!accomps.length) return null
-              return (
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🍟 Choisir votre accompagnement</p>
-                  <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {accomps.map(a => (
-                    <button key={a.id} onClick={() => setSelectedAccomp(a)}
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedAccomp?.id === a.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedAccomp?.id === a.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedAccomp?.id === a.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedAccomp?.id === a.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          {selectedAccomp?.id === a.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
-                        </div>
-                        <span style={{ fontSize: 14, color: selectedAccomp?.id === a.id ? 'white' : '#d1d5db', fontWeight: selectedAccomp?.id === a.id ? 600 : 400 }}>{a.name}</span>
-                      </div>
-                      <span style={{ fontSize: 12, color: Number(a.price) === 0 ? '#6b7280' : '#4ade80', fontWeight: Number(a.price) === 0 ? 400 : 600 }}>{Number(a.price) === 0 ? 'Inclus' : `+${Number(a.price).toFixed(2)}€`}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              )
-            })()}
-
             {optionsModal.groups.map(group => (
               <div key={group.id} style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -745,6 +689,62 @@ export default function RestaurantPage() {
                 </div>
               </div>
             ))}
+
+            {/* Sélecteur d'accompagnement — après la config du plat */}
+            {wantsMenu && (optionsModal.product as any).has_accompagnement !== false && (() => {
+              const accomps = products.filter(p => p.category === 'Accompagnements' && p.is_available !== false)
+              if (!accomps.length) return null
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🍟 Choisir votre accompagnement</p>
+                    <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {accomps.map(a => (
+                      <button key={a.id} onClick={() => setSelectedAccomp(a)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedAccomp?.id === a.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedAccomp?.id === a.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedAccomp?.id === a.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedAccomp?.id === a.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {selectedAccomp?.id === a.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
+                          </div>
+                          <span style={{ fontSize: 14, color: selectedAccomp?.id === a.id ? 'white' : '#d1d5db', fontWeight: selectedAccomp?.id === a.id ? 600 : 400 }}>{a.name}</span>
+                        </div>
+                        <span style={{ fontSize: 12, color: Number(a.price) === 0 ? '#6b7280' : '#4ade80', fontWeight: Number(a.price) === 0 ? 400 : 600 }}>{Number(a.price) === 0 ? 'Inclus' : `+${Number(a.price).toFixed(2)}€`}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Sélecteur de boisson — après la config du plat */}
+            {wantsMenu && (() => {
+              const boissons = products.filter(p => p.category === 'Boissons' && p.is_available !== false)
+              if (!boissons.length) return null
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🥤 Choisir votre boisson</p>
+                    <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {boissons.map(b => (
+                      <button key={b.id} onClick={() => setSelectedBoisson(b)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedBoisson?.id === b.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedBoisson?.id === b.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedBoisson?.id === b.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedBoisson?.id === b.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {selectedBoisson?.id === b.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
+                          </div>
+                          <span style={{ fontSize: 14, color: selectedBoisson?.id === b.id ? 'white' : '#d1d5db', fontWeight: selectedBoisson?.id === b.id ? 600 : 400 }}>{b.name}</span>
+                        </div>
+                        <span style={{ fontSize: 12, color: Number((b as any).menu_supplement) > 0 ? '#4ade80' : '#6b7280', fontWeight: Number((b as any).menu_supplement) > 0 ? 600 : 400 }}>{Number((b as any).menu_supplement) > 0 ? `+${Number((b as any).menu_supplement).toFixed(2)}€` : 'Incluse'}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
 
             {(() => {
               const extra = optionsModal.groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
