@@ -62,6 +62,7 @@ export default function OrdersPage() {
   const [selectedItems, setSelectedItems] = useState<any[]>([])
   const [toast, setToast] = useState<{ name: string; amount: string } | null>(null)
   const [soundEnabled, setSoundEnabled] = useState(true)
+  const [expandedCols, setExpandedCols] = useState<Record<string, boolean>>({ completed: false, all: false })
   const [restaurantName, setRestaurantName] = useState('')
   const router = useRouter()
   const supabase = createClient()
@@ -214,17 +215,23 @@ export default function OrdersPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, padding: '20px 16px', minHeight: 'calc(100vh - 65px)', alignItems: 'start' }}>
         {COLUMNS.map(col => {
           const colOrders = col.key === 'all' ? orders : orders.filter(o => o.status === col.key)
+          const isCollapsible = col.key === 'completed' || col.key === 'all'
+          const isExpanded = isCollapsible ? expandedCols[col.key] : true
           return (
             <div key={col.key} style={{ borderRadius: 16, background: col.bg, border: `1px solid ${col.color}22`, padding: '12px 10px' }}>
               {/* En-tête colonne */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '0 4px' }}>
+              <div
+                onClick={isCollapsible ? () => setExpandedCols(p => ({ ...p, [col.key]: !p[col.key] })) : undefined}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: isExpanded ? 12 : 0, padding: '0 4px', cursor: isCollapsible ? 'pointer' : 'default' }}
+              >
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: col.color, flexShrink: 0 }} />
                 <span style={{ fontSize: 12, fontWeight: 800, color: col.color, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{col.label}</span>
                 <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: col.color, background: `${col.color}22`, borderRadius: 100, padding: '2px 8px' }}>{colOrders.length}</span>
+                {isCollapsible && <span style={{ fontSize: 11, color: col.color, transition: 'transform 0.2s', display: 'inline-block', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>}
               </div>
 
               {/* Cartes */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {isExpanded && <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {colOrders.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '24px 0', color: '#1f2937', fontSize: 12 }}>—</div>
                 )}
@@ -258,7 +265,7 @@ export default function OrdersPage() {
                     </div>
                   </div>
                 ))}
-              </div>
+              </div>}
             </div>
           )
         })}

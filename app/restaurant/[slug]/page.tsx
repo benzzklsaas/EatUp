@@ -43,6 +43,7 @@ type CartItem = {
   extraPrice: number
   cartKey: string
   menuBoisson?: string
+  menuAccomp?: string
 }
 
 export default function RestaurantPage() {
@@ -68,6 +69,7 @@ export default function RestaurantPage() {
   const [wantsMenu, setWantsMenu] = useState(false)
   const [menuOnlyModal, setMenuOnlyModal] = useState<Product | null>(null)
   const [selectedBoisson, setSelectedBoisson] = useState<Product | null>(null)
+  const [selectedAccomp, setSelectedAccomp] = useState<Product | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem(`cart_${slug}`)
@@ -196,19 +198,21 @@ export default function RestaurantPage() {
       setSelectedOptions({})
       setWantsMenu(hasMenu)
       setSelectedBoisson(null)
+      setSelectedAccomp(null)
       setOptionsModal({ product, groups: optGroups })
     } else if (hasMenu) {
       setWantsMenu(true)
       setSelectedBoisson(null)
+      setSelectedAccomp(null)
       setMenuOnlyModal(product)
     } else {
       addToCart(product, {}, [], 0)
     }
   }
 
-  function addToCart(product: Product, selOpts: SelectedOptions, groups: OptionGroup[], extra: number, menuBoisson?: string) {
+  function addToCart(product: Product, selOpts: SelectedOptions, groups: OptionGroup[], extra: number, menuBoisson?: string, menuAccomp?: string) {
     const cartKey = product.id + JSON.stringify(selOpts) + Date.now()
-    saveCart([...cart, { product, quantity: 1, selectedOptions: selOpts, optionGroups: groups, extraPrice: extra, cartKey, menuBoisson }])
+    saveCart([...cart, { product, quantity: 1, selectedOptions: selOpts, optionGroups: groups, extraPrice: extra, cartKey, menuBoisson, menuAccomp }])
   }
 
   function removeFromCart(cartKey: string) {
@@ -239,16 +243,19 @@ export default function RestaurantPage() {
     const { product, groups } = optionsModal
     const optExtra = groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
     const menuExtra = wantsMenu ? Math.max(0, Number((product as any).menu_extra_price || 0) - Number(product.price)) : 0
-    addToCart(product, selectedOptions, groups, optExtra + menuExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined)
+    const accompExtra = wantsMenu && selectedAccomp ? Number(selectedAccomp.price) : 0
+    addToCart(product, selectedOptions, groups, optExtra + menuExtra + accompExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined, wantsMenu && selectedAccomp ? selectedAccomp.name : undefined)
     setOptionsModal(null)
     setWantsMenu(false)
     setSelectedBoisson(null)
+    setSelectedAccomp(null)
   }
 
   function optionsValid() {
     if (!optionsModal) return false
     const optsOk = optionsModal.groups.every(g => (selectedOptions[g.id] || []).length >= g.min_choices)
     if (wantsMenu && !selectedBoisson) return false
+    if (wantsMenu && !selectedAccomp) return false
     return optsOk
   }
 
@@ -512,6 +519,7 @@ export default function RestaurantPage() {
                                 <span style={{ fontSize: 12, color: '#818cf8', flex: 1 }}>
                                   {Object.values(ci.selectedOptions || {}).flat().map((i: any) => i.name).join(' · ')}
                                   {ci.menuBoisson && <span style={{ color: '#f59e0b' }}> · 🥤 {ci.menuBoisson}</span>}
+                                  {ci.menuAccomp && <span style={{ color: '#f59e0b' }}> · 🍟 {ci.menuAccomp}</span>}
                                   {ci.extraPrice > 0 && <span style={{ color: '#f59e0b' }}> +{ci.extraPrice.toFixed(2)}€</span>}
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 10 }}>
@@ -631,6 +639,34 @@ export default function RestaurantPage() {
                           <span style={{ fontSize: 14, color: selectedBoisson?.id === b.id ? 'white' : '#d1d5db', fontWeight: selectedBoisson?.id === b.id ? 600 : 400 }}>{b.name}</span>
                         </div>
                         <span style={{ fontSize: 12, color: '#6b7280' }}>Incluse</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Sélecteur d'accompagnement obligatoire si En menu */}
+            {wantsMenu && (() => {
+              const accomps = products.filter(p => p.category === 'Accompagnements' && p.is_available !== false)
+              if (!accomps.length) return null
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🍟 Choisir votre accompagnement</p>
+                    <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {accomps.map(a => (
+                      <button key={a.id} onClick={() => setSelectedAccomp(a)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedAccomp?.id === a.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedAccomp?.id === a.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedAccomp?.id === a.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedAccomp?.id === a.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {selectedAccomp?.id === a.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
+                          </div>
+                          <span style={{ fontSize: 14, color: selectedAccomp?.id === a.id ? 'white' : '#d1d5db', fontWeight: selectedAccomp?.id === a.id ? 600 : 400 }}>{a.name}</span>
+                        </div>
+                        <span style={{ fontSize: 12, color: Number(a.price) === 0 ? '#6b7280' : '#4ade80', fontWeight: Number(a.price) === 0 ? 400 : 600 }}>{Number(a.price) === 0 ? 'Inclus' : `+${Number(a.price).toFixed(2)}€`}</span>
                       </button>
                     ))}
                   </div>
@@ -788,27 +824,57 @@ export default function RestaurantPage() {
               )
             })()}
 
+            {/* Sélecteur d'accompagnement obligatoire si En menu */}
+            {wantsMenu && (() => {
+              const accomps = products.filter(p => p.category === 'Accompagnements' && p.is_available !== false)
+              if (!accomps.length) return null
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🍟 Choisir votre accompagnement</p>
+                    <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {accomps.map(a => (
+                      <button key={a.id} onClick={() => setSelectedAccomp(a)}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedAccomp?.id === a.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedAccomp?.id === a.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedAccomp?.id === a.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedAccomp?.id === a.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {selectedAccomp?.id === a.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
+                          </div>
+                          <span style={{ fontSize: 14, color: selectedAccomp?.id === a.id ? 'white' : '#d1d5db', fontWeight: selectedAccomp?.id === a.id ? 600 : 400 }}>{a.name}</span>
+                        </div>
+                        <span style={{ fontSize: 12, color: Number(a.price) === 0 ? '#6b7280' : '#4ade80', fontWeight: Number(a.price) === 0 ? 400 : 600 }}>{Number(a.price) === 0 ? 'Inclus' : `+${Number(a.price).toFixed(2)}€`}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
             <button
               onClick={() => {
-                if (wantsMenu && !selectedBoisson) return
+                if (wantsMenu && (!selectedBoisson || !selectedAccomp)) return
                 const menuExtra = wantsMenu ? Math.max(0, Number((menuOnlyModal as any).menu_extra_price || 0) - Number(menuOnlyModal.price)) : 0
-                addToCart(menuOnlyModal, {}, [], menuExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined)
+                const accompExtra = wantsMenu && selectedAccomp ? Number(selectedAccomp.price) : 0
+                addToCart(menuOnlyModal, {}, [], menuExtra + accompExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined, wantsMenu && selectedAccomp ? selectedAccomp.name : undefined)
                 setMenuOnlyModal(null)
                 setWantsMenu(false)
                 setSelectedBoisson(null)
+                setSelectedAccomp(null)
               }}
-              disabled={wantsMenu && !selectedBoisson}
+              disabled={wantsMenu && (!selectedBoisson || !selectedAccomp)}
               style={{
-                width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: wantsMenu && !selectedBoisson ? 'default' : 'pointer',
-                background: wantsMenu && !selectedBoisson ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-                color: wantsMenu && !selectedBoisson ? '#374151' : 'white',
+                width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: wantsMenu && (!selectedBoisson || !selectedAccomp) ? 'default' : 'pointer',
+                background: wantsMenu && (!selectedBoisson || !selectedAccomp) ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                color: wantsMenu && (!selectedBoisson || !selectedAccomp) ? '#374151' : 'white',
                 fontWeight: 800, fontSize: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                boxShadow: wantsMenu && !selectedBoisson ? 'none' : '0 4px 20px rgba(99,102,241,0.4)',
+                boxShadow: wantsMenu && (!selectedBoisson || !selectedAccomp) ? 'none' : '0 4px 20px rgba(99,102,241,0.4)',
                 transition: 'all 0.2s',
               }}
             >
               <span>Ajouter au panier</span>
-              <span>{(wantsMenu ? Number((menuOnlyModal as any).menu_extra_price || 0) : Number(menuOnlyModal.price)).toFixed(2)}€</span>
+              <span>{(wantsMenu ? Number((menuOnlyModal as any).menu_extra_price || 0) + (selectedAccomp ? Number(selectedAccomp.price) : 0) : Number(menuOnlyModal.price)).toFixed(2)}€</span>
             </button>
           </div>
         </div>

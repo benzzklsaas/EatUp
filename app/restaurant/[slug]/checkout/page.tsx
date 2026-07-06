@@ -112,7 +112,7 @@ export default function CheckoutPage() {
       product_name: i.product.name,
       quantity: i.quantity,
       price: i.product.price + (i.extraPrice || 0),
-      options: [i.selectedOptions ? Object.values(i.selectedOptions).flat().map((o: any) => o.name).join(', ') : '', i.menuBoisson ? `🥤 ${i.menuBoisson}` : ''].filter(Boolean).join(', '),
+      options: [i.selectedOptions ? Object.values(i.selectedOptions).flat().map((o: any) => o.name).join(', ') : '', i.menuBoisson ? `🥤 ${i.menuBoisson}` : '', i.menuAccomp ? `🍟 ${i.menuAccomp}` : ''].filter(Boolean).join(', '),
     }))
 
     const res = await fetch('/api/orders', {
@@ -236,6 +236,7 @@ export default function CheckoutPage() {
                   </div>
                   {optionLabels && <p style={{ fontSize: 11, color: '#374151', marginTop: 2 }}>{optionLabels}</p>}
                   {i.menuBoisson && <p style={{ fontSize: 11, color: '#6366f1', marginTop: 2 }}>🥤 {i.menuBoisson}</p>}
+                  {i.menuAccomp && <p style={{ fontSize: 11, color: '#f59e0b', marginTop: 2 }}>🍟 {i.menuAccomp}</p>}
                 </div>
               )
             })}

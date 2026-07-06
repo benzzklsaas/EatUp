@@ -64,6 +64,9 @@ export default function DashboardPage() {
     </div>
   )
 
+  const GREETINGS = ['Bonjour', 'Bienvenue', 'Ravis de vous revoir']
+  const greeting = GREETINGS[Math.floor(Date.now() / 10000) % GREETINGS.length]
+
   const totalRevenue = orders.filter(o => o.payment_status === 'paid').reduce((sum, o) => sum + Number(o.total_price), 0)
   const pendingOrders = orders.filter(o => o.status === 'pending').length
   const todayOrders = orders.filter(o => o.created_at?.startsWith(new Date().toISOString().split('T')[0])).length
@@ -91,6 +94,13 @@ export default function DashboardPage() {
       </header>
 
       <main style={{ padding: '32px 24px', maxWidth: 960, margin: '0 auto' }}>
+
+        {/* Greeting */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <p style={{ fontSize: 28, fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-0.5px' }}>
+            {greeting}, <span style={{ color: '#6366f1' }}>{restaurant.name}</span> 👋
+          </p>
+        </div>
 
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 32 }}>
