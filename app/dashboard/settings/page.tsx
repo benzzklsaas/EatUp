@@ -35,6 +35,9 @@ export default function SettingsPage() {
   const [savedInfo, setSavedInfo] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
+  const [accompagnements, setAccompagnements] = useState<any[]>([])
+  const [newAccomp, setNewAccomp] = useState({ name: '', price: '' })
+  const [savingAccomp, setSavingAccomp] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -56,6 +59,9 @@ export default function SettingsPage() {
 
       const { data: closuresData } = await supabase.from('restaurant_closures').select('*').eq('restaurant_id', resto.id).order('closed_date')
       setClosures(closuresData || [])
+
+      const { data: accompsData } = await supabase.from('products').select('*').eq('restaurant_id', resto.id).eq('category', 'Accompagnements').order('created_at')
+      setAccompagnements(accompsData || [])
       setLoading(false)
     }
     load()
@@ -122,6 +128,31 @@ export default function SettingsPage() {
   async function removeClosure(id: string) {
     await supabase.from('restaurant_closures').delete().eq('id', id)
     setClosures(prev => prev.filter(c => c.id !== id))
+  }
+
+  async function addAccomp() {
+    if (!newAccomp.name.trim() || !restaurant) return
+    setSavingAccomp(true)
+    const { data } = await supabase.from('products').insert({
+      restaurant_id: restaurant.id,
+      name: newAccomp.name.trim(),
+      price: parseFloat(newAccomp.price) || 0,
+      category: 'Accompagnements',
+      is_available: true,
+    }).select().single()
+    if (data) { setAccompagnements(prev => [...prev, data]); setNewAccomp({ name: '', price: '' }) }
+    setSavingAccomp(false)
+  }
+
+  async function removeAccomp(id: string) {
+    await supabase.from('products').delete().eq('id', id)
+    setAccompagnements(prev => prev.filter(a => a.id !== id))
+  }
+
+  async function updateAccompPrice(id: string, price: string) {
+    const val = parseFloat(price) || 0
+    await supabase.from('products').update({ price: val }).eq('id', id)
+    setAccompagnements(prev => prev.map(a => a.id === id ? { ...a, price: val } : a))
   }
 
   if (loading) return (
@@ -315,6 +346,55 @@ export default function SettingsPage() {
                     {c.reason && <p style={{ fontSize: 12, color: '#4b5563', margin: 0 }}>{c.reason}</p>}
                   </div>
                   <button onClick={() => c.id && removeClosure(c.id)} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Accompagnements */}
+        <div style={{ ...section }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 6px' }}>🍟 Accompagnements (menu)</p>
+          <p style={{ fontSize: 12, color: '#4b5563', margin: '0 0 20px' }}>Proposés uniquement en mode "En menu". Prix à 0 = inclus.</p>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <input
+              placeholder="Nom (ex: Frite classique)"
+              value={newAccomp.name}
+              onChange={e => setNewAccomp({ ...newAccomp, name: e.target.value })}
+              onKeyDown={e => e.key === 'Enter' && addAccomp()}
+              style={{ flex: 2, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }}
+            />
+            <input
+              placeholder="Prix (0 = inclus)"
+              value={newAccomp.price}
+              onChange={e => setNewAccomp({ ...newAccomp, price: e.target.value })}
+              onKeyDown={e => e.key === 'Enter' && addAccomp()}
+              type="number" step="0.5" min="0"
+              style={{ flex: 1, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }}
+            />
+            <button
+              onClick={addAccomp}
+              disabled={savingAccomp || !newAccomp.name.trim()}
+              style={{ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 16 }}
+            >+</button>
+          </div>
+
+          {accompagnements.length === 0 ? (
+            <p style={{ fontSize: 13, color: '#374151' }}>Aucun accompagnement configuré</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {accompagnements.map(a => (
+                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <span style={{ flex: 1, fontSize: 14, color: 'white', fontWeight: 600 }}>{a.name}</span>
+                  <input
+                    type="number" step="0.5" min="0"
+                    defaultValue={a.price}
+                    onBlur={e => updateAccompPrice(a.id, e.target.value)}
+                    style={{ width: 80, borderRadius: 8, padding: '6px 10px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#4ade80', outline: 'none', textAlign: 'right' }}
+                  />
+                  <span style={{ fontSize: 12, color: '#4b5563' }}>€</span>
+                  <button onClick={() => removeAccomp(a.id)} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: '0 4px' }}>✕</button>
                 </div>
               ))}
             </div>
