@@ -20,7 +20,7 @@ type Order = {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: 'En attente',
+  pending: 'En cours',
   preparing: 'En préparation',
   ready: 'Prêt',
   completed: 'Terminé',
