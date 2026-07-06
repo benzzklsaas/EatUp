@@ -418,6 +418,14 @@ export default function RestaurantPage() {
         </div>
       )}
 
+      {/* Message du jour */}
+      {restaurant.daily_message && (
+        <div style={{ margin: '12px 20px 0', padding: '12px 16px', borderRadius: 14, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>📢</span>
+          <p style={{ margin: 0, fontSize: 13, color: '#a5b4fc', lineHeight: 1.5 }}>{restaurant.daily_message}</p>
+        </div>
+      )}
+
       {/* ── Barre catégories sticky ── */}
       {orderedCategories.length > 1 && (
         <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(8,12,20,0.97)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)', marginTop: 16 }}>

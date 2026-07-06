@@ -99,8 +99,10 @@ export default function CheckoutPage() {
         }
 
         if (slots.length > 0) {
-          setPickupSlots(slots)
-          setPickupTime(slots[0])
+          // Limiter à 18 créneaux (3h à 10 min d'intervalle)
+          const limited = slots.slice(0, 18)
+          setPickupSlots(limited)
+          setPickupTime(limited[0])
         }
       }
     }
@@ -182,7 +184,7 @@ export default function CheckoutPage() {
     const pickupDate = new Date(success.pickupTime)
     const isToday = pickupDate.toDateString() === new Date().toDateString()
     const pickupLabel = isToday
-      ? `Aujourd'hui à ${pickupDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+      ? `Aujourd'hui à ${pickupDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })}`
       : pickupDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
 
     return (
@@ -308,7 +310,7 @@ export default function CheckoutPage() {
                 })()}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   {pickupSlots.map(slot => {
-                    const label = new Date(slot).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                    const label = new Date(slot).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })
                     const selected = pickupTime === slot
                     return (
                       <button key={slot} type="button" onClick={() => setPickupTime(slot)} style={{
