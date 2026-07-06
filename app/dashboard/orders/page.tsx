@@ -20,11 +20,10 @@ type Order = {
 }
 
 const COLUMNS = [
-  { key: 'pending',   label: 'En cours',        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  next: 'preparing', nextLabel: '→ En préparation' },
-  { key: 'preparing', label: 'En préparation',   color: '#60a5fa', bg: 'rgba(96,165,250,0.08)',  next: 'ready',     nextLabel: '→ Prêt' },
-  { key: 'ready',     label: 'Prêt',             color: '#4ade80', bg: 'rgba(74,222,128,0.08)',  next: 'completed', nextLabel: '✓ Terminé' },
-  { key: 'completed', label: 'Terminé',          color: '#475569', bg: 'rgba(71,85,105,0.08)',   next: null,        nextLabel: '' },
-  { key: 'all',       label: 'Toutes',           color: '#818cf8', bg: 'rgba(129,140,248,0.06)', next: null,        nextLabel: '' },
+  { key: 'pending',   label: 'En cours',  color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  next: 'ready',     nextLabel: '→ Prêt' },
+  { key: 'ready',     label: 'Prêt',      color: '#4ade80', bg: 'rgba(74,222,128,0.08)',  next: 'completed', nextLabel: '✓ Terminé' },
+  { key: 'completed', label: 'Terminé',   color: '#475569', bg: 'rgba(71,85,105,0.08)',   next: null,        nextLabel: '' },
+  { key: 'all',       label: 'Toutes',    color: '#818cf8', bg: 'rgba(129,140,248,0.06)', next: null,        nextLabel: '' },
 ]
 
 let audioCtx: AudioContext | null = null
@@ -212,7 +211,7 @@ export default function OrdersPage() {
       </header>
 
       {/* Kanban */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, padding: '20px 16px', minHeight: 'calc(100vh - 65px)', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, padding: '20px 16px', minHeight: 'calc(100vh - 65px)', alignItems: 'start' }}>
         {COLUMNS.map(col => {
           const colOrders = col.key === 'all' ? orders : orders.filter(o => o.status === col.key)
           const isCollapsible = col.key === 'completed' || col.key === 'all'
