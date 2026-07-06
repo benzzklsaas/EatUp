@@ -176,8 +176,13 @@ export default function RestaurantPage() {
   }, [])
 
   useEffect(() => {
-    document.body.style.overflow = (optionsModal || menuOnlyModal) ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    const lock = !!(optionsModal || menuOnlyModal)
+    document.body.style.overflow = lock ? 'hidden' : ''
+    document.documentElement.style.overflow = lock ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
   }, [optionsModal, menuOnlyModal])
 
   function saveCart(newCart: CartItem[]) {
