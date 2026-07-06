@@ -175,6 +175,11 @@ export default function RestaurantPage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  useEffect(() => {
+    document.body.style.overflow = (optionsModal || menuOnlyModal) ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [optionsModal, menuOnlyModal])
+
   function saveCart(newCart: CartItem[]) {
     setCart(newCart)
     localStorage.setItem(`cart_${slug}`, JSON.stringify(newCart))
@@ -263,7 +268,7 @@ export default function RestaurantPage() {
 
   const total = cart.reduce((sum, i) => sum + (i.product.price + i.extraPrice) * i.quantity, 0)
   const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0)
-  const HIDDEN_CATEGORIES = ['Accompagnements', 'Boissons']
+  const HIDDEN_CATEGORIES = ['Accompagnements']
   const productCategories = [...new Set(products.map(p => p.category || 'Autres').filter(c => !HIDDEN_CATEGORIES.includes(c)))]
   const orderedCategories = dbCategories.length > 0
     ? [...dbCategories.map(c => c.name).filter(n => productCategories.includes(n)), ...productCategories.filter(n => !dbCategories.find(c => c.name === n))]
