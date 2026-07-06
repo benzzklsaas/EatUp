@@ -177,11 +177,27 @@ export default function RestaurantPage() {
 
   useEffect(() => {
     const lock = !!(optionsModal || menuOnlyModal)
-    document.body.style.overflow = lock ? 'hidden' : ''
-    document.documentElement.style.overflow = lock ? 'hidden' : ''
-    return () => {
+    if (lock) {
+      const scrollY = window.scrollY
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+    } else {
+      const top = document.body.style.top
       document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      if (top) window.scrollTo(0, -parseInt(top))
+    }
+    return () => {
+      const top = document.body.style.top
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      if (top) window.scrollTo(0, -parseInt(top))
     }
   }, [optionsModal, menuOnlyModal])
 
