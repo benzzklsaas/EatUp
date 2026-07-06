@@ -187,10 +187,13 @@ export default function OrdersPage() {
 
   const formatPickup = (iso: string) => {
     const d = new Date(iso)
-    const isToday = d.toDateString() === new Date().toDateString()
-    return isToday
-      ? `Aujourd'hui ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
-      : d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    const tz = 'Europe/Paris'
+    const todayStr = new Date().toLocaleDateString('fr-FR', { timeZone: tz })
+    const dStr = d.toLocaleDateString('fr-FR', { timeZone: tz })
+    const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: tz })
+    return todayStr === dStr
+      ? `Aujourd'hui ${time}`
+      : d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: tz }) + ' ' + time
   }
 
   if (loading) return (
