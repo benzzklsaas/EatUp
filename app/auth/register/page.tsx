@@ -54,11 +54,24 @@ export default function RegisterPage() {
     if (data.user) {
       const baseSlug = form.restaurantName.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
       const slug = baseSlug + '-' + Math.random().toString(36).slice(2, 6)
-      const { error: restoError } = await supabase.from('restaurants').insert({
+      const { data: newResto, error: restoError } = await supabase.from('restaurants').insert({
         name: form.restaurantName, email: form.email, phone: form.phone,
         address: form.address, description: form.description, owner_id: data.user.id, slug,
-      })
-      if (restoError) { setError('Erreur lors de la création — veuillez réessayer.'); setLoading(false); return }
+      }).select().single()
+      if (restoError || !newResto) { setError('Erreur lors de la création — veuillez réessayer.'); setLoading(false); return }
+
+      // Créer les horaires par défaut (lun-ven 11h-15h et 18h-23h, sam 11h-23h, dim fermé)
+      const defaultSchedule = [0,1,2,3,4,5,6].map(day => ({
+        restaurant_id: newResto.id,
+        day_of_week: day,
+        is_closed: day === 6,
+        opening_time_1: '11:00',
+        closing_time_1: '15:00',
+        opening_time_2: day < 6 ? '18:00' : null,
+        closing_time_2: day < 6 ? '23:00' : null,
+        slot_duration: 10,
+      }))
+      await supabase.from('restaurant_schedule').insert(defaultSchedule)
     }
 
     router.push('/subscribe')

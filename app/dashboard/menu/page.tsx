@@ -51,7 +51,7 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
-  const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '', has_accompagnement: true })
+  const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '', has_accompagnement: false })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{ name?: boolean; price?: boolean }>({})
@@ -112,9 +112,9 @@ export default function MenuPage() {
     load()
   }, [])
 
-  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '', has_accompagnement: true }); setCatInput(''); setFieldErrors({}); setShowForm(true) }
+  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '', has_accompagnement: false }); setCatInput(''); setFieldErrors({}); setShowForm(true) }
   function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '', menu_supplement: String((p as any).menu_supplement || ''), has_accompagnement: (p as any).has_accompagnement !== false }); setCatInput(p.category || ''); setFieldErrors({}); setShowForm(true) }
-  function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '', has_accompagnement: true }); setCatInput(catName); setFieldErrors({}); setShowForm(true) }
+  function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '', has_accompagnement: false }); setCatInput(catName); setFieldErrors({}); setShowForm(true) }
 
   async function dropProduct(dragId: string, overId: string, catName: string) {
     if (dragId === overId) return

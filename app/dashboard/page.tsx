@@ -34,7 +34,14 @@ export default function DashboardPage() {
         router.push('/auth/register'); return
       }
 
-      const { data: sub } = await supabase.from('restaurant_subscriptions').select('status, past_due_since').eq('restaurant_id', resto.id).single()
+      // Si inscription récente (< 2 min), patienter que le webhook Stripe arrive
+      const isNew = (Date.now() - new Date(resto.created_at).getTime()) < 2 * 60_000
+      let sub = null
+      for (let attempt = 0; attempt < (isNew ? 6 : 1); attempt++) {
+        const { data } = await supabase.from('restaurant_subscriptions').select('status, past_due_since').eq('restaurant_id', resto.id).single()
+        if (data) { sub = data; break }
+        if (attempt < 5) await new Promise(r => setTimeout(r, 2000))
+      }
       const gracePeriodExpired = sub?.status === 'past_due' && sub.past_due_since
         && (Date.now() - new Date(sub.past_due_since).getTime()) > 2 * 24 * 3600_000
       if (!sub || (sub.status !== 'active' && sub.status !== 'past_due') || gracePeriodExpired) {
