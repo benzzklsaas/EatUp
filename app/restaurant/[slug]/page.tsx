@@ -608,7 +608,7 @@ export default function RestaurantPage() {
           onClick={(e) => { if (e.target === e.currentTarget) setOptionsModal(null) }}
           style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
         >
-          <div style={{ width: '100%', maxWidth: 560, borderRadius: '24px 24px 0 0', padding: '8px 20px 36px', background: '#0d1424', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '85vh', overflowY: 'auto', animation: 'slideUp 0.3s ease' }}>
+          <div style={{ width: '100%', maxWidth: 560, borderRadius: '24px 24px 0 0', padding: '8px 20px 36px', background: '#0d1424', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '85vh', overflowY: 'auto', overscrollBehavior: 'contain', animation: 'slideUp 0.3s ease' }}>
 
             {/* Handle */}
             <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.15)', margin: '12px auto 20px' }} />
@@ -780,7 +780,7 @@ export default function RestaurantPage() {
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: '#1a1a2e', borderRadius: '24px 24px 0 0', padding: '28px 20px 36px', width: '100%', maxWidth: 480 }}
+            style={{ background: '#1a1a2e', borderRadius: '24px 24px 0 0', padding: '28px 20px 36px', width: '100%', maxWidth: 480, maxHeight: '85vh', overflowY: 'auto', overscrollBehavior: 'contain' }}
           >
             <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '0 auto 24px' }} />
             <p style={{ fontSize: 18, fontWeight: 800, color: 'white', marginBottom: 6 }}>{menuOnlyModal.name}</p>
