@@ -51,7 +51,7 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
-  const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' })
+  const [form, setForm] = useState({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '' })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{ name?: boolean; price?: boolean }>({})
@@ -107,8 +107,8 @@ export default function MenuPage() {
     load()
   }, [])
 
-  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(''); setFieldErrors({}); setShowForm(true) }
-  function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '' }); setCatInput(p.category || ''); setFieldErrors({}); setShowForm(true) }
+  function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '' }); setCatInput(''); setFieldErrors({}); setShowForm(true) }
+  function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '', menu_supplement: String((p as any).menu_supplement || '') }); setCatInput(p.category || ''); setFieldErrors({}); setShowForm(true) }
   function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(catName); setFieldErrors({}); setShowForm(true) }
 
   async function dropProduct(dragId: string, overId: string, catName: string) {
@@ -169,6 +169,7 @@ export default function MenuPage() {
       image_url: form.image_url,
       menu_extra_price: form.menu_extra_price ? parseFloat(form.menu_extra_price) : 0,
       menu_label: form.menu_label,
+      menu_supplement: form.menu_supplement ? parseFloat(form.menu_supplement) : 0,
     }
     if (editProduct) {
       const { error } = await supabase.from('products').update(fields).eq('id', editProduct.id)
@@ -642,6 +643,13 @@ export default function MenuPage() {
                   <input placeholder="Contenu (ex: Frites + Boisson)" value={form.menu_label} onChange={e => setForm({ ...form, menu_label: e.target.value })} style={{ ...inputStyle, flex: 2 }} />
                 </div>
               </div>
+              {(form.category === 'Boissons' || catInput === 'Boissons') && (
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: '#4b5563', marginBottom: 4, fontWeight: 600 }}>Supplément en menu (facultatif)</label>
+                  <p style={{ fontSize: 11, color: '#374151', margin: '0 0 8px' }}>Si cette boisson coûte plus cher que les autres quand choisie dans un menu</p>
+                  <input placeholder="Ex: 1.50" value={form.menu_supplement} onChange={e => setForm({ ...form, menu_supplement: e.target.value })} type="number" step="0.5" min="0" style={{ ...inputStyle, width: '50%' }} />
+                </div>
+              )}
               <div>
                 <label style={{ display: 'block', fontSize: 12, color: '#4b5563', marginBottom: 8, fontWeight: 600 }}>Photo du produit</label>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

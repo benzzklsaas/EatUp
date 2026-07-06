@@ -244,7 +244,8 @@ export default function RestaurantPage() {
     const optExtra = groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
     const menuExtra = wantsMenu ? Math.max(0, Number((product as any).menu_extra_price || 0) - Number(product.price)) : 0
     const accompExtra = wantsMenu && selectedAccomp ? Number(selectedAccomp.price) : 0
-    addToCart(product, selectedOptions, groups, optExtra + menuExtra + accompExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined, wantsMenu && selectedAccomp ? selectedAccomp.name : undefined)
+    const boissonExtra = wantsMenu && selectedBoisson ? Number((selectedBoisson as any).menu_supplement || 0) : 0
+    addToCart(product, selectedOptions, groups, optExtra + menuExtra + accompExtra + boissonExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined, wantsMenu && selectedAccomp ? selectedAccomp.name : undefined)
     setOptionsModal(null)
     setWantsMenu(false)
     setSelectedBoisson(null)
@@ -640,7 +641,7 @@ export default function RestaurantPage() {
                           </div>
                           <span style={{ fontSize: 14, color: selectedBoisson?.id === b.id ? 'white' : '#d1d5db', fontWeight: selectedBoisson?.id === b.id ? 600 : 400 }}>{b.name}</span>
                         </div>
-                        <span style={{ fontSize: 12, color: '#6b7280' }}>Incluse</span>
+                        <span style={{ fontSize: 12, color: Number((b as any).menu_supplement) > 0 ? '#4ade80' : '#6b7280', fontWeight: Number((b as any).menu_supplement) > 0 ? 600 : 400 }}>{Number((b as any).menu_supplement) > 0 ? `+${Number((b as any).menu_supplement).toFixed(2)}€` : 'Incluse'}</span>
                       </button>
                     ))}
                   </div>
@@ -818,7 +819,7 @@ export default function RestaurantPage() {
                           </div>
                           <span style={{ fontSize: 14, color: selectedBoisson?.id === b.id ? 'white' : '#d1d5db', fontWeight: selectedBoisson?.id === b.id ? 600 : 400 }}>{b.name}</span>
                         </div>
-                        <span style={{ fontSize: 12, color: '#6b7280' }}>Incluse</span>
+                        <span style={{ fontSize: 12, color: Number((b as any).menu_supplement) > 0 ? '#4ade80' : '#6b7280', fontWeight: Number((b as any).menu_supplement) > 0 ? 600 : 400 }}>{Number((b as any).menu_supplement) > 0 ? `+${Number((b as any).menu_supplement).toFixed(2)}€` : 'Incluse'}</span>
                       </button>
                     ))}
                   </div>
@@ -861,7 +862,8 @@ export default function RestaurantPage() {
                 if (wantsMenu && hasAccomps && !selectedAccomp) return
                 const menuExtra = wantsMenu ? Math.max(0, Number((menuOnlyModal as any).menu_extra_price || 0) - Number(menuOnlyModal.price)) : 0
                 const accompExtra = wantsMenu && selectedAccomp ? Number(selectedAccomp.price) : 0
-                addToCart(menuOnlyModal, {}, [], menuExtra + accompExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined, wantsMenu && selectedAccomp ? selectedAccomp.name : undefined)
+                const boissonExtra = wantsMenu && selectedBoisson ? Number((selectedBoisson as any).menu_supplement || 0) : 0
+                addToCart(menuOnlyModal, {}, [], menuExtra + accompExtra + boissonExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined, wantsMenu && selectedAccomp ? selectedAccomp.name : undefined)
                 setMenuOnlyModal(null)
                 setWantsMenu(false)
                 setSelectedBoisson(null)
@@ -878,7 +880,7 @@ export default function RestaurantPage() {
               }}
             >
               <span>Ajouter au panier</span>
-              <span>{(wantsMenu ? Number((menuOnlyModal as any).menu_extra_price || 0) + (selectedAccomp ? Number(selectedAccomp.price) : 0) : Number(menuOnlyModal.price)).toFixed(2)}€</span>
+              <span>{(wantsMenu ? Number((menuOnlyModal as any).menu_extra_price || 0) + (selectedAccomp ? Number(selectedAccomp.price) : 0) + (selectedBoisson ? Number((selectedBoisson as any).menu_supplement || 0) : 0) : Number(menuOnlyModal.price)).toFixed(2)}€</span>
             </button>
           </div>
         </div>
