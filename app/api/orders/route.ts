@@ -108,14 +108,14 @@ export async function POST(req: NextRequest) {
       await Promise.all([
         resend.emails.send({
           from: 'EatUp <onboarding@resend.dev>',
-          to: emailData.customerEmail,
+          to: 'ben.kacel7@gmail.com',
           subject: `✅ Commande #${orderNumber} confirmée — ${restaurantName}`,
           html: `<p>Bonjour ${customerName}, votre commande #${orderNumber} chez ${restaurantName} est confirmée. Retrait : ${pickupFormatted}. Total : ${totalStr}€</p>`,
         }),
         resend.emails.send({
           from: 'EatUp <onboarding@resend.dev>',
-          to: restoFull.email,
-          subject: `🔔 Nouvelle commande #${orderNumber} — ${customerName}`,
+          to: 'ben.kacel7@gmail.com',
+          subject: `🔔 Nouvelle commande #${orderNumber} — ${customerName} (pour ${restaurantName})`,
           html: `<p>Nouvelle commande #${orderNumber} de ${customerName}. Retrait : ${pickupFormatted}. Total : ${totalStr}€<br><a href="${appUrl}/dashboard/orders">Voir dans le dashboard</a></p>`,
         }),
       ])
