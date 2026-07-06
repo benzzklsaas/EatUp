@@ -109,7 +109,7 @@ export default function MenuPage() {
 
   function openAdd() { setEditProduct(null); setForm({ name: '', description: '', price: '', category: '', image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '' }); setCatInput(''); setFieldErrors({}); setShowForm(true) }
   function openEdit(p: Product) { setEditProduct(p); setForm({ name: p.name, description: p.description || '', price: String(p.price), category: p.category || '', image_url: p.image_url || '', menu_extra_price: String((p as any).menu_extra_price || ''), menu_label: (p as any).menu_label || '', menu_supplement: String((p as any).menu_supplement || '') }); setCatInput(p.category || ''); setFieldErrors({}); setShowForm(true) }
-  function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '' }); setCatInput(catName); setFieldErrors({}); setShowForm(true) }
+  function openAddWithCategory(catName: string) { setEditProduct(null); setForm({ name: '', description: '', price: '', category: catName, image_url: '', menu_extra_price: '', menu_label: '', menu_supplement: '' }); setCatInput(catName); setFieldErrors({}); setShowForm(true) }
 
   async function dropProduct(dragId: string, overId: string, catName: string) {
     if (dragId === overId) return
