@@ -26,6 +26,8 @@ export default function OnboardingPage() {
   const [description, setDescription] = useState('')
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
+  const [logoUrl, setLogoUrl] = useState('')
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
   const [addressLoading, setAddressLoading] = useState(false)
 
@@ -75,9 +77,20 @@ export default function OnboardingPage() {
     setTimeout(() => { setStep(n); setAnimating(false) }, 300)
   }
 
+  async function uploadLogo(file: File) {
+    setUploadingLogo(true)
+    const path = `${restaurant.id}/logo-${Date.now()}.${file.name.split('.').pop()}`
+    const { error } = await supabase.storage.from('logos').upload(path, file, { upsert: true, contentType: file.type })
+    if (!error) {
+      const { data: { publicUrl } } = supabase.storage.from('logos').getPublicUrl(path)
+      setLogoUrl(publicUrl)
+    }
+    setUploadingLogo(false)
+  }
+
   async function saveStep1() {
     setSaving(true)
-    await supabase.from('restaurants').update({ name, description, address, phone }).eq('id', restaurant.id)
+    await supabase.from('restaurants').update({ name, description, address, phone, ...(logoUrl ? { logo_url: logoUrl } : {}) }).eq('id', restaurant.id)
     setSaving(false)
     goTo(2)
   }
@@ -187,6 +200,21 @@ export default function OnboardingPage() {
             <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 32px', lineHeight: 1.6 }}>Ces infos apparaîtront sur votre page client.</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Logo upload */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <label style={{ cursor: 'pointer', flexShrink: 0 }}>
+                  <div style={{ width: 72, height: 72, borderRadius: 18, background: 'rgba(99,102,241,0.08)', border: '2px dashed rgba(99,102,241,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    {logoUrl
+                      ? <img src={logoUrl} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 16 }} />
+                      : <span style={{ fontSize: 28 }}>{uploadingLogo ? '⏳' : '📷'}</span>}
+                  </div>
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadLogo(e.target.files[0])} />
+                </label>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'white', margin: '0 0 4px' }}>Logo du restaurant</p>
+                  <p style={{ fontSize: 12, color: '#4b5563', margin: 0 }}>Apparaît sur votre page client. Optionnel.</p>
+                </div>
+              </div>
               <input placeholder="Nom du restaurant *" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
               <textarea placeholder="Description (ambiance, spécialité...)" value={description} onChange={e => setDescription(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'none' }} />
               <div style={{ position: 'relative' }}>

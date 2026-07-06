@@ -59,14 +59,16 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Order | null>(null)
   const [selectedItems, setSelectedItems] = useState<any[]>([])
-  const [toast, setToast] = useState<{ name: string; amount: string } | null>(null)
+  const [toast, setToast] = useState<{ name: string; amount: string; orderId: string } | null>(null)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [expandedCols, setExpandedCols] = useState<Record<string, boolean>>({ completed: false, all: false })
   const [restaurantName, setRestaurantName] = useState('')
+  const [alertingOrders, setAlertingOrders] = useState<Set<string>>(new Set())
   const router = useRouter()
   const supabase = createClient()
   const restaurantId = useRef<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const ringInterval = useRef<ReturnType<typeof setInterval> | null>(null)
   const printRef = useRef<HTMLDivElement>(null)
 
   async function fetchItemsAndPrint(order: Order) {
@@ -103,18 +105,40 @@ export default function OrdersPage() {
     window.print()
   }
 
+  const startRinging = useCallback((orderId: string) => {
+    if (!soundEnabled) return
+    if (ringInterval.current) return // déjà en train de sonner
+    playNotificationSound()
+    ringInterval.current = setInterval(() => {
+      playNotificationSound()
+    }, 2500)
+  }, [soundEnabled])
+
+  const stopRinging = useCallback(() => {
+    if (ringInterval.current) { clearInterval(ringInterval.current); ringInterval.current = null }
+  }, [])
+
+  const acknowledgeOrder = useCallback((orderId: string) => {
+    setAlertingOrders(prev => {
+      const next = new Set(prev)
+      next.delete(orderId)
+      if (next.size === 0) stopRinging()
+      return next
+    })
+    setToast(t => t?.orderId === orderId ? null : t)
+  }, [stopRinging])
+
   const showToast = useCallback((order: Order) => {
-    if (soundEnabled) playNotificationSound()
-    setToast({ name: `${order.first_name} ${order.last_name}`, amount: `${Number(order.total_price).toFixed(2)}€` })
-    if (toastTimer.current) clearTimeout(toastTimer.current)
-    toastTimer.current = setTimeout(() => setToast(null), 5000)
+    setAlertingOrders(prev => new Set(prev).add(order.id))
+    setToast({ name: `${order.first_name} ${order.last_name}`, amount: `${Number(order.total_price).toFixed(2)}€`, orderId: order.id })
+    startRinging(order.id)
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('🔔 Nouvelle commande EatUp', {
         body: `${order.first_name} ${order.last_name} — ${Number(order.total_price).toFixed(2)}€`,
         icon: '/LogoEatUp.PNG',
       })
     }
-  }, [soundEnabled])
+  }, [soundEnabled, startRinging])
 
   useEffect(() => {
     const unlock = () => getAudioContext()
@@ -156,6 +180,7 @@ export default function OrdersPage() {
 
   async function openDetail(order: Order) {
     setSelected(order)
+    acknowledgeOrder(order.id)
     const { data: items } = await supabase.from('order_items').select('*').eq('order_id', order.id)
     setSelectedItems(items || [])
   }
@@ -183,16 +208,18 @@ export default function OrdersPage() {
       `}</style>
       <div id="print-ticket" ref={printRef} style={{ display: 'none' }} />
 
-      {/* Toast */}
+      {/* Toast — persiste jusqu'au clic sur la commande */}
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 200, background: '#0f172a', border: '1px solid #f59e0b', borderRadius: 16, padding: '16px 20px', minWidth: 280, boxShadow: '0 0 40px rgba(245,158,11,0.2)', animation: 'slideIn 0.3s ease' }}>
+        <div
+          onClick={() => { const o = orders.find(o => o.id === toast.orderId); if (o) openDetail(o) }}
+          style={{ position: 'fixed', top: 20, right: 20, zIndex: 200, background: '#0f172a', border: '2px solid #f59e0b', borderRadius: 16, padding: '16px 20px', minWidth: 300, boxShadow: '0 0 50px rgba(245,158,11,0.35)', animation: 'slideIn 0.3s ease', cursor: 'pointer' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 28 }}>🔔</div>
-            <div>
-              <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: 0 }}>Nouvelle commande !</p>
+            <div style={{ fontSize: 28, animation: 'bounceIn 0.6s ease infinite alternate' }}>🔔</div>
+            <div style={{ flex: 1 }}>
+              <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>Nouvelle commande !</p>
               <p style={{ color: '#f59e0b', fontSize: 13, margin: '2px 0 0' }}>{toast.name} — <strong>{toast.amount}</strong></p>
+              <p style={{ color: '#4b5563', fontSize: 11, margin: '4px 0 0' }}>Appuyez pour confirmer →</p>
             </div>
-            <button onClick={() => setToast(null)} style={{ marginLeft: 'auto', color: '#475569', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
           </div>
         </div>
       )}
@@ -234,14 +261,18 @@ export default function OrdersPage() {
                 {colOrders.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '24px 0', color: '#1f2937', fontSize: 12 }}>—</div>
                 )}
-                {colOrders.map(order => (
+                {colOrders.map(order => {
+                  const isAlerting = alertingOrders.has(order.id)
+                  return (
                   <div
                     key={order.id}
                     onClick={() => openDetail(order)}
                     style={{
-                      borderRadius: 12, background: '#0d1117', border: `1px solid ${col.key === 'pending' ? col.color + '44' : 'rgba(255,255,255,0.06)'}`,
+                      borderRadius: 12, background: isAlerting ? 'rgba(245,158,11,0.06)' : '#0d1117',
+                      border: `1px solid ${isAlerting ? '#f59e0b' : col.key === 'pending' ? col.color + '44' : 'rgba(255,255,255,0.06)'}`,
                       padding: '12px', cursor: 'pointer',
-                      animation: col.key === 'pending' ? 'pulse 2s infinite' : 'none',
+                      boxShadow: isAlerting ? '0 0 20px rgba(245,158,11,0.2)' : 'none',
+                      animation: isAlerting ? 'pulse 1s infinite' : col.key === 'pending' ? 'pulse 2s infinite' : 'none',
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
@@ -263,7 +294,7 @@ export default function OrdersPage() {
                       )}
                     </div>
                   </div>
-                ))}
+                )})}
               </div>}
             </div>
           )

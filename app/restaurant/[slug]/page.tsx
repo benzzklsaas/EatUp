@@ -55,6 +55,7 @@ export default function RestaurantPage() {
   const [restaurant, setRestaurant] = useState<any>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
+  const [hasRestoredCart, setHasRestoredCart] = useState(false)
   const [loading, setLoading] = useState(true)
   const [activeCategory, setActiveCategory] = useState<string>('')
   const [dbCategories, setDbCategories] = useState<Category[]>([])
@@ -73,7 +74,10 @@ export default function RestaurantPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem(`cart_${slug}`)
-    if (stored) setCart(JSON.parse(stored))
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      if (parsed.length > 0) { setCart(parsed); setHasRestoredCart(true) }
+    }
 
     async function load() {
       const { data: resto } = await supabase
@@ -350,6 +354,16 @@ export default function RestaurantPage() {
         </div>
       </div>
 
+      {/* ── Bannière panier restauré ── */}
+      {hasRestoredCart && cartCount > 0 && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', animation: 'slideUp 0.3s ease' }}>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'white' }}>🛒 Vous avez {cartCount} article{cartCount > 1 ? 's' : ''} dans votre panier</p>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button onClick={() => setHasRestoredCart(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>×</button>
+          </div>
+        </div>
+      )}
+
       {/* ── Hero ── */}
       <div style={{ position: 'relative', height: restaurant.cover_image_url ? 260 : 200, overflow: 'hidden' }}>
         {restaurant.cover_image_url
@@ -461,9 +475,10 @@ export default function RestaurantPage() {
       {/* ── Menu ── */}
       <main style={{ padding: '20px 16px', maxWidth: 700, margin: '0 auto' }}>
         {products.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <img src="/LogoEatUp.PNG" alt="EatUp" style={{ width: 48, height: 48, objectFit: 'contain', marginBottom: 12, opacity: 0.5 }} />
-            <p style={{ color: '#374151', fontSize: 14 }}>Le menu arrive bientôt…</p>
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🍽️</div>
+            <p style={{ fontSize: 17, fontWeight: 800, color: 'white', margin: '0 0 8px' }}>Menu en cours de configuration</p>
+            <p style={{ color: '#4b5563', fontSize: 14, lineHeight: 1.6, margin: '0 auto', maxWidth: 280 }}>Le restaurant prépare sa carte. Revenez dans quelques instants !</p>
           </div>
         )}
 

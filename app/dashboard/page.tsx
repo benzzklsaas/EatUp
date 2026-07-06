@@ -18,6 +18,7 @@ const NAV = [
 export default function DashboardPage() {
   const [restaurant, setRestaurant] = useState<any>(null)
   const [orders, setOrders] = useState<any[]>([])
+  const [productCount, setProductCount] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = createClient()
@@ -56,6 +57,8 @@ export default function DashboardPage() {
         .from('orders').select('*').eq('restaurant_id', resto.id)
         .order('created_at', { ascending: false }).limit(10)
 
+      const { count } = await supabase.from('products').select('id', { count: 'exact', head: true }).eq('restaurant_id', resto.id)
+      setProductCount(count ?? 0)
       setOrders(ordersData || [])
       setLoading(false)
     }
@@ -108,6 +111,18 @@ export default function DashboardPage() {
             {greeting}, <span style={{ color: '#6366f1' }}>{restaurant.name}</span> 👋
           </p>
         </div>
+
+        {/* Bannière menu vide */}
+        {productCount === 0 && (
+          <Link href="/dashboard/menu" style={{ display: 'flex', alignItems: 'center', gap: 14, borderRadius: 18, padding: '18px 22px', background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(234,88,12,0.08))', border: '1px solid rgba(245,158,11,0.25)', textDecoration: 'none', marginBottom: 24 }}>
+            <span style={{ fontSize: 28, flexShrink: 0 }}>⚠️</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 14, fontWeight: 800, color: '#fbbf24', margin: '0 0 3px' }}>Votre menu est vide</p>
+              <p style={{ fontSize: 13, color: '#92400e', margin: 0 }}>Ajoutez vos premiers plats pour que vos clients puissent commander.</p>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', flexShrink: 0 }}>Configurer →</span>
+          </Link>
+        )}
 
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 32 }}>
