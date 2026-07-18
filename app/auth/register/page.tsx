@@ -8,11 +8,11 @@ import Image from 'next/image'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', borderRadius: 12, padding: '12px 16px', fontSize: 14,
-  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-  color: 'white', outline: 'none', boxSizing: 'border-box',
+  background: 'white', border: '1.5px solid rgba(0,0,0,0.1)',
+  color: '#1A1208', outline: 'none', boxSizing: 'border-box',
 }
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 600, color: '#6b7280', marginBottom: 8 }
-const sectionStyle: React.CSSProperties = { borderRadius: 16, padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 14 }
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 600, color: '#78716C', marginBottom: 8 }
+const sectionStyle: React.CSSProperties = { borderRadius: 16, padding: '20px', background: '#FAFAF8', border: '1.5px solid rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', gap: 14 }
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ restaurantName: '', email: '', password: '', phone: '', address: '', description: '' })
@@ -60,7 +60,6 @@ export default function RegisterPage() {
       }).select().single()
       if (restoError || !newResto) { setError('Erreur lors de la création — veuillez réessayer.'); setLoading(false); return }
 
-      // Créer les horaires par défaut (lun-ven 11h-15h et 18h-23h, sam 11h-23h, dim fermé)
       const defaultSchedule = [0,1,2,3,4,5,6].map(day => ({
         restaurant_id: newResto.id,
         day_of_week: day,
@@ -78,20 +77,18 @@ export default function RegisterPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-      <div style={{ position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 700, height: 700, background: 'radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 70%)', pointerEvents: 'none' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#FFFBF5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
 
-      <div style={{ width: '100%', maxWidth: 520, borderRadius: 24, padding: '48px 40px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ width: '100%', maxWidth: 520, borderRadius: 24, padding: '48px 40px', background: 'white', border: '1.5px solid rgba(0,0,0,0.07)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <Image src="/LogoEatUp.PNG" alt="EatUp" width={56} height={56} style={{ borderRadius: '50%', margin: '0 auto 16px' }} />
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>Créez votre restaurant</h1>
-          <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>Prêt en 5 minutes · 29,99€/mois sans engagement</p>
+          <h1 style={{ fontSize: 24, fontWeight: 900, color: '#1A1208', letterSpacing: '-0.5px', margin: '0 0 8px' }}>Créez votre restaurant</h1>
+          <p style={{ fontSize: 14, color: '#78716C', margin: 0 }}>Prêt en 5 minutes · 29,99€/mois sans engagement</p>
         </div>
 
         <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Restaurant */}
           <div style={sectionStyle}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>Votre restaurant</p>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#A8A29E', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>Votre restaurant</p>
             <div>
               <label style={labelStyle}>Nom du restaurant *</label>
               <input type="text" value={form.restaurantName} onChange={e => update('restaurantName', e.target.value)} placeholder="Crousty Naan" required style={inputStyle} />
@@ -107,17 +104,17 @@ export default function RegisterPage() {
                 autoComplete="off"
               />
               {addressLoading && (
-                <div style={{ position: 'absolute', right: 12, top: 38, fontSize: 12, color: '#6366f1' }}>...</div>
+                <div style={{ position: 'absolute', right: 12, top: 38, fontSize: 12, color: '#f97316' }}>...</div>
               )}
               {addressSuggestions.length > 0 && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, marginTop: 4, overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: 'white', border: '1.5px solid rgba(0,0,0,0.08)', borderRadius: 12, marginTop: 4, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
                   {addressSuggestions.map((s, i) => (
                     <button
                       key={i}
                       type="button"
                       onClick={() => { update('address', s.display_name); setAddressSuggestions([]) }}
-                      style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: 'white', fontSize: 13, cursor: 'pointer', borderBottom: i < addressSuggestions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.1)')}
+                      style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: '#1A1208', fontSize: 13, cursor: 'pointer', borderBottom: i < addressSuggestions.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(249,115,22,0.05)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                     >
                       📍 {s.display_name}
@@ -136,9 +133,8 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Compte */}
           <div style={sectionStyle}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>Votre compte</p>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#A8A29E', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>Votre compte</p>
             <div>
               <label style={labelStyle}>Email *</label>
               <input type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="votre@email.com" required style={inputStyle} />
@@ -150,28 +146,28 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#f87171' }}>
+            <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#dc2626' }}>
               {error}
             </div>
           )}
 
           <button type="submit" disabled={loading} style={{
             padding: '14px', borderRadius: 14, border: 'none', cursor: loading ? 'default' : 'pointer',
-            background: loading ? '#374151' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            background: loading ? '#D1C5BD' : '#f97316',
             color: 'white', fontWeight: 700, fontSize: 15,
-            boxShadow: loading ? 'none' : '0 8px 30px rgba(99,102,241,0.3)',
+            boxShadow: loading ? 'none' : '0 8px 30px rgba(249,115,22,0.3)',
           }}>
             {loading ? 'Création...' : 'Créer mon restaurant →'}
           </button>
 
-          <p style={{ textAlign: 'center', fontSize: 12, color: '#1f2937' }}>
+          <p style={{ textAlign: 'center', fontSize: 12, color: '#A8A29E' }}>
             Après inscription, vous activerez votre abonnement.
           </p>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: 24, fontSize: 14, color: '#374151' }}>
+        <p style={{ textAlign: 'center', marginTop: 24, fontSize: 14, color: '#78716C' }}>
           Déjà un compte ?{' '}
-          <Link href="/auth/login" style={{ color: '#818cf8', fontWeight: 600, textDecoration: 'none' }}>Se connecter</Link>
+          <Link href="/auth/login" style={{ color: '#f97316', fontWeight: 600, textDecoration: 'none' }}>Se connecter</Link>
         </p>
       </div>
     </div>

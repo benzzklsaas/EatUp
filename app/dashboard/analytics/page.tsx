@@ -92,7 +92,7 @@ export default function AnalyticsPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080c14' }}>
-      <p style={{ color: '#374151', fontSize: 14, fontFamily: 'system-ui' }}>Chargement...</p>
+      <p style={{ color: '#78716C', fontSize: 14, fontFamily: 'system-ui' }}>Chargement...</p>
     </div>
   )
 
@@ -100,9 +100,9 @@ export default function AnalyticsPage() {
     <div style={{ minHeight: '100vh', background: '#080c14', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', paddingBottom: 56 }}>
       <style>{`* { box-sizing: border-box; }`}</style>
 
-      <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 24px', background: 'rgba(8,12,20,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 50 }}>
-        <button onClick={() => router.push('/dashboard')} style={{ color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>← Retour</button>
-        <p style={{ fontSize: 16, fontWeight: 700, color: 'white', margin: 0 }}>Analytics</p>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 24px', background: 'rgba(8,12,20,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,0,0,0.06)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <button onClick={() => router.push('/dashboard')} style={{ color: '#78716C', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>← Retour</button>
+        <p style={{ fontSize: 16, fontWeight: 700, color: '#1A1208', margin: 0 }}>Analytics</p>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
           {(['7j', '30j', 'total'] as const).map(p => (
             <button key={p} onClick={() => setPeriod(p)} style={{ padding: '5px 12px', borderRadius: 100, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: period === p ? '#6366f1' : 'rgba(255,255,255,0.06)', color: period === p ? 'white' : '#6b7280' }}>
@@ -120,7 +120,7 @@ export default function AnalyticsPage() {
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
               CA {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
             </p>
-            <p style={{ fontSize: 42, fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
+            <p style={{ fontSize: 42, fontWeight: 900, color: '#1A1208', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
               {revenueThisMonth.toFixed(2)}<span style={{ fontSize: 22, color: 'rgba(255,255,255,0.5)' }}>€</span>
             </p>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: '8px 0 0' }}>{thisMonth.length} commande{thisMonth.length > 1 ? 's' : ''} ce mois-ci</p>
@@ -140,32 +140,32 @@ export default function AnalyticsPage() {
             { label: 'Clients uniques', value: uniqueCustomers, color: '#60a5fa', sub: 'emails différents' },
             { label: 'Terminées', value: completedCount, color: '#a78bfa', sub: `${totalOrders > 0 ? Math.round(completedCount / totalOrders * 100) : 0}% du total` },
           ].map((kpi, i) => (
-            <div key={i} style={{ borderRadius: 20, padding: '20px 22px', background: '#0d1424', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <p style={{ fontSize: 12, color: '#374151', margin: '0 0 8px', fontWeight: 600 }}>{kpi.label}</p>
+            <div key={i} style={{ borderRadius: 20, padding: '20px 22px', background: '#0d1424', border: '1.5px solid rgba(0,0,0,0.07)' }}>
+              <p style={{ fontSize: 12, color: '#78716C', margin: '0 0 8px', fontWeight: 600 }}>{kpi.label}</p>
               <p style={{ fontSize: 28, fontWeight: 900, color: kpi.color, margin: '0 0 4px', letterSpacing: '-0.8px' }}>{kpi.value}</p>
-              <p style={{ fontSize: 11, color: '#374151', margin: 0 }}>{kpi.sub}</p>
+              <p style={{ fontSize: 11, color: '#78716C', margin: 0 }}>{kpi.sub}</p>
             </div>
           ))}
         </div>
 
         {/* Graphique CA */}
-        <div style={{ borderRadius: 20, padding: '24px', background: '#0d1424', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>
+        <div style={{ borderRadius: 20, padding: '24px', background: '#0d1424', border: '1.5px solid rgba(0,0,0,0.07)' }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1208', margin: '0 0 20px' }}>
             Chiffre d'affaires — {period === '7j' ? '7 derniers jours' : period === '30j' ? '30 derniers jours' : 'tout'}
           </p>
           {totalRevenue === 0 ? (
-            <p style={{ color: '#374151', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>Aucune commande sur cette période</p>
+            <p style={{ color: '#78716C', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>Aucune commande sur cette période</p>
           ) : (
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: chartDays > 14 ? 3 : 8, height: 130 }}>
               {chartData.map((day, i) => (
                 <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
-                  {day.revenue > 0 && <p style={{ fontSize: 9, color: '#818cf8', margin: 0, fontWeight: 700 }}>{day.revenue.toFixed(0)}€</p>}
+                  {day.revenue > 0 && <p style={{ fontSize: 9, color: '#f97316', margin: 0, fontWeight: 700 }}>{day.revenue.toFixed(0)}€</p>}
                   <div style={{
                     width: '100%', borderRadius: '5px 5px 0 0',
                     height: `${Math.max((day.revenue / maxRevenue) * 100, day.revenue > 0 ? 8 : 3)}%`,
                     background: day.revenue > 0 ? 'linear-gradient(180deg,#818cf8,#6366f1)' : 'rgba(255,255,255,0.04)',
                   }} />
-                  {chartDays <= 7 && <p style={{ fontSize: 9, color: '#374151', margin: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>{day.label}</p>}
+                  {chartDays <= 7 && <p style={{ fontSize: 9, color: '#78716C', margin: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>{day.label}</p>}
                 </div>
               ))}
             </div>
@@ -173,11 +173,11 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Heure de pointe — graphique horaire */}
-        <div style={{ borderRadius: 20, padding: '24px', background: '#0d1424', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 4px' }}>Affluence par heure</p>
-          <p style={{ fontSize: 12, color: '#374151', margin: '0 0 20px' }}>Toutes commandes confondues</p>
+        <div style={{ borderRadius: 20, padding: '24px', background: '#0d1424', border: '1.5px solid rgba(0,0,0,0.07)' }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1208', margin: '0 0 4px' }}>Affluence par heure</p>
+          <p style={{ fontSize: 12, color: '#78716C', margin: '0 0 20px' }}>Toutes commandes confondues</p>
           {orders.length === 0 ? (
-            <p style={{ color: '#374151', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>Pas encore de données</p>
+            <p style={{ color: '#78716C', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>Pas encore de données</p>
           ) : (
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 80 }}>
               {hourBars.map(({ h, count }) => {
@@ -199,8 +199,8 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Statuts */}
-        <div style={{ borderRadius: 20, padding: '24px', background: '#0d1424', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>Statuts des commandes</p>
+        <div style={{ borderRadius: 20, padding: '24px', background: '#0d1424', border: '1.5px solid rgba(0,0,0,0.07)' }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1208', margin: '0 0 20px' }}>Statuts des commandes</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
               { label: 'En attente', count: pendingCount, color: '#f59e0b' },
@@ -210,8 +210,8 @@ export default function AnalyticsPage() {
             ].map(item => (
               <div key={item.label}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
-                  <span style={{ color: '#6b7280' }}>{item.label}</span>
-                  <span style={{ color: 'white', fontWeight: 700 }}>{item.count}</span>
+                  <span style={{ color: '#78716C' }}>{item.label}</span>
+                  <span style={{ color: '#1A1208', fontWeight: 700 }}>{item.count}</span>
                 </div>
                 <div style={{ height: 6, borderRadius: 100, background: 'rgba(255,255,255,0.05)' }}>
                   <div style={{ height: 6, borderRadius: 100, background: item.color, width: totalOrders > 0 ? `${(item.count / totalOrders) * 100}%` : '0%', transition: 'width 0.6s ease' }} />

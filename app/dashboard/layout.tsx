@@ -40,8 +40,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [pathname])
 
   if (!checked) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810' }}>
-      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 20px #6366f1', animation: 'pulse 1s infinite' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFFBF5' }}>
+      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316', boxShadow: '0 0 20px rgba(249,115,22,0.4)', animation: 'pulse 1s infinite' }} />
       <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
     </div>
   )

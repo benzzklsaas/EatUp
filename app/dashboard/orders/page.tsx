@@ -198,13 +198,13 @@ export default function OrdersPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810' }}>
-      <p style={{ color: '#475569' }}>Chargement...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFFBF5' }}>
+      <p style={{ color: '#78716C' }}>Chargement...</p>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#FFFBF5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       <style>{`
         @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4) } 50% { box-shadow: 0 0 0 8px rgba(245,158,11,0) } }
@@ -216,25 +216,25 @@ export default function OrdersPage() {
       {toast && (
         <div
           onClick={() => { const o = orders.find(o => o.id === toast.orderId); if (o) openDetail(o) }}
-          style={{ position: 'fixed', top: 20, right: 20, zIndex: 200, background: '#0f172a', border: '2px solid #f59e0b', borderRadius: 16, padding: '16px 20px', minWidth: 300, boxShadow: '0 0 50px rgba(245,158,11,0.35)', animation: 'slideIn 0.3s ease', cursor: 'pointer' }}>
+          style={{ position: 'fixed', top: 20, right: 20, zIndex: 200, background: 'white', border: '2px solid #f59e0b', borderRadius: 16, padding: '16px 20px', minWidth: 300, boxShadow: '0 8px 40px rgba(245,158,11,0.25)', animation: 'slideIn 0.3s ease', cursor: 'pointer' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ fontSize: 28, animation: 'bounceIn 0.6s ease infinite alternate' }}>🔔</div>
+            <div style={{ fontSize: 28 }}>🔔</div>
             <div style={{ flex: 1 }}>
-              <p style={{ color: 'white', fontWeight: 800, fontSize: 14, margin: 0 }}>Nouvelle commande !</p>
+              <p style={{ color: '#1A1208', fontWeight: 800, fontSize: 14, margin: 0 }}>Nouvelle commande !</p>
               <p style={{ color: '#f59e0b', fontSize: 13, margin: '2px 0 0' }}>{toast.name} — <strong>{toast.amount}</strong></p>
-              <p style={{ color: '#4b5563', fontSize: 11, margin: '4px 0 0' }}>Appuyez pour confirmer →</p>
+              <p style={{ color: '#A8A29E', fontSize: 11, margin: '4px 0 0' }}>Appuyez pour confirmer →</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'rgba(5,8,16,0.9)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(20px)' }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', height: 64, background: 'rgba(255,251,245,0.95)', borderBottom: '1px solid rgba(0,0,0,0.06)', position: 'sticky', top: 0, zIndex: 50, backdropFilter: 'blur(20px)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => router.push('/dashboard')} style={{ color: '#374151', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>←</button>
-          <h1 style={{ fontSize: 16, fontWeight: 800, color: 'white', margin: 0 }}>Commandes</h1>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px #4ade80' }} title="Temps réel actif" />
-          <span style={{ fontSize: 12, color: '#374151' }}>{orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length} actives</span>
+          <button onClick={() => router.push('/dashboard')} style={{ color: '#78716C', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>←</button>
+          <h1 style={{ fontSize: 16, fontWeight: 800, color: '#1A1208', margin: 0 }}>Commandes</h1>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px rgba(16,185,129,0.5)' }} title="Temps réel actif" />
+          <span style={{ fontSize: 12, color: '#A8A29E' }}>{orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length} actives</span>
         </div>
         <button onClick={() => setSoundEnabled(!soundEnabled)} style={{ fontSize: 18, background: 'none', border: 'none', cursor: 'pointer', opacity: soundEnabled ? 1 : 0.3 }}>
           {soundEnabled ? '🔊' : '🔇'}
@@ -272,22 +272,22 @@ export default function OrdersPage() {
                     key={order.id}
                     onClick={() => openDetail(order)}
                     style={{
-                      borderRadius: 12, background: isAlerting ? 'rgba(245,158,11,0.06)' : '#0d1117',
-                      border: `1px solid ${isAlerting ? '#f59e0b' : col.key === 'pending' ? col.color + '44' : 'rgba(255,255,255,0.06)'}`,
+                      borderRadius: 12, background: isAlerting ? 'rgba(245,158,11,0.06)' : 'white',
+                      border: `1.5px solid ${isAlerting ? '#f59e0b' : col.key === 'pending' ? col.color + '55' : 'rgba(0,0,0,0.07)'}`,
                       padding: '12px', cursor: 'pointer',
-                      boxShadow: isAlerting ? '0 0 20px rgba(245,158,11,0.2)' : 'none',
+                      boxShadow: isAlerting ? '0 0 20px rgba(245,158,11,0.15)' : '0 1px 4px rgba(0,0,0,0.05)',
                       animation: isAlerting ? 'pulse 1s infinite' : col.key === 'pending' ? 'pulse 2s infinite' : 'none',
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                      <p style={{ fontSize: 14, fontWeight: 800, color: 'white', margin: 0 }}>{order.first_name} {order.last_name}</p>
+                      <p style={{ fontSize: 14, fontWeight: 800, color: '#1A1208', margin: 0 }}>{order.first_name} {order.last_name}</p>
                       <span style={{ fontSize: 13, fontWeight: 700, color: col.color }}>#{order.order_number}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                      <span style={{ fontSize: 11, color: '#374151' }}>⏰ {formatPickup(order.pickup_time)}</span>
+                      <span style={{ fontSize: 11, color: '#78716C' }}>⏰ {formatPickup(order.pickup_time)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 15, fontWeight: 900, color: 'white' }}>{Number(order.total_price).toFixed(2)}€</span>
+                      <span style={{ fontSize: 15, fontWeight: 900, color: '#1A1208' }}>{Number(order.total_price).toFixed(2)}€</span>
                       {col.next && (
                         <button
                           onClick={e => { e.stopPropagation(); updateStatus(order.id, col.next!) }}
@@ -307,48 +307,48 @@ export default function OrdersPage() {
 
       {/* Modal détail */}
       {selected && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ width: '100%', maxWidth: 420, borderRadius: 20, padding: '28px 24px', background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ width: '100%', maxWidth: 420, borderRadius: 20, padding: '28px 24px', background: 'white', border: '1.5px solid rgba(0,0,0,0.08)', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 800, color: 'white', margin: '0 0 4px' }}>{selected.first_name} {selected.last_name}</h2>
-                <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>#{selected.order_number} · {formatPickup(selected.pickup_time)}</p>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1A1208', margin: '0 0 4px' }}>{selected.first_name} {selected.last_name}</h2>
+                <p style={{ fontSize: 12, color: '#A8A29E', margin: 0 }}>#{selected.order_number} · {formatPickup(selected.pickup_time)}</p>
               </div>
-              <button onClick={() => setSelected(null)} style={{ color: '#374151', background: 'none', border: 'none', cursor: 'pointer', fontSize: 20 }}>✕</button>
+              <button onClick={() => setSelected(null)} style={{ color: '#A8A29E', background: 'none', border: 'none', cursor: 'pointer', fontSize: 20 }}>✕</button>
             </div>
 
             {/* Infos client */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-              {selected.phone && <span style={{ fontSize: 12, color: '#9ca3af', background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '4px 10px' }}>📞 {selected.phone}</span>}
-              <span style={{ fontSize: 12, color: '#9ca3af', background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '4px 10px' }}>💳 {selected.payment_method === 'cash' ? 'En caisse' : 'En ligne'}</span>
+              {selected.phone && <span style={{ fontSize: 12, color: '#78716C', background: '#FAFAF8', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 8, padding: '4px 10px' }}>📞 {selected.phone}</span>}
+              <span style={{ fontSize: 12, color: '#78716C', background: '#FAFAF8', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 8, padding: '4px 10px' }}>💳 {selected.payment_method === 'cash' ? 'En caisse' : 'En ligne'}</span>
             </div>
 
             {/* Articles */}
             {selectedItems.length > 0 && (
-              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>Détail commande</p>
+              <div style={{ background: '#FAFAF8', borderRadius: 12, padding: '12px 14px', marginBottom: 16, border: '1px solid rgba(0,0,0,0.06)' }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#A8A29E', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>Détail commande</p>
                 {selectedItems.map((item: any, i: number) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < selectedItems.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < selectedItems.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}>
                     <div>
-                      <span style={{ color: 'white', fontWeight: 600, fontSize: 14 }}>{item.quantity}× {item.product_name}</span>
-                      {item.options && <p style={{ color: '#374151', fontSize: 11, margin: '2px 0 0' }}>→ {item.options}</p>}
+                      <span style={{ color: '#1A1208', fontWeight: 600, fontSize: 14 }}>{item.quantity}× {item.product_name}</span>
+                      {item.options && <p style={{ color: '#78716C', fontSize: 11, margin: '2px 0 0' }}>→ {item.options}</p>}
                     </div>
-                    <span style={{ color: '#9ca3af', fontWeight: 600, fontSize: 13 }}>{(item.price * item.quantity).toFixed(2)}€</span>
+                    <span style={{ color: '#78716C', fontWeight: 600, fontSize: 13 }}>{(item.price * item.quantity).toFixed(2)}€</span>
                   </div>
                 ))}
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, marginTop: 6, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span style={{ color: 'white', fontWeight: 800, fontSize: 15 }}>Total</span>
-                  <span style={{ color: 'white', fontWeight: 800, fontSize: 15 }}>{Number(selected.total_price).toFixed(2)}€</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, marginTop: 6, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+                  <span style={{ color: '#1A1208', fontWeight: 800, fontSize: 15 }}>Total</span>
+                  <span style={{ color: '#f97316', fontWeight: 800, fontSize: 15 }}>{Number(selected.total_price).toFixed(2)}€</span>
                 </div>
               </div>
             )}
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => fetchItemsAndPrint(selected)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', color: '#9ca3af', fontWeight: 600, fontSize: 13 }}>
+              <button onClick={() => fetchItemsAndPrint(selected)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: '1.5px solid rgba(0,0,0,0.08)', cursor: 'pointer', background: 'white', color: '#78716C', fontWeight: 600, fontSize: 13 }}>
                 🖨️ Imprimer
               </button>
-              <button onClick={() => setSelected(null)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', color: '#9ca3af', fontWeight: 600, fontSize: 13 }}>
+              <button onClick={() => setSelected(null)} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', cursor: 'pointer', background: '#f97316', color: 'white', fontWeight: 600, fontSize: 13 }}>
                 Fermer
               </button>
             </div>

@@ -52,40 +52,40 @@ export default function AgentPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#FFFBF5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg) } }
         @keyframes fade-in { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
         textarea:focus { outline: none; border-color: rgba(99,102,241,0.5) !important; }
       `}</style>
 
-      <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', position: 'sticky', top: 0, background: 'rgba(5,8,16,0.85)', backdropFilter: 'blur(20px)', zIndex: 50 }}>
-        <button onClick={() => router.push('/dashboard')} style={{ color: '#374151', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '4px 8px 4px 0' }}>←</button>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px', borderBottom: '1px solid rgba(0,0,0,0.05)', position: 'sticky', top: 0, background: 'rgba(5,8,16,0.85)', backdropFilter: 'blur(20px)', zIndex: 50 }}>
+        <button onClick={() => router.push('/dashboard')} style={{ color: '#78716C', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '4px 8px 4px 0' }}>←</button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
           <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>✦</div>
           <div>
-            <p style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0, lineHeight: 1.2 }}>Agent IA</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: '#1A1208', margin: 0, lineHeight: 1.2 }}>Agent IA</p>
             <p style={{ fontSize: 11, color: '#6366f1', margin: 0, fontWeight: 600 }}>Réponses Google · Premium</p>
           </div>
         </div>
         {restaurantName && (
-          <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>{restaurantName}</span>
+          <span style={{ fontSize: 12, color: '#78716C', fontWeight: 600 }}>{restaurantName}</span>
         )}
       </header>
 
       <main style={{ padding: '40px 24px', maxWidth: 640, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: '#1A1208', letterSpacing: '-0.5px', margin: '0 0 8px' }}>
             Répondez à vos avis<br />comme un pro.
           </h1>
-          <p style={{ color: '#374151', fontSize: 14, margin: 0, lineHeight: 1.6 }}>
+          <p style={{ color: '#78716C', fontSize: 14, margin: 0, lineHeight: 1.6 }}>
             Collez un avis Google — l'IA génère une réponse personnalisée, signée{restaurantName ? ` La Team - ${restaurantName}` : ''}, prête à publier en 10 secondes.
           </p>
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Ton de réponse</label>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#78716C', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Ton de réponse</label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             {TONES.map(t => (
               <button
@@ -99,20 +99,20 @@ export default function AgentPage() {
                 }}
               >
                 <p style={{ fontSize: 13, fontWeight: 700, color: tone === t.value ? '#a78bfa' : 'white', margin: '0 0 2px' }}>{t.label}</p>
-                <p style={{ fontSize: 11, color: '#374151', margin: 0 }}>{t.desc}</p>
+                <p style={{ fontSize: 11, color: '#78716C', margin: 0 }}>{t.desc}</p>
               </button>
             ))}
           </div>
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Avis reçu</label>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#78716C', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Avis reçu</label>
           <textarea
             value={review}
             onChange={e => setReview(e.target.value)}
             placeholder="Collez ici l'avis Google du client..."
             rows={5}
-            style={{ width: '100%', borderRadius: 12, padding: '14px 16px', fontSize: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'white', resize: 'vertical', lineHeight: 1.6, boxSizing: 'border-box', fontFamily: 'inherit' }}
+            style={{ width: '100%', borderRadius: 12, padding: '14px 16px', fontSize: 14, background: 'white', border: '1.5px solid rgba(0,0,0,0.07)', color: 'white', resize: 'vertical', lineHeight: 1.6, boxSizing: 'border-box', fontFamily: 'inherit' }}
           />
         </div>
 
@@ -137,8 +137,8 @@ export default function AgentPage() {
 
         {response && (
           <div style={{ animation: 'fade-in 0.3s ease' }}>
-            <div style={{ borderRadius: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ borderRadius: 16, background: '#FAFAF8', border: '1.5px solid rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 8px #6366f1' }} />
                   <span style={{ fontSize: 12, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Réponse générée</span>
@@ -161,7 +161,7 @@ export default function AgentPage() {
 
             <button
               onClick={generate}
-              style={{ marginTop: 10, width: '100%', padding: '11px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', color: '#4b5563', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              style={{ marginTop: 10, width: '100%', padding: '11px', borderRadius: 12, border: '1.5px solid rgba(0,0,0,0.07)', background: '#FAFAF8', color: '#78716C', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
               ↻ Régénérer
             </button>

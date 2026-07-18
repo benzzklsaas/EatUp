@@ -18,9 +18,9 @@ type DaySchedule = {
 
 type Closure = { id?: string; closed_date: string; reason: string }
 
-const inp: React.CSSProperties = { width: '100%', borderRadius: 12, padding: '12px 14px', fontSize: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none', boxSizing: 'border-box' }
-const timeInput: React.CSSProperties = { flex: 1, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }
-const label: React.CSSProperties = { fontSize: 12, color: '#4b5563', fontWeight: 600, marginBottom: 6, display: 'block' }
+const inp: React.CSSProperties = { width: '100%', borderRadius: 12, padding: '12px 14px', fontSize: 14, background: 'white', border: '1.5px solid rgba(0,0,0,0.1)', color: '#1A1208', outline: 'none', boxSizing: 'border-box' }
+const timeInput: React.CSSProperties = { flex: 1, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'white', border: '1.5px solid rgba(0,0,0,0.1)', color: '#1A1208', outline: 'none' }
+const label: React.CSSProperties = { fontSize: 12, color: '#78716C', fontWeight: 600, marginBottom: 6, display: 'block' }
 
 export default function SettingsPage() {
   const [restaurant, setRestaurant] = useState<any>(null)
@@ -126,32 +126,32 @@ export default function SettingsPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810' }}>
-      <p style={{ color: '#374151', fontSize: 14 }}>Chargement...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFFBF5' }}>
+      <p style={{ color: '#78716C', fontSize: 14 }}>Chargement...</p>
     </div>
   )
 
-  const section: React.CSSProperties = { borderRadius: 20, padding: '24px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.06)' }
+  const section: React.CSSProperties = { borderRadius: 20, padding: '24px', background: 'white', border: '1.5px solid rgba(0,0,0,0.07)' }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', paddingBottom: 48 }}>
+    <div style={{ minHeight: '100vh', background: '#FFFBF5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', paddingBottom: 48 }}>
 
-      <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px', background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 50 }}>
-        <button onClick={() => router.push('/dashboard')} style={{ color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>← Retour</button>
-        <p style={{ fontSize: 16, fontWeight: 700, color: 'white', margin: 0 }}>Paramètres</p>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 24px', background: 'rgba(255,251,245,0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,0,0,0.06)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <button onClick={() => router.push('/dashboard')} style={{ color: '#78716C', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>← Retour</button>
+        <p style={{ fontSize: 16, fontWeight: 700, color: '#1A1208', margin: 0 }}>Paramètres</p>
       </header>
 
       <main style={{ padding: '24px 20px', maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {/* Statut en direct */}
         <div style={{ ...section }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 16px' }}>⚡ Statut en direct</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1208', margin: '0 0 16px' }}>⚡ Statut en direct</p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderRadius: 14, background: restaurant.is_open ? 'rgba(74,222,128,0.06)' : 'rgba(239,68,68,0.06)', border: `1px solid ${restaurant.is_open ? 'rgba(74,222,128,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
             <div>
               <p style={{ color: restaurant.is_open ? '#4ade80' : '#f87171', fontWeight: 800, fontSize: 16, margin: 0 }}>
                 {restaurant.is_open ? '● Ouvert' : '○ Fermé'}
               </p>
-              <p style={{ color: '#4b5563', fontSize: 12, margin: '4px 0 0' }}>Visible par les clients</p>
+              <p style={{ color: '#78716C', fontSize: 12, margin: '4px 0 0' }}>Visible par les clients</p>
             </div>
             <button
               onClick={toggleOpen}
@@ -164,7 +164,7 @@ export default function SettingsPage() {
 
         {/* Visuels du restaurant */}
         <div style={{ ...section }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>🖼️ Visuels</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1208', margin: '0 0 20px' }}>🖼️ Visuels</p>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
 
             {/* Logo */}
@@ -178,7 +178,7 @@ export default function SettingsPage() {
                   }
                   {uploadingLogo && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'white' }}>...</div>}
                 </div>
-                <p style={{ fontSize: 11, color: '#6366f1', marginTop: 8, fontWeight: 600 }}>Cliquer pour changer</p>
+                <p style={{ fontSize: 11, color: '#f97316', marginTop: 8, fontWeight: 600 }}>Cliquer pour changer</p>
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], 'logo')} />
               </label>
             </div>
@@ -190,11 +190,11 @@ export default function SettingsPage() {
                 <div style={{ height: 96, borderRadius: 16, border: '2px dashed rgba(99,102,241,0.4)', overflow: 'hidden', position: 'relative', background: '#0d1424', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {restaurant.cover_image_url
                     ? <img src={restaurant.cover_image_url} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <span style={{ fontSize: 13, color: '#374151' }}>Aucune photo</span>
+                    : <span style={{ fontSize: 13, color: '#78716C' }}>Aucune photo</span>
                   }
                   {uploadingCover && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'white' }}>Envoi...</div>}
                 </div>
-                <p style={{ fontSize: 11, color: '#6366f1', marginTop: 8, fontWeight: 600 }}>Cliquer pour changer</p>
+                <p style={{ fontSize: 11, color: '#f97316', marginTop: 8, fontWeight: 600 }}>Cliquer pour changer</p>
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], 'cover')} />
               </label>
             </div>
@@ -204,7 +204,7 @@ export default function SettingsPage() {
 
         {/* Informations du restaurant */}
         <div style={{ ...section }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>🏪 Informations du restaurant</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1208', margin: '0 0 20px' }}>🏪 Informations du restaurant</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
               <label style={label}>Nom du restaurant</label>
@@ -238,13 +238,13 @@ export default function SettingsPage() {
 
         {/* Horaires */}
         <div style={{ ...section }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>🕐 Horaires d'ouverture</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1208', margin: '0 0 20px' }}>🕐 Horaires d'ouverture</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {DAYS.map((day, i) => {
               const d = schedule[i]
               if (!d) return null
               return (
-                <div key={i} style={{ borderRadius: 14, padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div key={i} style={{ borderRadius: 14, padding: '16px', background: '#FAFAF8', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: d.is_closed ? 0 : 14 }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: d.is_closed ? '#374151' : 'white' }}>{day}</span>
                     <button onClick={() => updateDay(i, 'is_closed', !d.is_closed)} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 100, border: 'none', cursor: 'pointer', background: d.is_closed ? 'rgba(239,68,68,0.1)' : 'rgba(74,222,128,0.1)', color: d.is_closed ? '#f87171' : '#4ade80', fontWeight: 700 }}>
@@ -254,30 +254,30 @@ export default function SettingsPage() {
                   {!d.is_closed && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div>
-                        <p style={{ fontSize: 11, color: '#374151', fontWeight: 600, marginBottom: 6 }}>Plage 1</p>
+                        <p style={{ fontSize: 11, color: '#78716C', fontWeight: 600, marginBottom: 6 }}>Plage 1</p>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                           <input type="time" value={d.opening_time_1} onChange={e => updateDay(i, 'opening_time_1', e.target.value)} style={timeInput} />
-                          <span style={{ color: '#374151', fontSize: 12 }}>→</span>
+                          <span style={{ color: '#78716C', fontSize: 12 }}>→</span>
                           <input type="time" value={d.closing_time_1} onChange={e => updateDay(i, 'closing_time_1', e.target.value)} style={timeInput} />
                         </div>
                       </div>
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                          <p style={{ fontSize: 11, color: '#374151', fontWeight: 600, margin: 0 }}>Plage 2</p>
-                          <button onClick={() => updateDay(i, 'opening_time_2', d.opening_time_2 ? null : '18:00')} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                          <p style={{ fontSize: 11, color: '#78716C', fontWeight: 600, margin: 0 }}>Plage 2</p>
+                          <button onClick={() => updateDay(i, 'opening_time_2', d.opening_time_2 ? null : '18:00')} style={{ fontSize: 11, color: '#f97316', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
                             {d.opening_time_2 ? '− Supprimer' : '+ Ajouter'}
                           </button>
                         </div>
                         {d.opening_time_2 && (
                           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                             <input type="time" value={d.opening_time_2 || ''} onChange={e => updateDay(i, 'opening_time_2', e.target.value)} style={timeInput} />
-                            <span style={{ color: '#374151', fontSize: 12 }}>→</span>
+                            <span style={{ color: '#78716C', fontSize: 12 }}>→</span>
                             <input type="time" value={d.closing_time_2 || ''} onChange={e => updateDay(i, 'closing_time_2', e.target.value)} style={timeInput} />
                           </div>
                         )}
                       </div>
                       <div>
-                        <p style={{ fontSize: 11, color: '#374151', fontWeight: 600, marginBottom: 6 }}>Créneaux</p>
+                        <p style={{ fontSize: 11, color: '#78716C', fontWeight: 600, marginBottom: 6 }}>Créneaux</p>
                         <div style={{ display: 'flex', gap: 6 }}>
                           {[15, 20, 30].map(dur => (
                             <button key={dur} onClick={() => updateDay(i, 'slot_duration', dur)} style={{ padding: '6px 14px', borderRadius: 100, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: d.slot_duration === dur ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)', color: d.slot_duration === dur ? '#818cf8' : '#4b5563' }}>
@@ -299,21 +299,21 @@ export default function SettingsPage() {
 
         {/* Fermetures exceptionnelles */}
         <div style={{ ...section }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 20px' }}>📅 Fermetures exceptionnelles</p>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1208', margin: '0 0 20px' }}>📅 Fermetures exceptionnelles</p>
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            <input type="date" value={newClosure.closed_date} onChange={e => setNewClosure({ ...newClosure, closed_date: e.target.value })} style={{ flex: 1, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }} />
-            <input placeholder="Raison (optionnel)" value={newClosure.reason} onChange={e => setNewClosure({ ...newClosure, reason: e.target.value })} style={{ flex: 2, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }} />
-            <button onClick={addClosure} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 16 }}>+</button>
+            <input type="date" value={newClosure.closed_date} onChange={e => setNewClosure({ ...newClosure, closed_date: e.target.value })} style={{ flex: 1, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'white', border: '1.5px solid rgba(0,0,0,0.1)', color: '#1A1208', outline: 'none' }} />
+            <input placeholder="Raison (optionnel)" value={newClosure.reason} onChange={e => setNewClosure({ ...newClosure, reason: e.target.value })} style={{ flex: 2, borderRadius: 10, padding: '10px 12px', fontSize: 13, background: 'white', border: '1.5px solid rgba(0,0,0,0.1)', color: '#1A1208', outline: 'none' }} />
+            <button onClick={addClosure} style={{ padding: '10px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: '#f97316', color: '#1A1208', fontWeight: 700, fontSize: 16 }}>+</button>
           </div>
           {closures.length === 0 ? (
-            <p style={{ fontSize: 13, color: '#374151' }}>Aucune fermeture planifiée</p>
+            <p style={{ fontSize: 13, color: '#78716C' }}>Aucune fermeture planifiée</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {closures.map(c => (
                 <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 12, background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: 'white', margin: '0 0 2px' }}>{new Date(c.closed_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                    {c.reason && <p style={{ fontSize: 12, color: '#4b5563', margin: 0 }}>{c.reason}</p>}
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#1A1208', margin: '0 0 2px' }}>{new Date(c.closed_date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                    {c.reason && <p style={{ fontSize: 12, color: '#78716C', margin: 0 }}>{c.reason}</p>}
                   </div>
                   <button onClick={() => c.id && removeClosure(c.id)} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
                 </div>

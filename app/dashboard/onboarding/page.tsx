@@ -133,19 +133,19 @@ export default function OnboardingPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFFBF5' }}>
       <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 20px #6366f1' }} />
     </div>
   )
 
   const inputStyle: React.CSSProperties = {
     width: '100%', borderRadius: 14, padding: '13px 16px', fontSize: 14,
-    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-    color: 'white', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
+    background: 'white', border: '1.5px solid rgba(0,0,0,0.1)',
+    color: '#1A1208', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+    <div style={{ minHeight: '100vh', background: '#FFFBF5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
 
       {/* Glow background */}
       <div style={{ position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%)', pointerEvents: 'none' }} />
@@ -162,12 +162,12 @@ export default function OnboardingPage() {
 
       {/* Logo + chrono */}
       <div style={{ position: 'fixed', top: 24, left: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🍽️</div>
-        <span style={{ fontWeight: 800, color: 'white', fontSize: 16 }}>EatUp</span>
+        <div style={{ width: 32, height: 32, borderRadius: 10, background: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🍽️</div>
+        <span style={{ fontWeight: 800, color: '#1A1208', fontSize: 16 }}>EatUp</span>
       </div>
       <div style={{ position: 'fixed', top: 28, right: 24, display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 14 }}>⏱️</span>
-        <span style={{ fontSize: 13, color: '#4b5563', fontWeight: 600 }}>~5 min</span>
+        <span style={{ fontSize: 13, color: '#78716C', fontWeight: 600 }}>~5 min</span>
       </div>
 
       {/* Steps indicator */}
@@ -190,14 +190,14 @@ export default function OnboardingPage() {
       </div>
 
       {/* Card */}
-      <div className={animating ? 'step-exit' : 'step-enter'} style={{ width: '100%', maxWidth: 500, borderRadius: 28, padding: '48px 40px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 40px 120px rgba(0,0,0,0.6)' }}>
+      <div className={animating ? 'step-exit' : 'step-enter'} style={{ width: '100%', maxWidth: 500, borderRadius: 28, padding: '48px 40px', background: 'white', border: '1.5px solid rgba(0,0,0,0.07)', boxShadow: '0 40px 120px rgba(0,0,0,0.6)' }}>
 
         {/* ── STEP 1 : Infos restaurant ── */}
         {step === 1 && (
           <div>
-            <p style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Étape 1 sur 4</p>
-            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 6px' }}>Votre restaurant 🏪</h2>
-            <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 32px', lineHeight: 1.6 }}>Ces infos apparaîtront sur votre page client.</p>
+            <p style={{ fontSize: 13, color: '#f97316', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Étape 1 sur 4</p>
+            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#1A1208', letterSpacing: '-0.5px', margin: '0 0 6px' }}>Votre restaurant 🏪</h2>
+            <p style={{ fontSize: 14, color: '#78716C', margin: '0 0 32px', lineHeight: 1.6 }}>Ces infos apparaîtront sur votre page client.</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Logo upload */}
@@ -211,8 +211,8 @@ export default function OnboardingPage() {
                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && uploadLogo(e.target.files[0])} />
                 </label>
                 <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: 'white', margin: '0 0 4px' }}>Logo du restaurant</p>
-                  <p style={{ fontSize: 12, color: '#4b5563', margin: 0 }}>Apparaît sur votre page client. Optionnel.</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: '#1A1208', margin: '0 0 4px' }}>Logo du restaurant</p>
+                  <p style={{ fontSize: 12, color: '#78716C', margin: 0 }}>Apparaît sur votre page client. Optionnel.</p>
                 </div>
               </div>
               <input placeholder="Nom du restaurant *" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
@@ -225,9 +225,9 @@ export default function OnboardingPage() {
                   style={{ ...inputStyle, paddingRight: addressLoading ? 40 : 16 }}
                   autoComplete="off"
                 />
-                {addressLoading && <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: '#4b5563' }}>...</span>}
+                {addressLoading && <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: '#78716C' }}>...</span>}
                 {addressSuggestions.length > 0 && (
-                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: '#0f172a', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', marginTop: 4 }}>
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, borderRadius: 14, overflow: 'hidden', border: '1.5px solid rgba(0,0,0,0.1)', background: '#0f172a', boxShadow: '0 20px 60px rgba(0,0,0,0.6)', marginTop: 4 }}>
                     {addressSuggestions.map((s, i) => (
                       <button
                         key={i}
@@ -246,7 +246,7 @@ export default function OnboardingPage() {
               <input placeholder="Téléphone" value={phone} onChange={e => setPhone(e.target.value)} style={inputStyle} />
             </div>
 
-            <button onClick={saveStep1} disabled={!name.trim() || saving} style={{ marginTop: 28, width: '100%', padding: '15px', borderRadius: 16, border: 'none', cursor: name.trim() ? 'pointer' : 'not-allowed', background: name.trim() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.05)', color: 'white', fontWeight: 700, fontSize: 15, opacity: !name.trim() ? 0.5 : 1, transition: 'all 0.2s', boxShadow: name.trim() ? '0 8px 30px rgba(99,102,241,0.3)' : 'none' }}>
+            <button onClick={saveStep1} disabled={!name.trim() || saving} style={{ marginTop: 28, width: '100%', padding: '15px', borderRadius: 16, border: 'none', cursor: name.trim() ? 'pointer' : 'not-allowed', background: name.trim() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.05)', color: '#1A1208', fontWeight: 700, fontSize: 15, opacity: !name.trim() ? 0.5 : 1, transition: 'all 0.2s', boxShadow: name.trim() ? '0 8px 30px rgba(99,102,241,0.3)' : 'none' }}>
               {saving ? 'Enregistrement...' : 'Continuer →'}
             </button>
           </div>
@@ -255,9 +255,9 @@ export default function OnboardingPage() {
         {/* ── STEP 2 : Catégories ── */}
         {step === 2 && (
           <div>
-            <p style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Étape 2 sur 4</p>
-            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 6px' }}>Vos catégories 🏷️</h2>
-            <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 24px', lineHeight: 1.6 }}>Organisez votre menu par catégories (Burgers, Boissons, Desserts...)</p>
+            <p style={{ fontSize: 13, color: '#f97316', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Étape 2 sur 4</p>
+            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#1A1208', letterSpacing: '-0.5px', margin: '0 0 6px' }}>Vos catégories 🏷️</h2>
+            <p style={{ fontSize: 14, color: '#78716C', margin: '0 0 24px', lineHeight: 1.6 }}>Organisez votre menu par catégories (Burgers, Boissons, Desserts...)</p>
 
             {/* Emojis rapides */}
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
@@ -269,23 +269,23 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               <input value={catEmoji} onChange={e => setCatEmoji(e.target.value)} style={{ ...inputStyle, width: 60, textAlign: 'center', fontSize: 20, flexShrink: 0 }} />
               <input placeholder="Nom de la catégorie" value={catName} onChange={e => setCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} style={{ ...inputStyle, flex: 1 }} />
-              <button onClick={addCategory} disabled={!catName.trim()} style={{ padding: '0 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.2)', color: '#818cf8', fontWeight: 800, fontSize: 20, flexShrink: 0 }}>+</button>
+              <button onClick={addCategory} disabled={!catName.trim()} style={{ padding: '0 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.2)', color: '#f97316', fontWeight: 800, fontSize: 20, flexShrink: 0 }}>+</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 24, minHeight: 40 }}>
               {categories.map((c, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
                   <span style={{ fontSize: 18 }}>{c.emoji}</span>
-                  <span style={{ color: 'white', fontWeight: 600, fontSize: 14, flex: 1 }}>{c.name}</span>
+                  <span style={{ color: '#1A1208', fontWeight: 600, fontSize: 14, flex: 1 }}>{c.name}</span>
                   <button onClick={() => setCategories(categories.filter((_, j) => j !== i))} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
                 </div>
               ))}
-              {categories.length === 0 && <p style={{ color: '#1f2937', fontSize: 13, textAlign: 'center', padding: '12px 0' }}>Ajoutez au moins une catégorie</p>}
+              {categories.length === 0 && <p style={{ color: '#A8A29E', fontSize: 13, textAlign: 'center', padding: '12px 0' }}>Ajoutez au moins une catégorie</p>}
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => goTo(1)} style={{ flex: 1, padding: '13px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#4b5563', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>← Retour</button>
-              <button onClick={categories.length > 0 ? saveStep2 : () => goTo(3)} disabled={saving} style={{ flex: 2, padding: '13px', borderRadius: 14, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 14, boxShadow: '0 8px 30px rgba(99,102,241,0.3)' }}>
+              <button onClick={() => goTo(1)} style={{ flex: 1, padding: '13px', borderRadius: 14, border: '1.5px solid rgba(0,0,0,0.1)', background: 'transparent', color: '#78716C', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>← Retour</button>
+              <button onClick={categories.length > 0 ? saveStep2 : () => goTo(3)} disabled={saving} style={{ flex: 2, padding: '13px', borderRadius: 14, border: 'none', cursor: 'pointer', background: '#f97316', color: '#1A1208', fontWeight: 700, fontSize: 14, boxShadow: '0 8px 30px rgba(99,102,241,0.3)' }}>
                 {saving ? 'Enregistrement...' : categories.length === 0 ? 'Passer →' : 'Continuer →'}
               </button>
             </div>
@@ -295,9 +295,9 @@ export default function OnboardingPage() {
         {/* ── STEP 3 : Premier produit ── */}
         {step === 3 && (
           <div>
-            <p style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Étape 3 sur 4</p>
-            <h2 style={{ fontSize: 26, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 6px' }}>Votre menu 🍽️</h2>
-            <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 24px', lineHeight: 1.6 }}>Ajoutez vos premiers plats. Vous pourrez en ajouter autant que vous voulez ensuite.</p>
+            <p style={{ fontSize: 13, color: '#f97316', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Étape 3 sur 4</p>
+            <h2 style={{ fontSize: 26, fontWeight: 900, color: '#1A1208', letterSpacing: '-0.5px', margin: '0 0 6px' }}>Votre menu 🍽️</h2>
+            <p style={{ fontSize: 14, color: '#78716C', margin: '0 0 24px', lineHeight: 1.6 }}>Ajoutez vos premiers plats. Vous pourrez en ajouter autant que vous voulez ensuite.</p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
               <input placeholder="Nom du plat *" value={prodName} onChange={e => setProdName(e.target.value)} style={inputStyle} />
@@ -310,7 +310,7 @@ export default function OnboardingPage() {
                   </select>
                 )}
               </div>
-              <button onClick={addProduct} disabled={!prodName.trim() || !prodPrice} style={{ padding: '11px', borderRadius: 12, border: 'none', cursor: prodName.trim() && prodPrice ? 'pointer' : 'not-allowed', background: prodName.trim() && prodPrice ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)', color: '#818cf8', fontWeight: 700, opacity: !prodName.trim() || !prodPrice ? 0.5 : 1 }}>
+              <button onClick={addProduct} disabled={!prodName.trim() || !prodPrice} style={{ padding: '11px', borderRadius: 12, border: 'none', cursor: prodName.trim() && prodPrice ? 'pointer' : 'not-allowed', background: prodName.trim() && prodPrice ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)', color: '#f97316', fontWeight: 700, opacity: !prodName.trim() || !prodPrice ? 0.5 : 1 }}>
                 + Ajouter ce plat
               </button>
             </div>
@@ -318,17 +318,17 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 24, minHeight: 40 }}>
               {products.map((p, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.15)' }}>
-                  <span style={{ color: 'white', fontWeight: 600, fontSize: 13, flex: 1 }}>{p.name}</span>
-                  <span style={{ color: '#818cf8', fontWeight: 700, fontSize: 13 }}>{parseFloat(p.price).toFixed(2)}€</span>
+                  <span style={{ color: '#1A1208', fontWeight: 600, fontSize: 13, flex: 1 }}>{p.name}</span>
+                  <span style={{ color: '#f97316', fontWeight: 700, fontSize: 13 }}>{parseFloat(p.price).toFixed(2)}€</span>
                   <button onClick={() => setProducts(products.filter((_, j) => j !== i))} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>✕</button>
                 </div>
               ))}
-              {products.length === 0 && <p style={{ color: '#1f2937', fontSize: 13, textAlign: 'center', padding: '12px 0' }}>Aucun plat ajouté</p>}
+              {products.length === 0 && <p style={{ color: '#A8A29E', fontSize: 13, textAlign: 'center', padding: '12px 0' }}>Aucun plat ajouté</p>}
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => goTo(2)} style={{ flex: 1, padding: '13px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#4b5563', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>← Retour</button>
-              <button onClick={products.length > 0 ? saveStep3 : () => goTo(4)} disabled={saving} style={{ flex: 2, padding: '13px', borderRadius: 14, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 14, boxShadow: '0 8px 30px rgba(99,102,241,0.3)' }}>
+              <button onClick={() => goTo(2)} style={{ flex: 1, padding: '13px', borderRadius: 14, border: '1.5px solid rgba(0,0,0,0.1)', background: 'transparent', color: '#78716C', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>← Retour</button>
+              <button onClick={products.length > 0 ? saveStep3 : () => goTo(4)} disabled={saving} style={{ flex: 2, padding: '13px', borderRadius: 14, border: 'none', cursor: 'pointer', background: '#f97316', color: '#1A1208', fontWeight: 700, fontSize: 14, boxShadow: '0 8px 30px rgba(99,102,241,0.3)' }}>
                 {saving ? 'Enregistrement...' : products.length === 0 ? 'Passer →' : 'Continuer →'}
               </button>
             </div>
@@ -340,19 +340,19 @@ export default function OnboardingPage() {
           <div>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
               <div style={{ fontSize: 52, marginBottom: 12 }}>🎉</div>
-              <h2 style={{ fontSize: 26, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 8px' }}>Votre restaurant est en ligne !</h2>
-              <p style={{ fontSize: 14, color: '#4b5563', margin: 0, lineHeight: 1.6 }}>Voici tout ce qu'EatUp fait pour vous, dès maintenant.</p>
+              <h2 style={{ fontSize: 26, fontWeight: 900, color: '#1A1208', letterSpacing: '-0.5px', margin: '0 0 8px' }}>Votre restaurant est en ligne !</h2>
+              <p style={{ fontSize: 14, color: '#78716C', margin: 0, lineHeight: 1.6 }}>Voici tout ce qu'EatUp fait pour vous, dès maintenant.</p>
             </div>
 
             {/* Lien de la page */}
             {restaurant?.slug && (
               <div style={{ borderRadius: 14, padding: '12px 14px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 12, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#4b5563' }}>
-                  eatup.fr/restaurant/<span style={{ color: '#818cf8', fontWeight: 700 }}>{restaurant.name}</span>
+                <span style={{ fontSize: 12, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#78716C' }}>
+                  eatup.fr/restaurant/<span style={{ color: '#f97316', fontWeight: 700 }}>{restaurant.name}</span>
                 </span>
                 <button
                   onClick={() => { navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr'}/restaurant/${restaurant.slug}`); alert('Lien copié !') }}
-                  style={{ padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.3)', color: '#818cf8', fontWeight: 700, fontSize: 12, flexShrink: 0 }}
+                  style={{ padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.3)', color: '#f97316', fontWeight: 700, fontSize: 12, flexShrink: 0 }}
                 >
                   Copier
                 </button>
@@ -404,7 +404,7 @@ export default function OnboardingPage() {
                   icon: '📊',
                   title: 'Analytics & base clients',
                   desc: 'Suivez vos revenus, commandes et clients depuis les onglets Analytics et Clients. Identifiez vos meilleurs acheteurs.',
-                  color: '#818cf8',
+                  color: '#f97316',
                 },
                 {
                   icon: '🤖',
@@ -434,7 +434,7 @@ export default function OnboardingPage() {
                         }}>{f.badge}</span>
                       )}
                     </div>
-                    <p style={{ fontSize: 12, color: '#4b5563', margin: 0, lineHeight: 1.55 }}>{f.desc}</p>
+                    <p style={{ fontSize: 12, color: '#78716C', margin: 0, lineHeight: 1.55 }}>{f.desc}</p>
                   </div>
                 </div>
               ))}
@@ -443,7 +443,7 @@ export default function OnboardingPage() {
             {/* Tip */}
             <div style={{ borderRadius: 12, padding: '12px 14px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.15)', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 16, flexShrink: 0 }}>💡</span>
-              <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+              <p style={{ fontSize: 12, color: '#78716C', margin: 0, lineHeight: 1.6 }}>
                 <strong style={{ color: '#4ade80' }}>Pour recevoir vos premières commandes :</strong> allez dans <strong style={{ color: 'white' }}>Paramètres</strong>, configurez vos horaires et activez le statut <strong style={{ color: '#4ade80' }}>Ouvert</strong>.
               </p>
             </div>
@@ -451,11 +451,11 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {restaurant?.slug && (
                 <a href={`/restaurant/${restaurant.slug}`} target="_blank" rel="noreferrer"
-                  style={{ display: 'block', textAlign: 'center', padding: '12px', borderRadius: 14, border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.08)', color: '#818cf8', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+                  style={{ display: 'block', textAlign: 'center', padding: '12px', borderRadius: 14, border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.08)', color: '#f97316', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
                   👁️ Voir ma page client
                 </a>
               )}
-              <button onClick={finish} style={{ padding: '15px', borderRadius: 16, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15, boxShadow: '0 8px 30px rgba(99,102,241,0.3)' }}>
+              <button onClick={finish} style={{ padding: '15px', borderRadius: 16, border: 'none', cursor: 'pointer', background: '#f97316', color: '#1A1208', fontWeight: 700, fontSize: 15, boxShadow: '0 8px 30px rgba(99,102,241,0.3)' }}>
                 Accéder à mon dashboard →
               </button>
             </div>
@@ -465,10 +465,10 @@ export default function OnboardingPage() {
       </div>
 
       {/* Progress bar */}
-      <div style={{ marginTop: 24, width: '100%', maxWidth: 500, height: 3, borderRadius: 100, background: 'rgba(255,255,255,0.04)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', borderRadius: 100, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', width: `${(step / STEPS.length) * 100}%`, transition: 'width 0.5s cubic-bezier(0.16,1,0.3,1)' }} />
+      <div style={{ marginTop: 24, width: '100%', maxWidth: 500, height: 3, borderRadius: 100, background: 'white', overflow: 'hidden' }}>
+        <div style={{ height: '100%', borderRadius: 100, background: '#f97316', width: `${(step / STEPS.length) * 100}%`, transition: 'width 0.5s cubic-bezier(0.16,1,0.3,1)' }} />
       </div>
-      <p style={{ marginTop: 10, fontSize: 12, color: '#1f2937' }}>Étape {step} sur {STEPS.length}</p>
+      <p style={{ marginTop: 10, fontSize: 12, color: '#A8A29E' }}>Étape {step} sur {STEPS.length}</p>
 
     </div>
   )

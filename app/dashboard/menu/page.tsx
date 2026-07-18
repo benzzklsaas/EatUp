@@ -41,8 +41,8 @@ type OptionGroup = {
 
 const inputStyle: React.CSSProperties = {
   width: '100%', borderRadius: 12, padding: '12px 16px', fontSize: 14,
-  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-  color: 'white', outline: 'none', boxSizing: 'border-box',
+  background: 'white', border: '1.5px solid rgba(0,0,0,0.1)',
+  color: '#1A1208', outline: 'none', boxSizing: 'border-box',
 }
 
 export default function MenuPage() {
@@ -383,20 +383,20 @@ export default function MenuPage() {
   }
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050810' }}>
-      <p style={{ color: '#374151', fontSize: 14 }}>Chargement...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFFBF5' }}>
+      <p style={{ color: '#78716C', fontSize: 14 }}>Chargement...</p>
     </div>
   )
 
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#FFFBF5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
 
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'rgba(15,23,42,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 50 }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'rgba(255,251,245,0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,0,0,0.06)', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => router.push('/dashboard')} style={{ color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>← Retour</button>
-          <p style={{ fontSize: 16, fontWeight: 700, color: 'white', margin: 0 }}>Menu</p>
-          <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 100, background: 'rgba(99,102,241,0.15)', color: '#818cf8', fontWeight: 600 }}>{products.length} produits</span>
+          <button onClick={() => router.push('/dashboard')} style={{ color: '#78716C', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>← Retour</button>
+          <p style={{ fontSize: 16, fontWeight: 700, color: '#1A1208', margin: 0 }}>Menu</p>
+          <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 100, background: 'rgba(99,102,241,0.15)', color: '#f97316', fontWeight: 600 }}>{products.length} produits</span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 3 }}>
@@ -407,7 +407,7 @@ export default function MenuPage() {
             ))}
           </div>
           {tab === 'produits' && (
-            <button onClick={openAdd} style={{ padding: '9px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 13 }}>
+            <button onClick={openAdd} style={{ padding: '9px 18px', borderRadius: 12, border: 'none', cursor: 'pointer', background: '#f97316', color: '#1A1208', fontWeight: 700, fontSize: 13 }}>
               + Ajouter
             </button>
           )}
@@ -419,14 +419,14 @@ export default function MenuPage() {
         {/* Onglet Accompagnements */}
         {tab === 'accompagnements' && (
           <div style={{ maxWidth: 560 }}>
-            <p style={{ fontSize: 13, color: '#4b5563', marginBottom: 24 }}>Proposés uniquement en mode "En menu". Prix à 0 = inclus dans le menu.</p>
+            <p style={{ fontSize: 13, color: '#78716C', marginBottom: 24 }}>Proposés uniquement en mode "En menu". Prix à 0 = inclus dans le menu.</p>
             <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
               <input
                 placeholder="Nom (ex: Frite classique)"
                 value={newAccomp.name}
                 onChange={e => setNewAccomp({ ...newAccomp, name: e.target.value })}
                 onKeyDown={e => e.key === 'Enter' && addAccomp()}
-                style={{ flex: 2, borderRadius: 10, padding: '11px 14px', fontSize: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }}
+                style={{ flex: 2, borderRadius: 10, padding: '11px 14px', fontSize: 14, background: 'white', border: '1.5px solid rgba(0,0,0,0.1)', color: '#1A1208', outline: 'none' }}
               />
               <input
                 placeholder="Prix €"
@@ -434,29 +434,29 @@ export default function MenuPage() {
                 onChange={e => setNewAccomp({ ...newAccomp, price: e.target.value })}
                 onKeyDown={e => e.key === 'Enter' && addAccomp()}
                 type="number" step="0.5" min="0"
-                style={{ width: 90, borderRadius: 10, padding: '11px 14px', fontSize: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', outline: 'none' }}
+                style={{ width: 90, borderRadius: 10, padding: '11px 14px', fontSize: 14, background: 'white', border: '1.5px solid rgba(0,0,0,0.1)', color: '#1A1208', outline: 'none' }}
               />
               <button
                 onClick={addAccomp}
                 disabled={savingAccomp || !newAccomp.name.trim()}
-                style={{ padding: '11px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15 }}
+                style={{ padding: '11px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', background: '#f97316', color: '#1A1208', fontWeight: 700, fontSize: 15 }}
               >+</button>
             </div>
             {accompagnements.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#374151', textAlign: 'center', padding: '32px 0' }}>Aucun accompagnement — ajoute le premier ci-dessus</p>
+              <p style={{ fontSize: 13, color: '#78716C', textAlign: 'center', padding: '32px 0' }}>Aucun accompagnement — ajoute le premier ci-dessus</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {accompagnements.map(a => (
-                  <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                    <span style={{ flex: 1, fontSize: 14, color: 'white', fontWeight: 600 }}>{a.name}</span>
+                  <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(0,0,0,0.07)' }}>
+                    <span style={{ flex: 1, fontSize: 14, color: '#1A1208', fontWeight: 600 }}>{a.name}</span>
                     <input
                       type="number" step="0.5" min="0"
                       defaultValue={a.price}
                       onBlur={e => updateAccompPrice(a.id, e.target.value)}
-                      style={{ width: 80, borderRadius: 8, padding: '6px 10px', fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#4ade80', outline: 'none', textAlign: 'right' }}
+                      style={{ width: 80, borderRadius: 8, padding: '6px 10px', fontSize: 13, background: 'white', border: '1.5px solid rgba(0,0,0,0.1)', color: '#4ade80', outline: 'none', textAlign: 'right' }}
                     />
-                    <span style={{ fontSize: 12, color: '#4b5563' }}>€</span>
-                    <span style={{ fontSize: 12, color: '#6b7280', minWidth: 48 }}>{Number(a.price) === 0 ? 'Inclus' : `+${Number(a.price).toFixed(2)}€`}</span>
+                    <span style={{ fontSize: 12, color: '#78716C' }}>€</span>
+                    <span style={{ fontSize: 12, color: '#78716C', minWidth: 48 }}>{Number(a.price) === 0 ? 'Inclus' : `+${Number(a.price).toFixed(2)}€`}</span>
                     <button onClick={() => removeAccomp(a.id)} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>
                   </div>
                 ))}
@@ -471,15 +471,15 @@ export default function MenuPage() {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <p style={{ color: 'white', fontWeight: 800, fontSize: 18, margin: '0 0 4px' }}>Catégories</p>
-                <p style={{ color: '#4b5563', fontSize: 13, margin: 0 }}>{categories.length} catégorie{categories.length !== 1 ? 's' : ''} · glissez pour réordonner</p>
+                <p style={{ color: '#1A1208', fontWeight: 800, fontSize: 18, margin: '0 0 4px' }}>Catégories</p>
+                <p style={{ color: '#78716C', fontSize: 13, margin: 0 }}>{categories.length} catégorie{categories.length !== 1 ? 's' : ''} · glissez pour réordonner</p>
               </div>
             </div>
 
             {/* Liste */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {categories.length === 0 && (
-                <div style={{ borderRadius: 16, padding: '32px 24px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.08)', color: '#374151', fontSize: 14 }}>
+                <div style={{ borderRadius: 16, padding: '32px 24px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.08)', color: '#78716C', fontSize: 14 }}>
                   Aucune catégorie — créez-en une ci-dessous
                 </div>
               )}
@@ -495,20 +495,20 @@ export default function MenuPage() {
                 >
                   {editCat?.id === cat.id ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px' }}>
-                      <input value={editCatEmoji} onChange={e => setEditCatEmoji(e.target.value)} style={{ width: 52, borderRadius: 10, padding: '8px', fontSize: 20, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none', textAlign: 'center' }} />
-                      <input value={editCatName} onChange={e => setEditCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditCat()} style={{ flex: 1, borderRadius: 10, padding: '9px 14px', fontSize: 14, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none' }} />
-                      <button onClick={saveEditCat} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: '#6366f1', color: 'white', fontWeight: 700, fontSize: 13 }}>✓</button>
-                      <button onClick={() => setEditCat(null)} style={{ padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', color: '#6b7280', fontSize: 13 }}>✕</button>
+                      <input value={editCatEmoji} onChange={e => setEditCatEmoji(e.target.value)} style={{ width: 52, borderRadius: 10, padding: '8px', fontSize: 20, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(0,0,0,0.08)', color: '#1A1208', outline: 'none', textAlign: 'center' }} />
+                      <input value={editCatName} onChange={e => setEditCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditCat()} style={{ flex: 1, borderRadius: 10, padding: '9px 14px', fontSize: 14, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(0,0,0,0.08)', color: '#1A1208', outline: 'none' }} />
+                      <button onClick={saveEditCat} style={{ padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: '#6366f1', color: '#1A1208', fontWeight: 700, fontSize: 13 }}>✓</button>
+                      <button onClick={() => setEditCat(null)} style={{ padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', color: '#78716C', fontSize: 13 }}>✕</button>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px' }}>
                       <span style={{ fontSize: 26, flexShrink: 0 }}>{cat.emoji}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: '0 0 2px' }}>{cat.name}</p>
-                        <p style={{ color: '#4b5563', fontSize: 12, margin: 0 }}>{products.filter(p => p.category === cat.name).length} produit{products.filter(p => p.category === cat.name).length !== 1 ? 's' : ''}</p>
+                        <p style={{ color: '#1A1208', fontWeight: 700, fontSize: 15, margin: '0 0 2px' }}>{cat.name}</p>
+                        <p style={{ color: '#78716C', fontSize: 12, margin: 0 }}>{products.filter(p => p.category === cat.name).length} produit{products.filter(p => p.category === cat.name).length !== 1 ? 's' : ''}</p>
                       </div>
                       <span style={{ color: '#2d3748', fontSize: 18, cursor: 'grab', flexShrink: 0 }}>⠿</span>
-                      <button onClick={() => { setEditCat(cat); setEditCatName(cat.name); setEditCatEmoji(cat.emoji) }} style={{ fontSize: 12, color: '#6366f1', background: 'rgba(99,102,241,0.1)', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '6px 14px', borderRadius: 8 }}>Modifier</button>
+                      <button onClick={() => { setEditCat(cat); setEditCatName(cat.name); setEditCatEmoji(cat.emoji) }} style={{ fontSize: 12, color: '#f97316', background: 'rgba(99,102,241,0.1)', border: 'none', cursor: 'pointer', fontWeight: 700, padding: '6px 14px', borderRadius: 8 }}>Modifier</button>
                       <button onClick={() => deleteCategory(cat.id)} style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: '6px 14px', borderRadius: 8 }}>Supprimer</button>
                     </div>
                   )}
@@ -517,12 +517,12 @@ export default function MenuPage() {
             </div>
 
             {/* Nouvelle catégorie */}
-            <div style={{ borderRadius: 20, padding: '20px 22px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p style={{ color: '#818cf8', fontWeight: 700, fontSize: 13, margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>+ Nouvelle catégorie</p>
+            <div style={{ borderRadius: 20, padding: '20px 22px', background: 'white', border: '1.5px solid rgba(0,0,0,0.07)' }}>
+              <p style={{ color: '#f97316', fontWeight: 700, fontSize: 13, margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>+ Nouvelle catégorie</p>
               <div style={{ display: 'flex', gap: 10 }}>
-                <input placeholder="🍔" value={newCatEmoji} onChange={e => setNewCatEmoji(e.target.value)} style={{ width: 56, borderRadius: 12, padding: '11px', fontSize: 20, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: 'white', outline: 'none', textAlign: 'center' }} />
-                <input placeholder="Nom (ex: Burgers, Tacos...)" value={newCatName} onChange={e => setNewCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} style={{ flex: 1, borderRadius: 12, padding: '11px 16px', fontSize: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: 'white', outline: 'none' }} />
-                <button onClick={addCategory} style={{ padding: '11px 22px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 14, boxShadow: '0 4px 16px rgba(99,102,241,0.35)' }}>Ajouter</button>
+                <input placeholder="🍔" value={newCatEmoji} onChange={e => setNewCatEmoji(e.target.value)} style={{ width: 56, borderRadius: 12, padding: '11px', fontSize: 20, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: '#1A1208', outline: 'none', textAlign: 'center' }} />
+                <input placeholder="Nom (ex: Burgers, Tacos...)" value={newCatName} onChange={e => setNewCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} style={{ flex: 1, borderRadius: 12, padding: '11px 16px', fontSize: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: '#1A1208', outline: 'none' }} />
+                <button onClick={addCategory} style={{ padding: '11px 22px', borderRadius: 12, border: 'none', cursor: 'pointer', background: '#f97316', color: '#1A1208', fontWeight: 700, fontSize: 14, boxShadow: '0 4px 16px rgba(99,102,241,0.35)' }}>Ajouter</button>
               </div>
             </div>
           </div>
@@ -532,8 +532,8 @@ export default function MenuPage() {
         {tab === 'produits' && (products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 24px' }}>
             <img src="/LogoEatUp.PNG" alt="EatUp" style={{ width: 56, height: 56, objectFit: 'contain', marginBottom: 16, opacity: 0.4 }} />
-            <p style={{ color: '#374151', fontSize: 16, marginBottom: 24 }}>Votre menu est vide</p>
-            <button onClick={openAdd} style={{ padding: '12px 28px', borderRadius: 14, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15 }}>
+            <p style={{ color: '#78716C', fontSize: 16, marginBottom: 24 }}>Votre menu est vide</p>
+            <button onClick={openAdd} style={{ padding: '12px 28px', borderRadius: 14, border: 'none', cursor: 'pointer', background: '#f97316', color: '#1A1208', fontWeight: 700, fontSize: 15 }}>
               Ajouter votre premier produit
             </button>
           </div>
@@ -558,26 +558,26 @@ export default function MenuPage() {
                 onDragEnd={() => { setDraggedCatId(null); setDragOverCatId(null) }}
               >
                 {(cat !== undefined) && (() => {
-                  if (!cat) return <p style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 12px' }}>Sans catégorie</p>
+                  if (!cat) return <p style={{ fontSize: 12, fontWeight: 700, color: '#78716C', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 12px' }}>Sans catégorie</p>
                   const catObj = categories.find(c => c.name === cat)
                   return editCat?.id === catObj?.id ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                      <input value={editCatEmoji} onChange={e => setEditCatEmoji(e.target.value)} style={{ width: 44, borderRadius: 8, padding: '5px', fontSize: 18, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none', textAlign: 'center' }} />
-                      <input value={editCatName} onChange={e => setEditCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditCat()} style={{ flex: 1, maxWidth: 200, borderRadius: 8, padding: '6px 10px', fontSize: 13, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', outline: 'none' }} />
-                      <button onClick={saveEditCat} style={{ padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#6366f1', color: 'white', fontWeight: 700, fontSize: 12 }}>✓</button>
-                      <button onClick={() => setEditCat(null)} style={{ padding: '5px 8px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', color: '#6b7280', fontSize: 12 }}>✕</button>
+                      <input value={editCatEmoji} onChange={e => setEditCatEmoji(e.target.value)} style={{ width: 44, borderRadius: 8, padding: '5px', fontSize: 18, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(0,0,0,0.08)', color: '#1A1208', outline: 'none', textAlign: 'center' }} />
+                      <input value={editCatName} onChange={e => setEditCatName(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveEditCat()} style={{ flex: 1, maxWidth: 200, borderRadius: 8, padding: '6px 10px', fontSize: 13, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(0,0,0,0.08)', color: '#1A1208', outline: 'none' }} />
+                      <button onClick={saveEditCat} style={{ padding: '5px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', background: '#6366f1', color: '#1A1208', fontWeight: 700, fontSize: 12 }}>✓</button>
+                      <button onClick={() => setEditCat(null)} style={{ padding: '5px 8px', borderRadius: 8, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', color: '#78716C', fontSize: 12 }}>✕</button>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                       {catObj && (
-                        <span style={{ color: '#374151', fontSize: 16, cursor: 'grab', paddingRight: 2 }}>⠿</span>
+                        <span style={{ color: '#78716C', fontSize: 16, cursor: 'grab', paddingRight: 2 }}>⠿</span>
                       )}
-                      <p style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>{catObj?.emoji} {cat}</p>
-                      {catObj && <button onClick={() => { setEditCat(catObj); setEditCatName(catObj.name); setEditCatEmoji(catObj.emoji) }} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Modifier</button>}
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#78716C', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>{catObj?.emoji} {cat}</p>
+                      {catObj && <button onClick={() => { setEditCat(catObj); setEditCatName(catObj.name); setEditCatEmoji(catObj.emoji) }} style={{ fontSize: 11, color: '#f97316', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Modifier</button>}
                       <button
                         onClick={() => openAddWithCategory(cat)}
                         title={`Ajouter un produit dans ${cat}`}
-                        style={{ width: 22, height: 22, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.2)', color: '#818cf8', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, flexShrink: 0 }}
+                        style={{ width: 22, height: 22, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.2)', color: '#f97316', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: 0, flexShrink: 0 }}
                       >+</button>
                     </div>
                   )
@@ -593,7 +593,7 @@ export default function MenuPage() {
                       onDragEnd={() => { setDraggedId(null); setDragOverId(null) }}
                       style={{
                         borderRadius: 18, padding: '16px',
-                        background: 'linear-gradient(145deg, #0f172a, #111827)',
+                        background: 'white',
                         border: `1px solid ${dragOverId === p.id && draggedId !== p.id ? 'rgba(99,102,241,0.6)' : 'rgba(255,255,255,0.06)'}`,
                         display: 'flex', gap: 10, alignItems: 'stretch',
                         opacity: draggedId === p.id ? 0.4 : 1,
@@ -601,17 +601,17 @@ export default function MenuPage() {
                         cursor: 'grab',
                       }}>
                       <div style={{ display: 'flex', alignItems: 'center', paddingRight: 4, flexShrink: 0, cursor: 'grab' }}>
-                        <span style={{ color: '#374151', fontSize: 16, letterSpacing: '-1px', lineHeight: 1 }}>⠿</span>
+                        <span style={{ color: '#78716C', fontSize: 16, letterSpacing: '-1px', lineHeight: 1 }}>⠿</span>
                       </div>
                       {p.image_url && (
                         <img src={p.image_url} alt={p.name} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }} />
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-                          <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: 0 }}>{p.name}</p>
-                          <p style={{ fontSize: 15, fontWeight: 800, color: '#818cf8', margin: '0 0 0 8px', flexShrink: 0 }}>{Number(p.price).toFixed(2)}€</p>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1208', margin: 0 }}>{p.name}</p>
+                          <p style={{ fontSize: 15, fontWeight: 800, color: '#f97316', margin: '0 0 0 8px', flexShrink: 0 }}>{Number(p.price).toFixed(2)}€</p>
                         </div>
-                        {p.description && <p style={{ fontSize: 12, color: '#374151', margin: '0 0 10px', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{p.description}</p>}
+                        {p.description && <p style={{ fontSize: 12, color: '#78716C', margin: '0 0 10px', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{p.description}</p>}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
                           <button onClick={() => toggleOnline(p)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 100, border: 'none', cursor: 'pointer', background: (p as any).is_online !== false ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', color: (p as any).is_online !== false ? '#818cf8' : '#4b5563', fontWeight: 700 }}>
                             {(p as any).is_online !== false ? '🌐 En ligne' : '📴 Hors ligne'}
@@ -619,7 +619,7 @@ export default function MenuPage() {
                           <button onClick={() => toggleAvailable(p)} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 100, border: 'none', cursor: 'pointer', background: p.is_available ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.05)', color: p.is_available ? '#4ade80' : '#6b7280', fontWeight: 600 }}>
                             {p.is_available ? '● Dispo' : '○ Indispo'}
                           </button>
-                          <button onClick={() => openEdit(p)} style={{ fontSize: 12, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Modifier</button>
+                          <button onClick={() => openEdit(p)} style={{ fontSize: 12, color: '#f97316', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Modifier</button>
                           <button onClick={() => openOptions(p)} style={{ fontSize: 12, color: '#f59e0b', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>⚙ Options</button>
                           <button onClick={() => handleDelete(p.id)} style={{ fontSize: 12, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Supprimer</button>
                         </div>
@@ -634,7 +634,7 @@ export default function MenuPage() {
       </main>
 
       {/* Bouton enregistrer global */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '14px 24px', background: 'rgba(5,8,16,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '14px 24px', background: 'rgba(5,8,16,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
         <button
           onClick={async () => {
             setGlobalSaving(true)
@@ -655,8 +655,8 @@ export default function MenuPage() {
       {/* Modal produit */}
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 100, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}>
-          <div style={{ width: '100%', maxWidth: 440, borderRadius: 24, padding: '36px 32px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: 'white', margin: '0 0 24px', letterSpacing: '-0.3px' }}>
+          <div style={{ width: '100%', maxWidth: 440, borderRadius: 24, padding: '36px 32px', background: 'white', border: '1.5px solid rgba(0,0,0,0.08)' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1A1208', margin: '0 0 24px', letterSpacing: '-0.3px' }}>
               {editProduct ? 'Modifier le produit' : 'Nouveau produit'}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -685,11 +685,11 @@ export default function MenuPage() {
                   const showCreate = catInput.trim().length > 0 && !exactMatch
                   if (!filtered.length && !showCreate) return null
                   return (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, marginTop: 4, overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: '#0f172a', border: '1.5px solid rgba(0,0,0,0.08)', borderRadius: 12, marginTop: 4, overflow: 'hidden' }}>
                       {filtered.map(cat => (
                         <button key={cat.id} type="button"
                           onMouseDown={() => { setForm(f => ({ ...f, category: cat.name })); setCatInput(cat.name); setShowCatDropdown(false) }}
-                          style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: 'white', fontSize: 13, cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                          style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: '#1A1208', fontSize: 13, cursor: 'pointer', borderBottom: '1px solid rgba(0,0,0,0.05)' }}
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.1)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                         >
@@ -699,7 +699,7 @@ export default function MenuPage() {
                       {showCreate && (
                         <button type="button"
                           onMouseDown={() => selectOrCreateCategory(catInput)}
-                          style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: '#818cf8', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}
+                          style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: '#f97316', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.1)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                         >
@@ -710,18 +710,18 @@ export default function MenuPage() {
                   )
                 })()}
               </div>
-              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
-                <label style={{ display: 'block', fontSize: 12, color: '#4b5563', marginBottom: 8, fontWeight: 600 }}>Option Menu (facultatif)</label>
+              <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 12 }}>
+                <label style={{ display: 'block', fontSize: 12, color: '#78716C', marginBottom: 8, fontWeight: 600 }}>Option Menu (facultatif)</label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input placeholder="Prix du menu (ex: 2.00)" value={form.menu_extra_price} onChange={e => setForm({ ...form, menu_extra_price: e.target.value })} type="number" step="0.5" style={{ ...inputStyle, flex: 1 }} />
                   <input placeholder="Contenu (ex: Frites + Boisson)" value={form.menu_label} onChange={e => setForm({ ...form, menu_label: e.target.value })} style={{ ...inputStyle, flex: 2 }} />
                 </div>
               </div>
               {form.menu_extra_price && parseFloat(form.menu_extra_price) > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1.5px solid rgba(0,0,0,0.07)' }}>
                   <div>
-                    <p style={{ color: 'white', fontWeight: 600, fontSize: 13, margin: 0 }}>🍟 Accompagnement inclus dans le menu</p>
-                    <p style={{ color: '#4b5563', fontSize: 11, margin: '2px 0 0' }}>Le client pourra choisir un accompagnement</p>
+                    <p style={{ color: '#1A1208', fontWeight: 600, fontSize: 13, margin: 0 }}>🍟 Accompagnement inclus dans le menu</p>
+                    <p style={{ color: '#78716C', fontSize: 11, margin: '2px 0 0' }}>Le client pourra choisir un accompagnement</p>
                   </div>
                   <button
                     type="button"
@@ -733,14 +733,14 @@ export default function MenuPage() {
                 </div>
               )}
               {(form.category === 'Boissons' || catInput === 'Boissons') && (
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 12 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#4b5563', marginBottom: 4, fontWeight: 600 }}>Supplément en menu (facultatif)</label>
-                  <p style={{ fontSize: 11, color: '#374151', margin: '0 0 8px' }}>Si cette boisson coûte plus cher que les autres quand choisie dans un menu</p>
+                <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 12 }}>
+                  <label style={{ display: 'block', fontSize: 12, color: '#78716C', marginBottom: 4, fontWeight: 600 }}>Supplément en menu (facultatif)</label>
+                  <p style={{ fontSize: 11, color: '#78716C', margin: '0 0 8px' }}>Si cette boisson coûte plus cher que les autres quand choisie dans un menu</p>
                   <input placeholder="Ex: 1.50" value={form.menu_supplement} onChange={e => setForm({ ...form, menu_supplement: e.target.value })} type="number" step="0.5" min="0" style={{ ...inputStyle, width: '50%' }} />
                 </div>
               )}
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#4b5563', marginBottom: 8, fontWeight: 600 }}>Photo du produit</label>
+                <label style={{ display: 'block', fontSize: 12, color: '#78716C', marginBottom: 8, fontWeight: 600 }}>Photo du produit</label>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   {form.image_url && (
                     <img src={form.image_url} alt="" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }} />
@@ -766,8 +766,8 @@ export default function MenuPage() {
               </div>
             )}
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={() => { setShowForm(false); setSaveError(null) }} style={{ flex: 1, padding: '13px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#6b7280', cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
-              <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '13px', borderRadius: 12, border: 'none', cursor: saving ? 'default' : 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700 }}>
+              <button onClick={() => { setShowForm(false); setSaveError(null) }} style={{ flex: 1, padding: '13px', borderRadius: 12, border: '1.5px solid rgba(0,0,0,0.1)', background: 'transparent', color: '#78716C', cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
+              <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '13px', borderRadius: 12, border: 'none', cursor: saving ? 'default' : 'pointer', background: '#f97316', color: '#1A1208', fontWeight: 700 }}>
                 {saving ? 'Enregistrement...' : 'Enregistrer'}
               </button>
             </div>
@@ -778,17 +778,17 @@ export default function MenuPage() {
       {/* Modal options */}
       {optionsProduct && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px' }}>
-          <div style={{ width: '100%', maxWidth: 520, borderRadius: 24, padding: '32px 28px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(255,255,255,0.1)', marginTop: 20 }}>
+          <div style={{ width: '100%', maxWidth: 520, borderRadius: 24, padding: '32px 28px', background: 'white', border: '1.5px solid rgba(0,0,0,0.08)', marginTop: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 800, color: 'white', margin: 0 }}>Options — {optionsProduct.name}</h2>
-                <p style={{ fontSize: 12, color: '#4b5563', margin: '4px 0 0' }}>Choix proposés au client lors de la commande</p>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1A1208', margin: 0 }}>Options — {optionsProduct.name}</h2>
+                <p style={{ fontSize: 12, color: '#78716C', margin: '4px 0 0' }}>Choix proposés au client lors de la commande</p>
               </div>
-              <button onClick={() => setOptionsProduct(null)} style={{ color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', fontSize: 20 }}>✕</button>
+              <button onClick={() => setOptionsProduct(null)} style={{ color: '#78716C', background: 'none', border: 'none', cursor: 'pointer', fontSize: 20 }}>✕</button>
             </div>
 
             {loadingOptions ? (
-              <p style={{ color: '#4b5563', textAlign: 'center', padding: '20px 0' }}>Chargement...</p>
+              <p style={{ color: '#78716C', textAlign: 'center', padding: '20px 0' }}>Chargement...</p>
             ) : (
               <>
                 {optionGroups.map(group => (
@@ -802,16 +802,16 @@ export default function MenuPage() {
                     style={{ marginBottom: 20, borderRadius: 16, padding: 16, background: 'rgba(255,255,255,0.03)', border: `1px solid ${dragOverGroupId === group.id && draggedGroupId !== group.id ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.07)'}`, opacity: draggedGroupId === group.id ? 0.4 : 1, transition: 'border-color 0.15s, opacity 0.15s', cursor: 'grab' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ color: '#374151', fontSize: 16, cursor: 'grab' }}>⠿</span>
-                        <p style={{ color: 'white', fontWeight: 700, margin: 0, fontSize: 14 }}>{group.name}</p>
+                        <span style={{ color: '#78716C', fontSize: 16, cursor: 'grab' }}>⠿</span>
+                        <p style={{ color: '#1A1208', fontWeight: 700, margin: 0, fontSize: 14 }}>{group.name}</p>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ fontSize: 11, color: '#4b5563' }}>Max :</span>
+                          <span style={{ fontSize: 11, color: '#78716C' }}>Max :</span>
                           <select
                             value={group.max_choices}
                             onChange={e => updateGroupMax(group.id, parseInt(e.target.value))}
-                            style={{ fontSize: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: 8, padding: '4px 8px' }}
+                            style={{ fontSize: 12, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(0,0,0,0.08)', color: 'white', borderRadius: 8, padding: '4px 8px' }}
                           >
                             {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} choix</option>)}
                           </select>
@@ -837,7 +837,7 @@ export default function MenuPage() {
                           onDragEnd={() => { setDraggedItemKey(null); setDragOverItemKey(null) }}
                           style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: item.is_available !== false ? 'rgba(255,255,255,0.04)' : 'rgba(239,68,68,0.07)', border: dragOverItemKey === item.id && draggedItemKey !== item.id ? '1px solid rgba(99,102,241,0.5)' : item.is_available !== false ? 'none' : '1px solid rgba(239,68,68,0.2)', opacity: draggedItemKey === item.id ? 0.4 : 1, cursor: 'grab', transition: 'border 0.1s, opacity 0.1s' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ color: '#374151', fontSize: 14, cursor: 'grab' }}>⠿</span>
+                            <span style={{ color: '#78716C', fontSize: 14, cursor: 'grab' }}>⠿</span>
                             <span style={{ fontSize: 13, color: item.is_available !== false ? '#d1d5db' : '#6b7280', textDecoration: item.is_available !== false ? 'none' : 'line-through' }}>{item.name}</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -852,7 +852,7 @@ export default function MenuPage() {
                             >
                               {item.is_available !== false ? 'Dispo' : 'Rupture'}
                             </button>
-                            <button onClick={() => deleteItem(group.id, item.id)} style={{ fontSize: 13, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                            <button onClick={() => deleteItem(group.id, item.id)} style={{ fontSize: 13, color: '#78716C', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
                           </div>
                         </div>
                       ))}
@@ -873,7 +873,7 @@ export default function MenuPage() {
                         type="number" step="0.5"
                         style={{ ...inputStyle, flex: 1, padding: '8px 12px', fontSize: 13 }}
                       />
-                      <button onClick={() => addItem(group.id)} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.2)', color: '#818cf8', fontWeight: 700, fontSize: 18 }}>+</button>
+                      <button onClick={() => addItem(group.id)} style={{ padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'rgba(99,102,241,0.2)', color: '#f97316', fontWeight: 700, fontSize: 18 }}>+</button>
                     </div>
                   </div>
                 ))}
@@ -888,29 +888,29 @@ export default function MenuPage() {
                       {!showCopyFrom ? (
                         <button
                           onClick={() => setShowCopyFrom(true)}
-                          style={{ width: '100%', padding: '11px', borderRadius: 12, border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.08)', color: '#818cf8', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+                          style={{ width: '100%', padding: '11px', borderRadius: 12, border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.08)', color: '#f97316', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
                         >
                           + Ajouter une option existante
                         </button>
                       ) : (
                         <div style={{ padding: 14, borderRadius: 14, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                          <p style={{ fontSize: 12, color: '#818cf8', fontWeight: 700, margin: '0 0 10px' }}>Options déjà créées :</p>
+                          <p style={{ fontSize: 12, color: '#f97316', fontWeight: 700, margin: '0 0 10px' }}>Options déjà créées :</p>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto' }}>
                             {available.map(g => (
                               <button
                                 key={g.id}
                                 onClick={() => copyOptionsFrom(g.id)}
                                 disabled={copyingFrom}
-                                style={{ textAlign: 'left', padding: '10px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.04)', color: 'white', fontSize: 13, fontWeight: 600 }}
+                                style={{ textAlign: 'left', padding: '10px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'white', color: '#1A1208', fontSize: 13, fontWeight: 600 }}
                               >
                                 {g.name}
-                                <span style={{ color: '#4b5563', fontWeight: 400, fontSize: 12, marginLeft: 8 }}>
+                                <span style={{ color: '#78716C', fontWeight: 400, fontSize: 12, marginLeft: 8 }}>
                                   {g.items.length} choix · depuis {g.product_name}
                                 </span>
                               </button>
                             ))}
                           </div>
-                          <button onClick={() => setShowCopyFrom(false)} style={{ marginTop: 8, fontSize: 12, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>Annuler</button>
+                          <button onClick={() => setShowCopyFrom(false)} style={{ marginTop: 8, fontSize: 12, color: '#78716C', background: 'none', border: 'none', cursor: 'pointer' }}>Annuler</button>
                         </div>
                       )}
                     </div>
@@ -919,13 +919,13 @@ export default function MenuPage() {
 
                 <button
                   onClick={() => setOptionsProduct(null)}
-                  style={{ width: '100%', padding: '13px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#6b7280', cursor: 'pointer', fontWeight: 600, marginBottom: 12 }}
+                  style={{ width: '100%', padding: '13px', borderRadius: 12, border: '1.5px solid rgba(0,0,0,0.1)', background: 'transparent', color: '#78716C', cursor: 'pointer', fontWeight: 600, marginBottom: 12 }}
                 >
                   ✓ Fermer les options
                 </button>
 
                 <div style={{ marginTop: 0, padding: 16, borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)' }}>
-                  <p style={{ fontSize: 12, color: '#4b5563', margin: '0 0 10px', fontWeight: 600 }}>+ Nouveau groupe d'options</p>
+                  <p style={{ fontSize: 12, color: '#78716C', margin: '0 0 10px', fontWeight: 600 }}>+ Nouveau groupe d'options</p>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input
                       placeholder="Nom (ex: Viande)"
@@ -937,11 +937,11 @@ export default function MenuPage() {
                     <select
                       value={newGroupMax}
                       onChange={e => setNewGroupMax(e.target.value)}
-                      style={{ flex: 1, fontSize: 13, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', borderRadius: 12, padding: '10px 12px' }}
+                      style={{ flex: 1, fontSize: 13, background: 'white', border: '1.5px solid rgba(0,0,0,0.1)', color: 'white', borderRadius: 12, padding: '10px 12px' }}
                     >
                       {[1,2,3,4,5].map(n => <option key={n} value={n}>Max {n}</option>)}
                     </select>
-                    <button onClick={async () => { await addGroup(); setOptionsProduct(null) }} style={{ padding: '10px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700 }}>Confirmer</button>
+                    <button onClick={async () => { await addGroup(); setOptionsProduct(null) }} style={{ padding: '10px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', background: '#f97316', color: '#1A1208', fontWeight: 700 }}>Confirmer</button>
                   </div>
                 </div>
               </>
