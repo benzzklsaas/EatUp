@@ -51,7 +51,7 @@ export default function LandingPage() {
       <section style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '180px 24px 120px', overflow: 'hidden' }}>
 
         {/* Glows */}
-        <div style={{ position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)', width: 800, height: 800, background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)', width: 800, height: 800, background: 'radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 65%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', top: 200, left: '20%', width: 400, height: 400, background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', top: 200, right: '20%', width: 400, height: 400, background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
@@ -59,12 +59,12 @@ export default function LandingPage() {
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
           padding: '6px 14px', borderRadius: 100, marginBottom: 32,
-          background: 'rgba(99,102,241,0.1)',
-          border: '1px solid rgba(99,102,241,0.25)',
-          fontSize: 13, fontWeight: 600, color: '#818cf8',
+          background: 'rgba(249,115,22,0.1)',
+          border: '1px solid rgba(249,115,22,0.25)',
+          fontSize: 13, fontWeight: 600, color: '#fb923c',
           letterSpacing: '0.02em',
         }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#818cf8', display: 'inline-block', boxShadow: '0 0 8px #818cf8' }} />
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fb923c', display: 'inline-block', boxShadow: '0 0 8px #fb923c' }} />
           Disponible maintenant · Sans engagement
         </div>
 
@@ -72,7 +72,7 @@ export default function LandingPage() {
         <h1 style={{ fontSize: 'clamp(40px, 7vw, 80px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-3px', margin: '0 0 24px', maxWidth: 900 }}>
           Arrêtez de payer<br />
           <span style={{
-            background: 'linear-gradient(135deg, #60a5fa 0%, #818cf8 40%, #a78bfa 70%, #c084fc 100%)',
+            background: 'linear-gradient(135deg, #fdba74 0%, #fb923c 40%, #f97316 70%, #ea580c 100%)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
             30% à Uber Eats.
@@ -88,9 +88,9 @@ export default function LandingPage() {
           <Link href="/auth/register" style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '14px 28px', borderRadius: 14, textDecoration: 'none',
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            background: 'linear-gradient(135deg, #f97316, #ea580c)',
             color: 'white', fontWeight: 700, fontSize: 16,
-            boxShadow: '0 0 0 1px rgba(99,102,241,0.5), 0 20px 60px rgba(99,102,241,0.3)',
+            boxShadow: '0 0 0 1px rgba(249,115,22,0.5), 0 20px 60px rgba(249,115,22,0.3)',
           }}>
             Créer mon restaurant
             <span style={{ fontSize: 18 }}>→</span>
@@ -113,7 +113,7 @@ export default function LandingPage() {
           marginTop: 80, width: '100%', maxWidth: 900,
           borderRadius: 20, overflow: 'hidden',
           border: '1px solid rgba(255,255,255,0.07)',
-          boxShadow: '0 0 0 1px rgba(99,102,241,0.1), 0 40px 120px rgba(0,0,0,0.8)',
+          boxShadow: '0 0 0 1px rgba(249,115,22,0.1), 0 40px 120px rgba(0,0,0,0.8)',
           background: '#0f172a',
         }}>
           {/* Fake browser bar */}
@@ -129,7 +129,7 @@ export default function LandingPage() {
           <div style={{ padding: 24 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
               {[
-                { label: "Commandes aujourd'hui", value: '347', trend: '↑ +18% vs hier', color: '#60a5fa', trendColor: '#4ade80' },
+                { label: "Commandes aujourd'hui", value: '347', trend: '↑ +18% vs hier', color: '#fdba74', trendColor: '#4ade80' },
                 { label: 'En cours', value: '89', trend: '12 prêtes', color: '#f59e0b', trendColor: '#fbbf24' },
                 { label: 'Revenus du mois', value: '14 820€', trend: '↑ +31% vs mois dernier', color: '#10b981', trendColor: '#4ade80' },
               ].map((stat, i) => (
@@ -147,7 +147,7 @@ export default function LandingPage() {
               </div>
               {[
                 { name: 'Marie Lambert', items: '3 articles', amount: '54,50€', status: 'En attente', statusColor: '#f59e0b', statusBg: '#451a03' },
-                { name: 'Thomas Girard', items: '5 articles', amount: '89,90€', status: 'En préparation', statusColor: '#60a5fa', statusBg: '#1e3a5f' },
+                { name: 'Thomas Girard', items: '5 articles', amount: '89,90€', status: 'En préparation', statusColor: '#fdba74', statusBg: '#1e3a5f' },
                 { name: 'Sophie Martin', items: '2 articles', amount: '38,00€', status: 'Prêt ✓', statusColor: '#4ade80', statusBg: '#052e16' },
               ].map((order, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 2 ? '1px solid #0f172a' : 'none' }}>
@@ -199,7 +199,7 @@ export default function LandingPage() {
       {/* Features */}
       <section style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <p style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Fonctionnalités</p>
+          <p style={{ fontSize: 13, color: '#f97316', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Fonctionnalités</p>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1.5px', margin: '0 0 16px' }}>
             Tout ce qu'il faut,<br />rien de superflu.
           </h2>
@@ -232,8 +232,8 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section style={{ padding: '80px 24px', textAlign: 'center', background: 'rgba(99,102,241,0.03)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        <p style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Comment ça marche</p>
+      <section style={{ padding: '80px 24px', textAlign: 'center', background: 'rgba(249,115,22,0.03)', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+        <p style={{ fontSize: 13, color: '#f97316', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Comment ça marche</p>
         <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1.5px', marginBottom: 64 }}>
           En ligne en 5 minutes.
         </h2>
@@ -248,9 +248,9 @@ export default function LandingPage() {
               <div style={{
                 width: 48, height: 48, borderRadius: '50%', margin: '0 auto 20px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                background: 'linear-gradient(135deg, #f97316, #ea580c)',
                 fontSize: 18, fontWeight: 800,
-                boxShadow: '0 0 30px rgba(99,102,241,0.4)',
+                boxShadow: '0 0 30px rgba(249,115,22,0.4)',
               }}>
                 {step.n}
               </div>
@@ -264,7 +264,7 @@ export default function LandingPage() {
       {/* Pricing */}
       <section style={{ padding: '100px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <p style={{ fontSize: 13, color: '#6366f1', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Tarifs</p>
+          <p style={{ fontSize: 13, color: '#f97316', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Tarifs</p>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 900, letterSpacing: '-1.5px', marginBottom: 16 }}>
             Transparent. Sans surprise.
           </h2>
@@ -275,13 +275,13 @@ export default function LandingPage() {
           <div style={{
             borderRadius: 24, padding: '48px 40px',
             background: 'linear-gradient(145deg, #0f172a, #111827)',
-            border: '2px solid rgba(99,102,241,0.5)',
-            boxShadow: '0 0 80px rgba(99,102,241,0.12)',
+            border: '2px solid rgba(249,115,22,0.5)',
+            boxShadow: '0 0 80px rgba(249,115,22,0.12)',
             position: 'relative',
           }}>
             <div style={{
               position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: 'linear-gradient(135deg, #f97316, #ea580c)',
               padding: '4px 20px', borderRadius: 100, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', color: 'white',
             }}>
               SANS ENGAGEMENT
@@ -306,16 +306,16 @@ export default function LandingPage() {
                 'Support par email',
               ].map(f => (
                 <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, color: '#9ca3af' }}>
-                  <span style={{ color: '#818cf8', fontSize: 18, fontWeight: 800 }}>✓</span> {f}
+                  <span style={{ color: '#fb923c', fontSize: 18, fontWeight: 800 }}>✓</span> {f}
                 </li>
               ))}
             </ul>
 
             <Link href="/auth/register" style={{
               display: 'block', textAlign: 'center', padding: '16px', borderRadius: 14,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: 'linear-gradient(135deg, #f97316, #ea580c)',
               color: 'white', fontWeight: 700, fontSize: 16, textDecoration: 'none',
-              boxShadow: '0 8px 40px rgba(99,102,241,0.4)',
+              boxShadow: '0 8px 40px rgba(249,115,22,0.4)',
             }}>
               Commencer pour 29,99€/mois →
             </Link>
@@ -326,10 +326,10 @@ export default function LandingPage() {
 
       {/* Final CTA */}
       <section style={{ padding: '80px 24px 120px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 700, background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 700, background: 'radial-gradient(circle, rgba(249,115,22,0.1) 0%, transparent 65%)', pointerEvents: 'none' }} />
         <h2 style={{ fontSize: 'clamp(32px, 5vw, 64px)', fontWeight: 900, letterSpacing: '-2px', marginBottom: 20, lineHeight: 1.1 }}>
           Vos commandes.<br />
-          <span style={{ background: 'linear-gradient(135deg, #60a5fa, #818cf8, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <span style={{ background: 'linear-gradient(135deg, #fdba74, #fb923c, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Votre argent.
           </span>
         </h2>
