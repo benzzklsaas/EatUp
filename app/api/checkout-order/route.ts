@@ -5,18 +5,22 @@ import { createClient } from '@supabase/supabase-js'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(ip)
-  if (!entry || now > entry.resetAt) { rateLimitMap.set(ip, { count: 1, resetAt: now + 3600_000 }); return true }
-  if (entry.count >= 30) return false
-  entry.count++; return true
+async function checkRateLimit(ip: string, route: string): Promise<boolean> {
+  const now = new Date()
+  const resetAt = new Date(now.getTime() + 3600_000).toISOString()
+  const { data } = await supabase.from('rate_limits').select('count, reset_at').eq('ip', ip).eq('route', route).single()
+  if (!data || new Date(data.reset_at) < now) {
+    await supabase.from('rate_limits').upsert({ ip, route, count: 1, reset_at: resetAt }, { onConflict: 'ip,route' })
+    return true
+  }
+  if (data.count >= 30) return false
+  await supabase.from('rate_limits').update({ count: data.count + 1 }).eq('ip', ip).eq('route', route)
+  return true
 }
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  if (!checkRateLimit(ip)) return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une heure.' }, { status: 429 })
+  if (!await checkRateLimit(ip, 'checkout-order')) return NextResponse.json({ error: 'Trop de tentatives. Réessayez dans une heure.' }, { status: 429 })
   const { items, restaurantName, orderNumber, restaurantId, customerEmail } = await req.json()
 
   if (!restaurantId || !items?.length || !orderNumber) {

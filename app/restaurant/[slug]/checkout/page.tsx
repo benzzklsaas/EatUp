@@ -99,10 +99,8 @@ export default function CheckoutPage() {
         }
 
         if (slots.length > 0) {
-          // Limiter à 18 créneaux (3h à 10 min d'intervalle)
-          const limited = slots.slice(0, 18)
-          setPickupSlots(limited)
-          setPickupTime(limited[0])
+          setPickupSlots(slots)
+          setPickupTime(slots[0])
         }
       }
     }

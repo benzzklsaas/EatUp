@@ -35,13 +35,23 @@ export default function DashboardPage() {
         router.push('/auth/register'); return
       }
 
-      // Si inscription récente (< 2 min), patienter que le webhook Stripe arrive
-      const isNew = (Date.now() - new Date(resto.created_at).getTime()) < 2 * 60_000
+      // Vérifier la souscription — si inscription récente, attendre le webhook Stripe via Realtime
+      const isNew = (Date.now() - new Date(resto.created_at).getTime()) < 3 * 60_000
       let sub = null
-      for (let attempt = 0; attempt < (isNew ? 6 : 1); attempt++) {
-        const { data } = await supabase.from('restaurant_subscriptions').select('status, past_due_since').eq('restaurant_id', resto.id).single()
-        if (data) { sub = data; break }
-        if (attempt < 5) await new Promise(r => setTimeout(r, 2000))
+      const { data: existingSub } = await supabase.from('restaurant_subscriptions').select('status, past_due_since').eq('restaurant_id', resto.id).single()
+      if (existingSub) {
+        sub = existingSub
+      } else if (isNew) {
+        sub = await new Promise<{ status: string; past_due_since: string | null } | null>(resolve => {
+          const timeout = setTimeout(() => resolve(null), 30_000)
+          const channel = supabase.channel(`sub-wait-${resto.id}`)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'restaurant_subscriptions', filter: `restaurant_id=eq.${resto.id}` }, (payload) => {
+              clearTimeout(timeout)
+              supabase.removeChannel(channel)
+              resolve(payload.new as { status: string; past_due_since: string | null })
+            })
+            .subscribe()
+        })
       }
       const gracePeriodExpired = sub?.status === 'past_due' && sub.past_due_since
         && (Date.now() - new Date(sub.past_due_since).getTime()) > 2 * 24 * 3600_000

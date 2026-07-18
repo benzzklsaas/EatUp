@@ -65,22 +65,22 @@ export default function LandingPage() {
           letterSpacing: '0.02em',
         }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#818cf8', display: 'inline-block', boxShadow: '0 0 8px #818cf8' }} />
-          Plateforme click & collect · Ouverture 2026
+          Disponible maintenant · Sans engagement
         </div>
 
         {/* Headline */}
         <h1 style={{ fontSize: 'clamp(40px, 7vw, 80px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-3px', margin: '0 0 24px', maxWidth: 900 }}>
-          Le restaurant qui commande<br />
+          Arrêtez de payer<br />
           <span style={{
             background: 'linear-gradient(135deg, #60a5fa 0%, #818cf8 40%, #a78bfa 70%, #c084fc 100%)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            sans attendre.
+            30% à Uber Eats.
           </span>
         </h1>
 
         <p style={{ fontSize: 18, color: '#4b5563', lineHeight: 1.7, maxWidth: 520, margin: '0 0 48px' }}>
-          Donnez à votre restaurant un menu digital, un système de commande click & collect et un dashboard complet — configuré en 5 minutes.
+          EatUp c'est votre propre système de commande en ligne — vos clients commandent, vous gardez 100% de l'argent. 29,99€/mois fixe, aucune commission.
         </p>
 
         {/* CTA */}
@@ -170,10 +170,10 @@ export default function LandingPage() {
       <div style={{ padding: '0 24px 80px' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 1, borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
           {[
-            { value: '2 400+', label: 'commandes traitées', icon: '🛒' },
-            { value: '98%', label: 'de satisfaction client', icon: '⭐' },
-            { value: '< 2 min', label: "pour s'inscrire", icon: '⚡' },
-            { value: '0€', label: 'de commission sur vos ventes', icon: '💰' },
+            { value: '0%', label: 'de commission sur chaque vente', icon: '💰' },
+            { value: '29,99€', label: 'par mois, tout inclus', icon: '📋' },
+            { value: '5 min', label: "pour être en ligne", icon: '⚡' },
+            { value: '450€', label: 'économisés vs Uber Eats / mois', icon: '🏦' },
           ].map((s, i) => (
             <div key={i} style={{ background: 'rgba(255,255,255,0.02)', padding: '28px 24px', textAlign: 'center' }}>
               <div style={{ fontSize: 22, marginBottom: 8 }}>{s.icon}</div>
@@ -328,9 +328,9 @@ export default function LandingPage() {
       <section style={{ padding: '80px 24px 120px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 700, background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%)', pointerEvents: 'none' }} />
         <h2 style={{ fontSize: 'clamp(32px, 5vw, 64px)', fontWeight: 900, letterSpacing: '-2px', marginBottom: 20, lineHeight: 1.1 }}>
-          Votre restaurant mérite<br />
+          Vos commandes.<br />
           <span style={{ background: 'linear-gradient(135deg, #60a5fa, #818cf8, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            mieux que les applis tierces.
+            Votre argent.
           </span>
         </h2>
         <p style={{ color: '#4b5563', fontSize: 18, marginBottom: 48, maxWidth: 480, margin: '0 auto 48px' }}>

@@ -8,24 +8,29 @@ const supabase = createClient(
 )
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Rate limiting: 5 commandes max par IP par heure
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+async function checkRateLimit(ip: string, route: string): Promise<boolean> {
+  const now = new Date()
+  const resetAt = new Date(now.getTime() + 3600_000).toISOString()
 
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(ip)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 3600_000 })
+  const { data } = await supabase
+    .from('rate_limits')
+    .select('count, reset_at')
+    .eq('ip', ip)
+    .eq('route', route)
+    .single()
+
+  if (!data || new Date(data.reset_at) < now) {
+    await supabase.from('rate_limits').upsert({ ip, route, count: 1, reset_at: resetAt }, { onConflict: 'ip,route' })
     return true
   }
-  if (entry.count >= 30) return false
-  entry.count++
+  if (data.count >= 30) return false
+  await supabase.from('rate_limits').update({ count: data.count + 1 }).eq('ip', ip).eq('route', route)
   return true
 }
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  if (!checkRateLimit(ip)) {
+  if (!await checkRateLimit(ip, 'orders')) {
     return NextResponse.json({ error: 'Trop de commandes. Réessayez dans une heure.' }, { status: 429 })
   }
   const { order, items, emailData } = await req.json()
@@ -203,14 +208,14 @@ export async function POST(req: NextRequest) {
 
       await Promise.all([
         resend.emails.send({
-          from: 'EatUp <onboarding@resend.dev>',
-          to: 'ben.kacel7@gmail.com',
+          from: 'EatUp <noreply@eatup-app.fr>',
+          to: emailData.customerEmail,
           subject: `✅ Commande #${orderNumber} confirmée — ${restaurantName}`,
           html: customerHtml,
         }),
         resend.emails.send({
-          from: 'EatUp <onboarding@resend.dev>',
-          to: 'ben.kacel7@gmail.com',
+          from: 'EatUp <noreply@eatup-app.fr>',
+          to: restoFull.email,
           subject: `🔔 Nouvelle commande #${orderNumber} — ${customerName} (${restaurantName})`,
           html: restaurantHtml,
         }),

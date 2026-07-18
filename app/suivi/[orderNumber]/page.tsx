@@ -35,13 +35,15 @@ export default function SuiviPage() {
       setLoading(false)
 
       // Temps réel
-      supabase.channel(`suivi-${o.id}`)
+      const channel = supabase.channel(`suivi-${o.id}`)
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${o.id}` }, (payload) => {
           setOrder((prev: any) => ({ ...prev, ...payload.new }))
         })
         .subscribe()
+      return () => { supabase.removeChannel(channel) }
     }
-    load()
+    const cleanup = load()
+    return () => { cleanup?.then(fn => fn?.()) }
   }, [orderNumber])
 
   if (loading) return (
@@ -63,7 +65,14 @@ export default function SuiviPage() {
   const currentStep = STEPS.findIndex(s => s.key === order.status)
   const stepIndex = currentStep === -1 ? 0 : currentStep
   const isCompleted = order.status === 'completed' || order.status === 'cancelled'
-  const pickupTime = new Date(order.pickup_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })
+  const tz = 'Europe/Paris'
+  const pickupDate = new Date(order.pickup_time)
+  const pickupTimeStr = pickupDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: tz })
+  const todayStr = new Date().toLocaleDateString('fr-FR', { timeZone: tz })
+  const pickupDayStr = pickupDate.toLocaleDateString('fr-FR', { timeZone: tz })
+  const pickupLabel = todayStr === pickupDayStr
+    ? `Aujourd'hui à ${pickupTimeStr}`
+    : pickupDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz }) + ` à ${pickupTimeStr}`
 
   return (
     <div style={{ minHeight: '100vh', background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '32px 20px' }}>
@@ -147,7 +156,7 @@ export default function SuiviPage() {
         <div style={{ borderRadius: 20, padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 13, color: '#4b5563' }}>Retrait prévu</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>Aujourd'hui à {pickupTime}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{pickupLabel}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 13, color: '#4b5563' }}>Total</span>
@@ -155,7 +164,7 @@ export default function SuiviPage() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 13, color: '#4b5563' }}>Paiement</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#4b5563' }}>Sur place</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#4b5563' }}>{order.payment_method === 'cash' ? 'Sur place' : 'Payé en ligne'}</span>
           </div>
         </div>
 
