@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --blue-900: oklch(22% 0.085 264); --blue-800: oklch(28% 0.11 264); --blue-700: oklch(38% 0.16 264);
+      --blue-600: oklch(46% 0.19 264); --blue-500: oklch(58% 0.18 264); --blue-300: oklch(82% 0.07 252);
+      --cream: oklch(97% 0.014 80); --ink: oklch(19% 0.03 264); --coral: oklch(73% 0.16 36); --coral-deep: oklch(60% 0.17 32);
+    }
+    body{ margin:0; font-family:'Manrope',ui-sans-serif,system-ui,sans-serif; background:transparent; }
+    a{ color:var(--blue-300); } a:hover{ color:var(--coral); }
+    .display{ font-family:'Sora',ui-sans-serif,system-ui,sans-serif; }
+  </style>
+</helmet>
+
+<div style="width:430px; height:880px; position:relative; display:flex; align-items:center; justify-content:center; background:transparent;">
+  <!-- device body -->
+  <div style="width:402px; height:844px; border-radius:56px; background:oklch(14% 0.01 264); padding:12px; box-shadow:0 40px 80px -30px oklch(15% 0.02 264 / 0.55), 0 0 0 1px oklch(30% 0.02 264 / 0.4);">
+    <div style="width:100%; height:100%; border-radius:46px; overflow:hidden; position:relative; background:linear-gradient(165deg, var(--blue-900) 0%, var(--blue-700) 100%);">
+
+      <svg width="420" height="420" viewBox="0 0 400 400" style="position:absolute; left:-140px; top:-80px; opacity:0.55;">
+        <path fill="var(--blue-500)" d="M132.4,-146.6C169.4,-116.3,194.2,-71.3,199.6,-24.5C205,22.3,191,71,159.9,105.7C128.8,140.4,80.7,161.1,29.8,168.6C-21.1,176.1,-74.7,170.4,-113.6,141.7C-152.5,113,-176.7,61.3,-179.7,8.2C-182.7,-44.9,-164.5,-99.4,-128.6,-130.8C-92.6,-162.2,-46.3,-170.5,2.9,-174C52.1,-177.5,95.4,-176.9,132.4,-146.6Z" transform="translate(200 200)"/>
+      </svg>
+      <svg width="260" height="260" viewBox="0 0 400 400" style="position:absolute; right:-90px; top:220px; opacity:0.5;">
+        <path fill="var(--coral)" opacity="0.5" d="M120.6,-133.7C155.7,-108.6,181.6,-67.9,188.6,-23.9C195.6,20.1,181.7,67.4,151.8,102.1C121.9,136.8,76,158.9,26.6,168.4C-22.8,177.9,-75.6,174.8,-113.4,148.5C-151.2,122.2,-174,72.7,-177.5,21.6C-181,-29.5,-165.2,-82.2,-131.8,-108.6C-98.4,-135,-49.2,-135.1,-2.1,-132.6C45,-130.1,90,-125,120.6,-133.7Z" transform="translate(200 200)"/>
+      </svg>
+
+      <!-- dynamic island -->
+      <div style="position:absolute; top:14px; left:50%; transform:translateX(-50%); width:100px; height:28px; border-radius:14px; background:#000;"></div>
+
+      <!-- illustrated food graphic -->
+      <div style="position:absolute; left:0; right:0; top:120px; display:flex; justify-content:center;">
+        <div style="position:relative; width:260px; height:260px;">
+          <svg width="260" height="260" viewBox="0 0 260 260" style="position:absolute; inset:0;">
+            <ellipse cx="130" cy="215" rx="90" ry="16" fill="oklch(10% 0.02 264 / 0.35)"/>
+          </svg>
+          <div style="position:absolute; left:20px; top:20px; width:220px; height:220px; border-radius:50%; background:radial-gradient(circle at 32% 28%, oklch(83% 0.13 70), oklch(66% 0.15 45) 55%, oklch(52% 0.14 35) 100%); box-shadow:inset 0 -14px 30px oklch(20% 0.05 40 / 0.35);"></div>
+          <div style="position:absolute; left:55px; top:52px; width:60px; height:44px; border-radius:50% 50% 45% 45%; background:oklch(90% 0.14 130); opacity:0.9;"></div>
+          <div style="position:absolute; left:120px; top:40px; width:44px; height:34px; border-radius:50%; background:oklch(88% 0.16 25); opacity:0.9;"></div>
+          <div style="position:absolute; left:150px; top:80px; width:36px; height:36px; border-radius:50%; background:oklch(85% 0.17 95); opacity:0.9;"></div>
+          <div style="position:absolute; left:70px; top:100px; width:30px; height:30px; border-radius:50%; background:oklch(70% 0.16 30); opacity:0.85;"></div>
+        </div>
+      </div>
+
+      <!-- pagination -->
+      <div style="position:absolute; left:0; right:0; top:412px; display:flex; justify-content:center; gap:8px;">
+        <span style="width:22px; height:6px; border-radius:3px; background:var(--cream);"></span>
+        <span style="width:6px; height:6px; border-radius:3px; background:oklch(96% 0.02 250 / 0.35);"></span>
+        <span style="width:6px; height:6px; border-radius:3px; background:oklch(96% 0.02 250 / 0.35);"></span>
+      </div>
+
+      <!-- headline + cta -->
+      <div style="position:absolute; left:0; right:0; bottom:0; padding:32px 28px 40px; background:linear-gradient(180deg, transparent, oklch(22% 0.085 264 / 0.55) 30%, var(--blue-900) 62%);">
+        <h1 class="display" style="margin:0 0 12px; color:var(--cream); font-size:30px; font-weight:800; letter-spacing:-0.02em; line-height:1.1;">Skip the line.<br>Support local.</h1>
+        <p style="margin:0 0 28px; color:oklch(96% 0.02 250 / 0.68); font-size:15px; line-height:1.55;">Order ahead from restaurants near you, pay in the app, and pick up the moment it's ready — commission-free for the people who cook it.</p>
+        <button style="width:100%; height:56px; border:none; border-radius:999px; background:linear-gradient(135deg, var(--coral), var(--coral-deep)); color:var(--cream); font-family:'Sora',sans-serif; font-size:16px; font-weight:700; box-shadow:0 16px 32px -12px oklch(60% 0.17 32 / 0.55);">Get started</button>
+        <div style="text-align:center; margin-top:16px;"><a href="#" style="font-size:13px; font-weight:600; text-decoration:none;">I already have an account</a></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

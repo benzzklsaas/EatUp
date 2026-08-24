@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --blue-900: oklch(22% 0.085 264); --blue-700: oklch(38% 0.16 264); --blue-600: oklch(46% 0.19 264);
+      --blue-500: oklch(58% 0.18 264); --blue-300: oklch(82% 0.07 252); --blue-100: oklch(96% 0.02 250);
+      --cream: oklch(97% 0.014 80); --paper: oklch(99% 0.006 90); --ink: oklch(19% 0.03 264); --ink-soft: oklch(45% 0.03 264);
+      --coral: oklch(73% 0.16 36); --coral-deep: oklch(60% 0.17 32); --line: oklch(90% 0.012 260);
+    }
+    body{ margin:0; font-family:'Manrope',ui-sans-serif,system-ui,sans-serif; background:transparent; }
+    a{ color:var(--blue-600); } a:hover{ color:var(--coral-deep); }
+    .display{ font-family:'Sora',ui-sans-serif,system-ui,sans-serif; }
+    .rcard{ display:flex; gap:14px; padding:14px; border-radius:24px; background:var(--paper); border:1px solid var(--line); }
+  </style>
+</helmet>
+
+<div style="width:430px; height:880px; position:relative; display:flex; align-items:center; justify-content:center;">
+  <div style="width:402px; height:844px; border-radius:56px; background:oklch(14% 0.01 264); padding:12px; box-shadow:0 40px 80px -30px oklch(15% 0.02 264 / 0.55), 0 0 0 1px oklch(30% 0.02 264 / 0.4);">
+    <div style="width:100%; height:100%; border-radius:46px; overflow:hidden; position:relative; background:var(--cream);">
+
+      <svg width="300" height="300" viewBox="0 0 400 400" style="position:absolute; right:-120px; top:-40px; opacity:0.35;">
+        <path fill="var(--blue-300)" d="M120.6,-133.7C155.7,-108.6,181.6,-67.9,188.6,-23.9C195.6,20.1,181.7,67.4,151.8,102.1C121.9,136.8,76,158.9,26.6,168.4C-22.8,177.9,-75.6,174.8,-113.4,148.5C-151.2,122.2,-174,72.7,-177.5,21.6C-181,-29.5,-165.2,-82.2,-131.8,-108.6C-98.4,-135,-49.2,-135.1,-2.1,-132.6C45,-130.1,90,-125,120.6,-133.7Z" transform="translate(200 200)"/>
+      </svg>
+
+      <div style="position:absolute; top:14px; left:50%; transform:translateX(-50%); width:100px; height:28px; border-radius:14px; background:#000; z-index:5;"></div>
+
+      <div style="position:relative; z-index:1; padding:64px 22px 0; height:100%; box-sizing:border-box; display:flex; flex-direction:column;">
+
+        <!-- header -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px;">
+          <div>
+            <div style="font-size:13px; color:var(--ink-soft); margin-bottom:4px;">Good evening</div>
+            <div class="display" style="font-size:21px; font-weight:800; color:var(--ink);">Camille</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; background:var(--paper); border:1px solid var(--line); padding:9px 14px; border-radius:999px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+            <span style="font-size:12.5px; font-weight:600; color:var(--ink);">Le Marais</span>
+          </div>
+        </div>
+
+        <!-- search -->
+        <div style="display:flex; align-items:center; gap:10px; background:var(--paper); border:1px solid var(--line); border-radius:999px; padding:13px 18px; margin-bottom:18px;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <span style="font-size:14px; color:var(--ink-soft);">Search restaurants, dishes…</span>
+        </div>
+
+        <!-- categories -->
+        <div style="display:flex; gap:8px; margin-bottom:22px; overflow:hidden;">
+          <span style="padding:9px 16px; border-radius:999px; background:var(--blue-700); color:var(--cream); font-size:13px; font-weight:700; flex-shrink:0;">All</span>
+          <span style="padding:9px 16px; border-radius:999px; background:var(--paper); border:1px solid var(--line); color:var(--ink); font-size:13px; font-weight:600; flex-shrink:0;">Bowls</span>
+          <span style="padding:9px 16px; border-radius:999px; background:var(--paper); border:1px solid var(--line); color:var(--ink); font-size:13px; font-weight:600; flex-shrink:0;">Pizza</span>
+          <span style="padding:9px 16px; border-radius:999px; background:var(--paper); border:1px solid var(--line); color:var(--ink); font-size:13px; font-weight:600; flex-shrink:0;">Sushi</span>
+        </div>
+
+        <!-- section -->
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;">
+          <span class="display" style="font-size:17px; font-weight:700; color:var(--ink);">Ready near you</span>
+          <a href="#" style="font-size:12.5px; font-weight:700; text-decoration:none;">See all</a>
+        </div>
+
+        <!-- cards -->
+        <div style="display:flex; flex-direction:column; gap:12px; flex:1; overflow:hidden;">
+
+          <div class="rcard">
+            <div style="width:70px; height:70px; border-radius:18px; flex-shrink:0; background:radial-gradient(circle at 32% 28%, oklch(76% 0.15 150), oklch(55% 0.14 145) 70%); position:relative;">
+              <div style="position:absolute; left:14px; top:16px; width:22px; height:16px; border-radius:50%; background:oklch(88% 0.14 45); opacity:0.9;"></div>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <span style="font-size:14.5px; font-weight:700; color:var(--ink);">Basil &amp; Bowl</span>
+                <span style="display:flex; align-items:center; gap:3px; font-size:12px; color:var(--ink-soft);">★ 4.8</span>
+              </div>
+              <div style="font-size:12.5px; color:var(--ink-soft); margin:3px 0 8px;">Mediterranean · Salads</div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span style="font-size:12px; color:var(--ink-soft);">0.4 km · 8 min</span>
+                <span style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:var(--coral-deep);"><span style="width:5px;height:5px;border-radius:50%;background:var(--coral);display:inline-block;"></span>Order direct</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="rcard">
+            <div style="width:70px; height:70px; border-radius:18px; flex-shrink:0; background:radial-gradient(circle at 32% 28%, oklch(80% 0.15 60), oklch(58% 0.16 40) 70%); position:relative;">
+              <div style="position:absolute; left:12px; top:14px; width:24px; height:24px; border-radius:50%; background:oklch(85% 0.16 25); opacity:0.9;"></div>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <span style="font-size:14.5px; font-weight:700; color:var(--ink);">Nona Pizzeria</span>
+                <span style="display:flex; align-items:center; gap:3px; font-size:12px; color:var(--ink-soft);">★ 4.9</span>
+              </div>
+              <div style="font-size:12.5px; color:var(--ink-soft); margin:3px 0 8px;">Italian · Wood-fired</div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span style="font-size:12px; color:var(--ink-soft);">0.7 km · 12 min</span>
+                <span style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:var(--coral-deep);"><span style="width:5px;height:5px;border-radius:50%;background:var(--coral);display:inline-block;"></span>Order direct</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="rcard">
+            <div style="width:70px; height:70px; border-radius:18px; flex-shrink:0; background:radial-gradient(circle at 32% 28%, oklch(78% 0.13 90), oklch(56% 0.13 70) 70%); position:relative;">
+              <div style="position:absolute; left:15px; top:15px; width:20px; height:20px; border-radius:50%; background:oklch(90% 0.14 100); opacity:0.9;"></div>
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <span style="font-size:14.5px; font-weight:700; color:var(--ink);">Comptoir Bento</span>
+                <span style="display:flex; align-items:center; gap:3px; font-size:12px; color:var(--ink-soft);">★ 4.7</span>
+              </div>
+              <div style="font-size:12.5px; color:var(--ink-soft); margin:3px 0 8px;">Japanese · Bento</div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span style="font-size:12px; color:var(--ink-soft);">1.1 km · 15 min</span>
+                <span style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:var(--coral-deep);"><span style="width:5px;height:5px;border-radius:50%;background:var(--coral);display:inline-block;"></span>Order direct</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- bottom nav -->
+        <div style="padding:14px 0 24px;">
+          <div style="display:flex; justify-content:space-around; align-items:center; background:var(--blue-900); border-radius:999px; padding:12px 20px; box-shadow:0 16px 32px -14px oklch(22% 0.085 264 / 0.5);">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--cream)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9a1 1 0 001 1h10a1 1 0 001-1v-9"/></svg>
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="oklch(96% 0.02 250 / 0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="oklch(96% 0.02 250 / 0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 01-2 1.8H9.2a2 2 0 01-2-1.8L6 8z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg>
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="oklch(96% 0.02 250 / 0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

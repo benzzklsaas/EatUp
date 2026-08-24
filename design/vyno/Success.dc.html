@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --blue-900: oklch(22% 0.085 264); --blue-800: oklch(28% 0.11 264); --blue-700: oklch(38% 0.16 264);
+      --blue-600: oklch(46% 0.19 264); --blue-500: oklch(58% 0.18 264); --blue-300: oklch(82% 0.07 252);
+      --cream: oklch(97% 0.014 80); --ink: oklch(19% 0.03 264); --coral: oklch(73% 0.16 36); --coral-deep: oklch(60% 0.17 32);
+    }
+    body{ margin:0; font-family:'Manrope',ui-sans-serif,system-ui,sans-serif; background:transparent; }
+    .display{ font-family:'Sora',ui-sans-serif,system-ui,sans-serif; }
+  </style>
+</helmet>
+
+<div style="width:430px; height:880px; position:relative; display:flex; align-items:center; justify-content:center;">
+  <div style="width:402px; height:844px; border-radius:56px; background:oklch(14% 0.01 264); padding:12px; box-shadow:0 40px 80px -30px oklch(15% 0.02 264 / 0.55), 0 0 0 1px oklch(30% 0.02 264 / 0.4);">
+    <div style="width:100%; height:100%; border-radius:46px; overflow:hidden; position:relative; background:linear-gradient(170deg, var(--blue-900) 0%, var(--blue-700) 100%);">
+
+      <svg width="380" height="380" viewBox="0 0 400 400" style="position:absolute; left:-120px; top:-100px; opacity:0.5;">
+        <path fill="var(--blue-500)" d="M132.4,-146.6C169.4,-116.3,194.2,-71.3,199.6,-24.5C205,22.3,191,71,159.9,105.7C128.8,140.4,80.7,161.1,29.8,168.6C-21.1,176.1,-74.7,170.4,-113.6,141.7C-152.5,113,-176.7,61.3,-179.7,8.2C-182.7,-44.9,-164.5,-99.4,-128.6,-130.8C-92.6,-162.2,-46.3,-170.5,2.9,-174C52.1,-177.5,95.4,-176.9,132.4,-146.6Z" transform="translate(200 200)"/>
+      </svg>
+      <svg width="240" height="240" viewBox="0 0 400 400" style="position:absolute; right:-80px; bottom:60px; opacity:0.55;">
+        <path fill="var(--coral)" opacity="0.6" d="M120.6,-133.7C155.7,-108.6,181.6,-67.9,188.6,-23.9C195.6,20.1,181.7,67.4,151.8,102.1C121.9,136.8,76,158.9,26.6,168.4C-22.8,177.9,-75.6,174.8,-113.4,148.5C-151.2,122.2,-174,72.7,-177.5,21.6C-181,-29.5,-165.2,-82.2,-131.8,-108.6C-98.4,-135,-49.2,-135.1,-2.1,-132.6C45,-130.1,90,-125,120.6,-133.7Z" transform="translate(200 200)"/>
+      </svg>
+      <!-- confetti bubbles -->
+      <div style="position:absolute; left:70px; top:140px; width:10px; height:10px; border-radius:50%; background:var(--coral);"></div>
+      <div style="position:absolute; left:320px; top:110px; width:14px; height:14px; border-radius:50%; background:var(--blue-300);"></div>
+      <div style="position:absolute; left:300px; top:220px; width:8px; height:8px; border-radius:50%; background:var(--cream); opacity:0.7;"></div>
+      <div style="position:absolute; left:50px; top:280px; width:8px; height:8px; border-radius:50%; background:var(--blue-300);"></div>
+
+      <div style="position:absolute; top:14px; left:50%; transform:translateX(-50%); width:100px; height:28px; border-radius:14px; background:#000; z-index:5;"></div>
+
+      <div style="position:relative; z-index:1; height:100%; box-sizing:border-box; padding:120px 32px 40px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+
+        <div style="width:96px; height:96px; border-radius:50%; background:linear-gradient(135deg, var(--coral), var(--coral-deep)); display:flex; align-items:center; justify-content:center; box-shadow:0 20px 40px -14px oklch(60% 0.17 32 / 0.6); margin-bottom:28px;">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--cream)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+
+        <h1 class="display" style="margin:0 0 10px; color:var(--cream); font-size:28px; font-weight:800; letter-spacing:-0.01em;">Order confirmed</h1>
+        <p style="margin:0 0 32px; color:oklch(96% 0.02 250 / 0.7); font-size:14.5px; line-height:1.55; max-width:280px;">Basil &amp; Bowl is getting started. We'll tell you the moment it's ready.</p>
+
+        <div style="width:100%; border-radius:24px; background:oklch(96% 0.02 250 / 0.08); border:1px solid oklch(96% 0.02 250 / 0.16); padding:24px; margin-bottom:20px;">
+          <div style="font-size:11.5px; letter-spacing:0.1em; text-transform:uppercase; color:oklch(96% 0.02 250 / 0.55); margin-bottom:10px;">Pickup code</div>
+          <div class="display" style="font-size:40px; font-weight:800; color:var(--cream); letter-spacing:0.12em;">48 21</div>
+        </div>
+
+        <div style="width:100%; display:flex; justify-content:space-between; font-size:13px; color:oklch(96% 0.02 250 / 0.75); margin-bottom:36px;">
+          <span>Pickup at 18:50</span>
+          <span>12 Rue des Rosiers</span>
+        </div>
+
+        <button style="width:100%; height:56px; border:none; border-radius:999px; background:var(--cream); color:var(--blue-800); font-family:'Sora',sans-serif; font-size:16px; font-weight:700; margin-bottom:14px;">Track my order</button>
+        <a href="#" style="font-size:13px; font-weight:600; color:oklch(96% 0.02 250 / 0.7); text-decoration:none;">Back to home</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

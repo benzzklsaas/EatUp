@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --blue-900: oklch(22% 0.085 264); --blue-800: oklch(28% 0.11 264); --blue-700: oklch(38% 0.16 264); --blue-600: oklch(46% 0.19 264);
+      --blue-500: oklch(58% 0.18 264); --blue-300: oklch(82% 0.07 252); --blue-100: oklch(96% 0.02 250);
+      --cream: oklch(97% 0.014 80); --paper: oklch(99% 0.006 90); --ink: oklch(19% 0.03 264); --ink-soft: oklch(45% 0.03 264);
+      --coral: oklch(73% 0.16 36); --coral-deep: oklch(60% 0.17 32); --line: oklch(90% 0.012 260);
+    }
+    body{ margin:0; font-family:'Manrope',ui-sans-serif,system-ui,sans-serif; background:transparent; }
+    .display{ font-family:'Sora',ui-sans-serif,system-ui,sans-serif; }
+  </style>
+</helmet>
+
+<div style="width:430px; height:880px; position:relative; display:flex; align-items:center; justify-content:center;">
+  <div style="width:402px; height:844px; border-radius:56px; background:oklch(14% 0.01 264); padding:12px; box-shadow:0 40px 80px -30px oklch(15% 0.02 264 / 0.55), 0 0 0 1px oklch(30% 0.02 264 / 0.4);">
+    <div style="width:100%; height:100%; border-radius:46px; overflow:hidden; position:relative; background:var(--cream);">
+
+      <div style="position:absolute; top:14px; left:50%; transform:translateX(-50%); width:100px; height:28px; border-radius:14px; background:#000; z-index:5;"></div>
+
+      <!-- stylised map -->
+      <div style="position:relative; height:260px; background:linear-gradient(160deg, var(--blue-300) 0%, var(--blue-500) 100%); border-radius:0 0 32px 32px; overflow:hidden;">
+        <svg width="100%" height="100%" viewBox="0 0 402 260" style="position:absolute; inset:0; opacity:0.5;">
+          <path d="M0 60 L402 40" stroke="oklch(97% 0.014 80 / 0.5)" stroke-width="10"/>
+          <path d="M40 0 L60 260" stroke="oklch(97% 0.014 80 / 0.4)" stroke-width="16"/>
+          <path d="M0 180 L402 200" stroke="oklch(97% 0.014 80 / 0.4)" stroke-width="10"/>
+          <path d="M300 0 L330 260" stroke="oklch(97% 0.014 80 / 0.35)" stroke-width="12"/>
+        </svg>
+        <div style="position:absolute; left:110px; top:70px; width:34px; height:34px; border-radius:50% 50% 50% 4px; background:var(--blue-900); transform:rotate(-45deg); box-shadow:0 6px 14px oklch(22% 0.085 264 / 0.4);"></div>
+        <div style="position:absolute; left:250px; top:150px; width:26px; height:26px; border-radius:50% 50% 50% 4px; background:var(--coral); transform:rotate(-45deg); box-shadow:0 6px 14px oklch(60% 0.17 32 / 0.4);"></div>
+        <button style="position:absolute; left:20px; top:60px; width:38px; height:38px; border-radius:50%; border:none; background:oklch(20% 0.02 264 / 0.3); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+      </div>
+
+      <div style="padding:22px 22px 0; height:calc(100% - 260px); box-sizing:border-box; display:flex; flex-direction:column;">
+
+        <div style="font-size:12.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--coral-deep); margin-bottom:8px;">Order #VY-4821</div>
+        <h1 class="display" style="margin:0 0 4px; font-size:26px; font-weight:800; color:var(--ink);">Ready in 6 min</h1>
+        <p style="margin:0 0 22px; font-size:13.5px; color:var(--ink-soft);">Basil &amp; Bowl · 12 Rue des Rosiers</p>
+
+        <!-- progress -->
+        <div style="display:flex; align-items:center; margin-bottom:26px;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div style="width:30px; height:30px; border-radius:50%; background:var(--blue-700); display:flex; align-items:center; justify-content:center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cream)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+            </div>
+            <span style="font-size:10.5px; font-weight:700; color:var(--ink-soft);">Confirmed</span>
+          </div>
+          <div style="flex:1; height:3px; background:var(--blue-700); margin:0 4px 20px;"></div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div style="width:30px; height:30px; border-radius:50%; background:var(--blue-700); display:flex; align-items:center; justify-content:center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cream)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V7a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H9l-5 4z"/></svg>
+            </div>
+            <span style="font-size:10.5px; font-weight:700; color:var(--ink);">Preparing</span>
+          </div>
+          <div style="flex:1; height:3px; background:var(--line); margin:0 4px 20px;"></div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+            <div style="width:30px; height:30px; border-radius:50%; background:var(--paper); border:2px solid var(--line); display:flex; align-items:center; justify-content:center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/></svg>
+            </div>
+            <span style="font-size:10.5px; font-weight:700; color:var(--ink-soft);">Ready</span>
+          </div>
+        </div>
+
+        <div style="border-radius:22px; background:var(--paper); border:1px solid var(--line); padding:18px 20px; display:flex; align-items:center; justify-content:space-between; margin-bottom:auto;">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:var(--ink);">Camille, table for 1</div>
+            <div style="font-size:12px; color:var(--ink-soft); margin-top:3px;">2 items · Paid in app</div>
+          </div>
+          <div style="width:40px; height:40px; border-radius:50%; background:var(--blue-100); display:flex; align-items:center; justify-content:center;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V7a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H9l-5 4z"/></svg>
+          </div>
+        </div>
+
+        <div style="padding:18px 0 24px;">
+          <button style="width:100%; height:56px; border:1.5px solid var(--line); border-radius:999px; background:var(--paper); color:var(--ink); font-family:'Sora',sans-serif; font-size:15px; font-weight:700;">Message the restaurant</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

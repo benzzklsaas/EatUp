@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --blue-900: oklch(22% 0.085 264); --blue-700: oklch(38% 0.16 264); --blue-600: oklch(46% 0.19 264);
+      --blue-500: oklch(58% 0.18 264); --blue-300: oklch(82% 0.07 252);
+      --cream: oklch(97% 0.014 80); --paper: oklch(99% 0.006 90); --ink: oklch(19% 0.03 264); --ink-soft: oklch(45% 0.03 264);
+      --coral: oklch(73% 0.16 36); --coral-deep: oklch(60% 0.17 32); --line: oklch(90% 0.012 260);
+    }
+    body{ margin:0; font-family:'Manrope',ui-sans-serif,system-ui,sans-serif; background:transparent; }
+    .display{ font-family:'Sora',ui-sans-serif,system-ui,sans-serif; }
+    .chip{ padding:11px 18px; border-radius:16px; border:1.5px solid var(--line); font-size:13.5px; font-weight:700; color:var(--ink); }
+    .chip.on{ border-color:var(--blue-700); background:var(--blue-100); color:var(--blue-700); }
+  </style>
+</helmet>
+
+<div style="width:430px; height:880px; position:relative; display:flex; align-items:center; justify-content:center;">
+  <div style="width:402px; height:844px; border-radius:56px; background:oklch(14% 0.01 264); padding:12px; box-shadow:0 40px 80px -30px oklch(15% 0.02 264 / 0.55), 0 0 0 1px oklch(30% 0.02 264 / 0.4);">
+    <div style="width:100%; height:100%; border-radius:46px; overflow:hidden; position:relative; background:var(--cream);">
+
+      <div style="position:absolute; top:14px; left:50%; transform:translateX(-50%); width:100px; height:28px; border-radius:14px; background:#000; z-index:5;"></div>
+
+      <!-- hero image -->
+      <div style="position:relative; height:300px; background:radial-gradient(circle at 30% 24%, oklch(80% 0.14 60), oklch(56% 0.15 40) 65%, oklch(44% 0.13 30) 100%); border-radius:0 0 32px 32px; overflow:hidden;">
+        <div style="position:absolute; left:40px; top:70px; width:120px; height:80px; border-radius:50%; background:oklch(87% 0.15 25); opacity:0.9;"></div>
+        <div style="position:absolute; right:50px; top:120px; width:70px; height:56px; border-radius:50%; background:oklch(90% 0.14 95); opacity:0.85;"></div>
+        <div style="position:absolute; left:110px; top:170px; width:60px; height:48px; border-radius:50%; background:oklch(70% 0.15 145); opacity:0.85;"></div>
+        <button style="position:absolute; left:20px; top:60px; width:38px; height:38px; border-radius:50%; border:none; background:oklch(20% 0.02 264 / 0.35); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button style="position:absolute; right:20px; top:60px; width:38px; height:38px; border-radius:50%; border:none; background:oklch(20% 0.02 264 / 0.35); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/></svg>
+        </button>
+      </div>
+
+      <div style="padding:22px 22px 0; height:calc(100% - 300px); box-sizing:border-box; display:flex; flex-direction:column;">
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+          <h1 class="display" style="margin:0; font-size:22px; font-weight:800; color:var(--ink); max-width:260px;">Poulet rôti bowl</h1>
+          <span class="display" style="font-size:20px; font-weight:800; color:var(--blue-700);">12,90 €</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:16px;">
+          <span style="font-size:12.5px; color:var(--ink-soft);">Basil &amp; Bowl</span>
+          <span style="width:3px; height:3px; border-radius:50%; background:var(--ink-soft);"></span>
+          <span style="font-size:12.5px; color:var(--ink-soft);">★ 4.8 (320)</span>
+        </div>
+        <p style="margin:0 0 20px; font-size:14px; line-height:1.6; color:var(--ink-soft);">Slow-roasted chicken, herbed rice, pickled vegetables and a lemon-tahini drizzle. Served warm, ready for pickup.</p>
+
+        <div style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:10px;">Size</div>
+        <div style="display:flex; gap:10px; margin-bottom:22px;">
+          <span class="chip on">Regular</span>
+          <span class="chip">Large +2,50€</span>
+        </div>
+
+        <div style="margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:14px;">
+          <div style="display:flex; align-items:center; gap:16px; background:var(--paper); border:1px solid var(--line); border-radius:999px; padding:8px 14px;">
+            <span style="width:26px; height:26px; border-radius:50%; background:var(--blue-100); display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--blue-700); font-size:16px;">–</span>
+            <span style="font-weight:700; font-size:15px; width:14px; text-align:center;">1</span>
+            <span style="width:26px; height:26px; border-radius:50%; background:var(--blue-700); color:var(--cream); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px;">+</span>
+          </div>
+          <button style="flex:1; height:56px; border:none; border-radius:999px; background:linear-gradient(135deg, var(--blue-600), var(--blue-800)); color:var(--cream); font-family:'Sora',sans-serif; font-size:15px; font-weight:700; box-shadow:0 16px 32px -14px oklch(38% 0.16 264 / 0.55);">Add · 12,90 €</button>
+        </div>
+        <div style="height:26px;"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

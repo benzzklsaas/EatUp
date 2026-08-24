@@ -1,0 +1,200 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&display=swap">
+  <style>
+    :root{
+      --blue-900: oklch(22% 0.085 264);
+      --blue-800: oklch(28% 0.11 264);
+      --blue-700: oklch(38% 0.16 264);
+      --blue-600: oklch(46% 0.19 264);
+      --blue-500: oklch(58% 0.18 264);
+      --blue-300: oklch(82% 0.07 252);
+      --blue-100: oklch(96% 0.02 250);
+      --cream: oklch(97% 0.014 80);
+      --paper: oklch(99% 0.006 90);
+      --ink: oklch(19% 0.03 264);
+      --ink-soft: oklch(40% 0.03 264);
+      --coral: oklch(73% 0.16 36);
+      --coral-deep: oklch(60% 0.17 32);
+      --line: oklch(88% 0.015 260);
+    }
+    body{ margin:0; font-family:'Manrope',ui-sans-serif,system-ui,sans-serif; background: var(--paper); color:var(--ink); }
+    a{ color: var(--blue-600); } a:hover{ color: var(--coral-deep); }
+    h1,h2,h3,.display{ font-family:'Sora',ui-sans-serif,system-ui,sans-serif; }
+    .kicker{ font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--blue-600); font-weight:700; }
+    .card{ border-radius:24px; border:1px solid var(--line); background:var(--paper); }
+  </style>
+</helmet>
+
+<div style="position:relative; width:1440px; min-height:1900px; background:var(--cream); padding:88px 88px 100px;">
+
+  <svg width="520" height="520" viewBox="0 0 400 400" style="position:absolute; right:-160px; top:-180px; opacity:0.5; z-index:0;">
+    <path fill="var(--blue-300)" opacity="0.5" d="M120.6,-133.7C155.7,-108.6,181.6,-67.9,188.6,-23.9C195.6,20.1,181.7,67.4,151.8,102.1C121.9,136.8,76,158.9,26.6,168.4C-22.8,177.9,-75.6,174.8,-113.4,148.5C-151.2,122.2,-174,72.7,-177.5,21.6C-181,-29.5,-165.2,-82.2,-131.8,-108.6C-98.4,-135,-49.2,-135.1,-2.1,-132.6C45,-130.1,90,-125,120.6,-133.7Z" transform="translate(200 200)"/>
+  </svg>
+
+  <div style="position:relative; z-index:1;">
+    <div class="kicker">Brand System</div>
+    <h1 class="display" style="margin:10px 0 8px; font-size:52px; font-weight:800; letter-spacing:-0.02em;">The Vyno visual language</h1>
+    <p style="margin:0 0 64px; max-width:680px; color:var(--ink-soft); font-size:17px; line-height:1.6;">A confident blue, warm food accents and soft organic bubbles — carried consistently across the app, the web and every partner-facing surface.</p>
+
+    <!-- LOGO -->
+    <div class="kicker" style="margin-bottom:20px;">Logo</div>
+    <div style="display:flex; gap:24px; margin-bottom:72px;">
+      <div class="card" style="flex:1; padding:40px; display:flex; flex-direction:column; align-items:flex-start; gap:24px;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:48px; height:48px; border-radius:17px; background:linear-gradient(135deg, var(--blue-500), var(--blue-700)); position:relative;">
+            <div style="position:absolute; width:17px; height:17px; border-radius:50%; background:oklch(96% 0.02 250 / 0.9); left:10px; top:9px;"></div>
+            <div style="position:absolute; width:8px; height:8px; border-radius:50%; background:var(--coral); right:9px; bottom:10px;"></div>
+          </div>
+          <span class="display" style="font-size:26px; font-weight:800; letter-spacing:-0.02em; color:var(--ink);">Vyno</span>
+        </div>
+        <span style="font-size:13px; color:var(--ink-soft);">Primary lockup — light surfaces</span>
+      </div>
+      <div class="card" style="flex:1; padding:40px; display:flex; flex-direction:column; align-items:flex-start; gap:24px; background:var(--blue-900); border:none;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:48px; height:48px; border-radius:17px; background:linear-gradient(135deg, var(--blue-500), var(--blue-300)); position:relative;">
+            <div style="position:absolute; width:17px; height:17px; border-radius:50%; background:oklch(20% 0.03 264 / 0.55); left:10px; top:9px;"></div>
+            <div style="position:absolute; width:8px; height:8px; border-radius:50%; background:var(--coral); right:9px; bottom:10px;"></div>
+          </div>
+          <span class="display" style="font-size:26px; font-weight:800; letter-spacing:-0.02em; color:var(--cream);">Vyno</span>
+        </div>
+        <span style="font-size:13px; color:oklch(96% 0.02 250 / 0.55);">Reverse lockup — dark surfaces</span>
+      </div>
+      <div class="card" style="width:220px; padding:40px; display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:24px;">
+        <div style="width:56px; height:56px; border-radius:19px; background:linear-gradient(135deg, var(--blue-500), var(--blue-700)); position:relative;">
+          <div style="position:absolute; width:20px; height:20px; border-radius:50%; background:oklch(96% 0.02 250 / 0.9); left:11px; top:10px;"></div>
+          <div style="position:absolute; width:9px; height:9px; border-radius:50%; background:var(--coral); right:10px; bottom:11px;"></div>
+        </div>
+        <span style="font-size:13px; color:var(--ink-soft);">App icon / mark-only</span>
+      </div>
+    </div>
+
+    <!-- COLOR -->
+    <div class="kicker" style="margin-bottom:20px;">Color</div>
+    <div style="display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:16px; margin-bottom:72px;">
+      <div>
+        <div style="height:96px; border-radius:20px; background:var(--blue-900);"></div>
+        <div style="margin-top:10px; font-size:13px; font-weight:600;">Ink Blue 900</div>
+        <div style="font-size:12px; color:var(--ink-soft);">Backgrounds, depth</div>
+      </div>
+      <div>
+        <div style="height:96px; border-radius:20px; background:var(--blue-700);"></div>
+        <div style="margin-top:10px; font-size:13px; font-weight:600;">Brand Blue 700</div>
+        <div style="font-size:12px; color:var(--ink-soft);">Primary actions</div>
+      </div>
+      <div>
+        <div style="height:96px; border-radius:20px; background:var(--blue-500);"></div>
+        <div style="margin-top:10px; font-size:13px; font-weight:600;">Blue 500</div>
+        <div style="font-size:12px; color:var(--ink-soft);">Gradients, icons</div>
+      </div>
+      <div>
+        <div style="height:96px; border-radius:20px; background:var(--blue-300);"></div>
+        <div style="margin-top:10px; font-size:13px; font-weight:600;">Blue 300</div>
+        <div style="font-size:12px; color:var(--ink-soft);">Tints, bubbles</div>
+      </div>
+      <div>
+        <div style="height:96px; border-radius:20px; background:var(--coral);"></div>
+        <div style="margin-top:10px; font-size:13px; font-weight:600;">Coral</div>
+        <div style="font-size:12px; color:var(--ink-soft);">Food warmth, CTA</div>
+      </div>
+      <div>
+        <div style="height:96px; border-radius:20px; background:var(--cream); border:1px solid var(--line);"></div>
+        <div style="margin-top:10px; font-size:13px; font-weight:600;">Cream</div>
+        <div style="font-size:12px; color:var(--ink-soft);">Warm neutral base</div>
+      </div>
+    </div>
+
+    <!-- TYPE -->
+    <div class="kicker" style="margin-bottom:20px;">Typography — Sora / Manrope</div>
+    <div class="card" style="padding:44px 48px; margin-bottom:72px; display:flex; flex-direction:column; gap:26px;">
+      <div style="display:flex; align-items:baseline; gap:24px; border-bottom:1px solid var(--line); padding-bottom:22px;">
+        <span style="width:110px; font-size:12px; color:var(--ink-soft); flex-shrink:0;">Display / 64</span>
+        <span class="display" style="font-size:64px; font-weight:800; letter-spacing:-0.02em;">Order ahead</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:24px; border-bottom:1px solid var(--line); padding-bottom:22px;">
+        <span style="width:110px; font-size:12px; color:var(--ink-soft); flex-shrink:0;">H2 / 32</span>
+        <span class="display" style="font-size:32px; font-weight:700; letter-spacing:-0.01em;">Nearby restaurants</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:24px; border-bottom:1px solid var(--line); padding-bottom:22px;">
+        <span style="width:110px; font-size:12px; color:var(--ink-soft); flex-shrink:0;">Body / 17</span>
+        <span style="font-size:17px; font-weight:500;">Manrope carries every paragraph, label and button — legible, warm, unmistakably app-native.</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:24px;">
+        <span style="width:110px; font-size:12px; color:var(--ink-soft); flex-shrink:0;">Caption / 13</span>
+        <span style="font-size:13px; font-weight:600; color:var(--ink-soft); letter-spacing:0.02em;">PICKUP IN 12 MIN · TABLE FOR TWO</span>
+      </div>
+    </div>
+
+    <!-- BUBBLE MOTIF -->
+    <div class="kicker" style="margin-bottom:20px;">The bubble motif</div>
+    <div class="card" style="padding:44px 48px; margin-bottom:72px; position:relative; overflow:hidden; min-height:220px;">
+      <svg width="260" height="260" viewBox="0 0 400 400" style="position:absolute; left:-60px; top:-70px; opacity:0.7;">
+        <path fill="var(--blue-300)" d="M120.6,-133.7C155.7,-108.6,181.6,-67.9,188.6,-23.9C195.6,20.1,181.7,67.4,151.8,102.1C121.9,136.8,76,158.9,26.6,168.4C-22.8,177.9,-75.6,174.8,-113.4,148.5C-151.2,122.2,-174,72.7,-177.5,21.6C-181,-29.5,-165.2,-82.2,-131.8,-108.6C-98.4,-135,-49.2,-135.1,-2.1,-132.6C45,-130.1,90,-125,120.6,-133.7Z" transform="translate(200 200)"/>
+      </svg>
+      <svg width="180" height="180" viewBox="0 0 400 400" style="position:absolute; left:220px; top:40px; opacity:0.9;">
+        <path fill="var(--blue-500)" opacity="0.85" d="M132.4,-146.6C169.4,-116.3,194.2,-71.3,199.6,-24.5C205,22.3,191,71,159.9,105.7C128.8,140.4,80.7,161.1,29.8,168.6C-21.1,176.1,-74.7,170.4,-113.6,141.7C-152.5,113,-176.7,61.3,-179.7,8.2C-182.7,-44.9,-164.5,-99.4,-128.6,-130.8C-92.6,-162.2,-46.3,-170.5,2.9,-174C52.1,-177.5,95.4,-176.9,132.4,-146.6Z" transform="translate(200 200)"/>
+      </svg>
+      <svg width="120" height="120" viewBox="0 0 400 400" style="position:absolute; left:410px; top:-30px; opacity:0.9;">
+        <path fill="var(--coral)" opacity="0.9" d="M120.6,-133.7C155.7,-108.6,181.6,-67.9,188.6,-23.9C195.6,20.1,181.7,67.4,151.8,102.1C121.9,136.8,76,158.9,26.6,168.4C-22.8,177.9,-75.6,174.8,-113.4,148.5C-151.2,122.2,-174,72.7,-177.5,21.6C-181,-29.5,-165.2,-82.2,-131.8,-108.6C-98.4,-135,-49.2,-135.1,-2.1,-132.6C45,-130.1,90,-125,120.6,-133.7Z" transform="translate(200 200)"/>
+      </svg>
+      <div style="position:relative; z-index:1; max-width:420px; margin-left:auto;">
+        <p style="margin:0; font-size:15px; line-height:1.6; color:var(--ink-soft);">Organic, hand-drawn blob shapes — never perfect circles — layered at low opacity behind content, or bold as isolated accents. They stand in for the bubbles in a simmering pot, a fizzing drink, a full plate. Sizes and hues vary; the fluid silhouette never does.</p>
+      </div>
+    </div>
+
+    <!-- ICONOGRAPHY -->
+    <div class="kicker" style="margin-bottom:20px;">Iconography — 1.8px stroke, rounded caps</div>
+    <div style="display:flex; gap:16px; margin-bottom:72px;">
+      <div class="card" style="width:96px; height:96px; display:flex; align-items:center; justify-content:center;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </div>
+      <div class="card" style="width:96px; height:96px; display:flex; align-items:center; justify-content:center;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1.2 11.2a2 2 0 01-2 1.8H9.2a2 2 0 01-2-1.8L6 8z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg>
+      </div>
+      <div class="card" style="width:96px; height:96px; display:flex; align-items:center; justify-content:center;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      </div>
+      <div class="card" style="width:96px; height:96px; display:flex; align-items:center; justify-content:center;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+      </div>
+      <div class="card" style="width:96px; height:96px; display:flex; align-items:center; justify-content:center;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>
+      </div>
+      <div class="card" style="width:96px; height:96px; display:flex; align-items:center; justify-content:center;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--blue-700)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V7a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H9l-5 4z"/></svg>
+      </div>
+    </div>
+
+    <!-- RADIUS / SHADOW -->
+    <div class="kicker" style="margin-bottom:20px;">Shape system</div>
+    <div style="display:flex; gap:16px; align-items:flex-end;">
+      <div style="text-align:center;">
+        <div style="width:120px; height:64px; border-radius:999px; background:var(--blue-700); box-shadow:0 16px 32px -12px oklch(45% 0.19 264 / 0.5);"></div>
+        <div style="margin-top:10px; font-size:12px; color:var(--ink-soft);">Pill · buttons</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="width:120px; height:120px; border-radius:28px; background:var(--paper); border:1px solid var(--line); box-shadow:0 20px 40px -20px oklch(22% 0.085 264 / 0.25);"></div>
+        <div style="margin-top:10px; font-size:12px; color:var(--ink-soft);">28px · cards</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="width:120px; height:150px; border-radius:32px 32px 0 0; background:var(--blue-100);"></div>
+        <div style="margin-top:10px; font-size:12px; color:var(--ink-soft);">32px top · sheets</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="width:60px; height:60px; border-radius:16px; background:var(--coral);"></div>
+        <div style="margin-top:10px; font-size:12px; color:var(--ink-soft);">16px · chips</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

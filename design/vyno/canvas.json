@@ -1,0 +1,27 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "Cover & Brand" },
+    { "id": "page-2", "name": "Mobile App" },
+    { "id": "page-3", "name": "Web & Partner" }
+  ],
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "page": "page-1" },
+    { "file": "Brand.dc.html", "x": 1600, "y": 0, "w": 1440, "h": 2000, "page": "page-1" },
+
+    { "file": "Onboarding.dc.html", "x": 0, "y": 0, "w": 430, "h": 880, "page": "page-2" },
+    { "file": "Home.dc.html", "x": 510, "y": 0, "w": 430, "h": 880, "page": "page-2" },
+    { "file": "MenuDetail.dc.html", "x": 1020, "y": 0, "w": 430, "h": 880, "page": "page-2" },
+    { "file": "Checkout.dc.html", "x": 1530, "y": 0, "w": 430, "h": 880, "page": "page-2" },
+    { "file": "Tracking.dc.html", "x": 2040, "y": 0, "w": 430, "h": 880, "page": "page-2" },
+    { "file": "Success.dc.html", "x": 2550, "y": 0, "w": 430, "h": 880, "page": "page-2" },
+
+    { "file": "Landing.dc.html", "x": 0, "y": 0, "w": 1440, "h": 1040, "page": "page-3" },
+    { "file": "Dashboard.dc.html", "x": 1560, "y": 0, "w": 1440, "h": 900, "page": "page-3" }
+  ],
+  "annotations": [
+    { "id": "concept-note", "x": 0, "y": -120, "w": 460, "text": "Vyno — rebrand concept for EatUp.\nIllustrated food graphics stand in for real photography (none supplied). Static high-fidelity mockups, not a clickable prototype.", "page": "page-1" },
+    { "id": "mobile-note", "x": 0, "y": -100, "w": 420, "text": "Core order-ahead flow: onboarding → discover → menu → checkout → live tracking → confirmation.", "page": "page-2" },
+    { "id": "web-note", "x": 0, "y": -100, "w": 420, "text": "Same brand system on desktop: consumer-facing marketing hero and the restaurant partner dashboard.", "page": "page-3" }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}

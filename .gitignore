@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# design canvas seeded output (large, generated — source .dc.html files are tracked)
+design/vyno/vyno-brand-presentation.html
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
