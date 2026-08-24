@@ -19,7 +19,7 @@
     { "file": "Landing.dc.html", "x": 0, "y": 0, "w": 1440, "h": 1040, "page": "page-3" },
     { "file": "Dashboard.dc.html", "x": 1560, "y": 0, "w": 1440, "h": 900, "page": "page-3" },
 
-    { "file": "Download.dc.html", "x": 0, "y": 0, "w": 430, "h": 3600, "expand": "fill", "page": "page-4" }
+    { "file": "Download.dc.html", "x": 0, "y": 0, "w": 430, "h": 3450, "expand": "fill", "page": "page-4" }
   ],
   "annotations": [
     { "id": "concept-note", "x": 0, "y": -120, "w": 460, "text": "Vyno — rebrand concept for EatUp.\nIllustrated food graphics stand in for real photography (none supplied). Static high-fidelity mockups, not a clickable prototype.", "page": "page-1" },
