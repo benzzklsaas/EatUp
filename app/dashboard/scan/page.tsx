@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+// @ts-ignore — jsqr n'expose pas de types officiels compatibles avec le build strict
 import jsQR from 'jsqr'
 
 export default function ScanPage() {
