@@ -29,6 +29,21 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Programme de fidélité
+
+Le programme de fidélité (carte tampon + points, configurable par restaurant) ajoute plusieurs
+tables à la base Supabase (`customers`, `loyalty_programs`, `loyalty_accounts`,
+`loyalty_transactions`, plus une colonne `customer_id` sur `orders`).
+
+Avant de déployer cette fonctionnalité, exécutez une fois `supabase/loyalty_schema.sql` dans
+l'éditeur SQL du dashboard Supabase (Dashboard → SQL Editor → New query → coller le contenu du
+fichier → Run). Le script est idempotent, il peut être relancé sans risque.
+
+Côté commerçant : `Dashboard → Fidélité` pour configurer le programme, `Dashboard → Clients` pour
+créditer manuellement un client payé en caisse ou valider une récompense.
+Côté client : `eatup-app.fr/restaurant/<slug>/fidelite` (connexion par lien magique envoyé par
+email, aucun mot de passe).
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 type Product = {
   id: string
@@ -348,9 +349,12 @@ export default function RestaurantPage() {
           : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🍽️</div>
         }
         <span style={{ fontWeight: 800, fontSize: 15, color: 'white' }}>{restaurant.name}</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: isOpenNow ? '#4ade80' : '#ef4444', display: 'inline-block', boxShadow: `0 0 8px ${isOpenNow ? '#4ade80' : '#ef4444'}` }} />
-          <span style={{ fontSize: 12, color: isOpenNow ? '#4ade80' : '#ef4444', fontWeight: 700 }}>{isOpenNow ? 'Ouvert' : 'Fermé'}</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Link href={`/restaurant/${slug}/fidelite`} style={{ fontSize: 12, color: '#f97316', fontWeight: 700, textDecoration: 'none' }}>🎁 Fidélité</Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: isOpenNow ? '#4ade80' : '#ef4444', display: 'inline-block', boxShadow: `0 0 8px ${isOpenNow ? '#4ade80' : '#ef4444'}` }} />
+            <span style={{ fontSize: 12, color: isOpenNow ? '#4ade80' : '#ef4444', fontWeight: 700 }}>{isOpenNow ? 'Ouvert' : 'Fermé'}</span>
+          </div>
         </div>
       </div>
 
@@ -391,6 +395,9 @@ export default function RestaurantPage() {
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: isOpenNow ? '#4ade80' : '#ef4444', boxShadow: `0 0 6px ${isOpenNow ? '#4ade80' : '#ef4444'}`, display: 'inline-block' }} />
                 <span style={{ fontSize: 11, fontWeight: 700, color: isOpenNow ? '#4ade80' : '#ef4444' }}>{isOpenNow ? 'Ouvert · Click & Collect' : 'Fermé'}</span>
               </div>
+              <Link href={`/restaurant/${slug}/fidelite`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 100, background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)', textDecoration: 'none' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#f97316' }}>🎁 Ma fidélité</span>
+              </Link>
             </div>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
               {restaurant.address && (

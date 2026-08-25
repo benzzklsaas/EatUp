@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { getOrCreateCustomer, creditOrderToLoyalty } from '@/lib/loyalty'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -75,9 +76,19 @@ export async function POST(req: NextRequest) {
     (sum: number, i: any) => sum + i.price * Number(i.quantity), 0
   )
 
+  // Identité fidélité du client — best-effort, ne doit jamais bloquer la commande.
+  let customer: { id: string } | null = null
+  if (order.email) {
+    try {
+      customer = await getOrCreateCustomer(supabase, {
+        email: order.email, phone: order.phone, firstName: order.first_name, lastName: order.last_name,
+      })
+    } catch (_) {}
+  }
+
   const { data, error } = await supabase
     .from('orders')
-    .insert({ ...order, total_price: recalculatedTotal })
+    .insert({ ...order, total_price: recalculatedTotal, customer_id: customer?.id || null })
     .select()
     .single()
 
@@ -91,6 +102,14 @@ export async function POST(req: NextRequest) {
 
   if (itemsError) {
     return NextResponse.json({ error: itemsError.message }, { status: 500 })
+  }
+
+  if (customer) {
+    try {
+      await creditOrderToLoyalty(supabase, {
+        restaurantId: order.restaurant_id, orderId: data.id, customerId: customer.id, amountSpent: recalculatedTotal,
+      })
+    } catch (_) {}
   }
 
   // Récupération des emails depuis la DB — jamais depuis le client

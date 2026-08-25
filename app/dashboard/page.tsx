@@ -11,6 +11,7 @@ const NAV = [
   { label: 'Menu', href: '/dashboard/menu', icon: '🍽️', desc: 'Gérer vos produits' },
   { label: 'Agent IA', href: '/dashboard/agent', icon: '🤖', desc: 'Répondre aux avis', badge: 'BETA' },
   { label: 'Clients', href: '/dashboard/customers', icon: '👥', desc: 'Base clients' },
+  { label: 'Fidélité', href: '/dashboard/loyalty', icon: '🎁', desc: 'Tampons & points' },
   { label: 'Analytics', href: '/dashboard/analytics', icon: '📊', desc: 'Revenus & stats' },
   { label: 'Paramètres', href: '/dashboard/settings', icon: '⚙️', desc: 'Horaires & config' },
 ]

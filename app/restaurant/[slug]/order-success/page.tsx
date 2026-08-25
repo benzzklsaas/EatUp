@@ -58,6 +58,10 @@ export default function OrderSuccessPage() {
           </p>
         </div>
 
+        <button onClick={() => router.push(`/restaurant/${slug}/fidelite`)} style={{ width: '100%', padding: '15px', borderRadius: 16, border: 'none', cursor: 'pointer', marginBottom: 12, background: 'linear-gradient(135deg, #f97316, #ea580c)', color: 'white', fontWeight: 700, fontSize: 15, boxShadow: '0 8px 30px rgba(249,115,22,0.3)' }}>
+          🎁 Voir ma carte fidélité
+        </button>
+
         <button onClick={() => router.push(`/restaurant/${slug}`)} style={{ width: '100%', padding: '15px', borderRadius: 16, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15, boxShadow: '0 8px 30px rgba(99,102,241,0.3)' }}>
           Retour au menu
         </button>
