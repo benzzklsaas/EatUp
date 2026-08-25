@@ -44,6 +44,12 @@ créditer manuellement un client payé en caisse ou valider une récompense.
 Côté client : `eatup-app.fr/restaurant/<slug>/fidelite` (connexion par lien magique envoyé par
 email, aucun mot de passe).
 
+## App mobile
+
+Le dossier `mobile/` contient l'app native (Expo/React Native) de l'espace
+fidélité client — même projet Supabase que le site, mêmes tables. Voir
+`mobile/README.md` pour le setup.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

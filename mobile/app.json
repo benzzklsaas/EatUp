@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "EatUp",
+    "slug": "eatup",
+    "scheme": "eatup",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FFFBF5",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "fr.eatup.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "EatUp utilise l'appareil photo pour scanner un QR code de fidélité."
+      }
+    },
+    "android": {
+      "package": "fr.eatup.app",
+      "permissions": ["CAMERA"]
+    },
+    "plugins": ["expo-router"]
+  }
+}
