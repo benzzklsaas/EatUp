@@ -22,6 +22,8 @@ create index if not exists customers_email_idx on customers (lower(email));
 -- Correctif pour un projet où une ancienne table `customers` existait déjà
 -- (version antérieure, un client par restaurant, sans email obligatoire/unique).
 -- Sans effet si la table vient d'être créée ci-dessus.
+drop policy if exists "Restaurant owners can manage their customers" on customers;
+
 alter table customers alter column first_name drop not null;
 alter table customers alter column email set not null;
 
