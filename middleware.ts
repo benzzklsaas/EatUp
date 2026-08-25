@@ -28,7 +28,9 @@ export async function middleware(request: NextRequest) {
   // Routes dashboard — authentification requise
   if (path.startsWith('/dashboard')) {
     if (!user) {
-      return NextResponse.redirect(new URL('/auth/login', request.url))
+      const loginUrl = new URL('/auth/login', request.url)
+      loginUrl.searchParams.set('next', path)
+      return NextResponse.redirect(loginUrl)
     }
   }
 

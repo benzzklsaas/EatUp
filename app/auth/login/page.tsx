@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
@@ -27,7 +28,8 @@ export default function LoginPage() {
     setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setError('Email ou mot de passe incorrect'); setLoading(false); return }
-    router.push('/dashboard')
+    const next = searchParams.get('next')
+    router.push(next && next.startsWith('/dashboard') ? next : '/dashboard')
   }
 
   return (

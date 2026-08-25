@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import QRCode from 'qrcode'
 
 const S = {
   page: { minHeight: '100vh', background: '#FFFBF5', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' } as React.CSSProperties,
@@ -22,6 +23,7 @@ export default function LoyaltyCardPage() {
   const [program, setProgram] = useState<any>(null)
   const [user, setUser] = useState<any>(null)
   const [account, setAccount] = useState<any>(null)
+  const [qrDataUrl, setQrDataUrl] = useState('')
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState('')
   const [sending, setSending] = useState(false)
@@ -45,6 +47,8 @@ export default function LoyaltyCardPage() {
         if (customer) {
           const { data: acc } = await supabase.from('loyalty_accounts').select('*').eq('restaurant_id', resto.id).eq('customer_id', customer.id).maybeSingle()
           setAccount(acc)
+          QRCode.toDataURL(`${window.location.origin}/dashboard/scan/${customer.id}`, { width: 200, margin: 1, color: { dark: '#1A1208', light: '#FFFBF5' } })
+            .then(setQrDataUrl).catch(() => {})
         }
       }
       setLoading(false)
@@ -163,9 +167,16 @@ export default function LoyaltyCardPage() {
               </div>
             )}
 
-            <p style={{ fontSize: 12, color: '#A8A29E', textAlign: 'center', margin: 0 }}>
-              Présentez cette page en caisse pour réclamer votre récompense.
-            </p>
+            {qrDataUrl && (
+              <div style={{ ...S.card, textAlign: 'center' }}>
+                <p style={{ fontSize: 12, color: '#78716C', margin: '0 0 14px' }}>Ou présentez directement ce QR code en caisse</p>
+                <img src={qrDataUrl} alt="QR code fidélité" style={{ width: 180, height: 180, borderRadius: 14, border: '1.5px solid rgba(0,0,0,0.07)' }} />
+              </div>
+            )}
+
+            <Link href="/fidelite" style={{ textAlign: 'center', fontSize: 13, color: '#f97316', fontWeight: 600, textDecoration: 'none' }}>
+              Voir tous mes restaurants fidélité →
+            </Link>
 
             <button onClick={signOut} style={{ background: 'none', border: 'none', color: '#78716C', fontSize: 13, cursor: 'pointer', padding: 8 }}>Se déconnecter</button>
           </div>
