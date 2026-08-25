@@ -19,6 +19,24 @@ create table if not exists customers (
 
 create index if not exists customers_email_idx on customers (lower(email));
 
+-- Correctif pour un projet où une ancienne table `customers` existait déjà
+-- (version antérieure, un client par restaurant, sans email obligatoire/unique).
+-- Sans effet si la table vient d'être créée ci-dessus.
+alter table customers alter column first_name drop not null;
+alter table customers alter column email set not null;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'customers_email_key') then
+    alter table customers add constraint customers_email_key unique (email);
+  end if;
+end $$;
+
+alter table customers drop constraint if exists customers_restaurant_id_fkey;
+alter table customers drop column if exists restaurant_id;
+alter table customers drop column if exists total_orders;
+alter table customers drop column if exists last_order_date;
+
 -- Configuration du programme de fidélité — un par restaurant.
 -- Les deux mécaniques (tampons ET points) peuvent être activées en même temps.
 create table if not exists loyalty_programs (
