@@ -9,6 +9,10 @@ export default function SuperAdminPage() {
   const [loading, setLoading] = useState(true)
   const [restaurants, setRestaurants] = useState<any[]>([])
   const [orders, setOrders] = useState<any[]>([])
+  const [loyaltyPrograms, setLoyaltyPrograms] = useState<any[]>([])
+  const [loyaltyAccounts, setLoyaltyAccounts] = useState<any[]>([])
+  const [loyaltyTransactions, setLoyaltyTransactions] = useState<any[]>([])
+  const [customerCount, setCustomerCount] = useState(0)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [selectedResto, setSelectedResto] = useState<any>(null)
   const router = useRouter()
@@ -32,8 +36,17 @@ export default function SuperAdminPage() {
         .select('*')
         .order('created_at', { ascending: false })
 
+      const { data: programs } = await supabase.from('loyalty_programs').select('*')
+      const { data: accounts } = await supabase.from('loyalty_accounts').select('*')
+      const { data: transactions } = await supabase.from('loyalty_transactions').select('*').in('type', ['stamp_redeemed', 'points_redeemed'])
+      const { count: custCount } = await supabase.from('customers').select('id', { count: 'exact', head: true })
+
       setRestaurants(restos || [])
       setOrders(allOrders || [])
+      setLoyaltyPrograms(programs || [])
+      setLoyaltyAccounts(accounts || [])
+      setLoyaltyTransactions(transactions || [])
+      setCustomerCount(custCount || 0)
       setLoading(false)
     }
     load()
@@ -81,11 +94,17 @@ export default function SuperAdminPage() {
 
   const atRisk = restoWithOrders.filter(r => r.daysSinceLastOrder !== null && r.daysSinceLastOrder > 7)
 
+  const restosWithLoyalty = loyaltyPrograms.filter(p => p.stamps_enabled || p.points_enabled).length
+  const totalStampsGiven = loyaltyAccounts.reduce((s, a) => s + (a.lifetime_stamps || 0), 0)
+  const totalPointsGiven = loyaltyAccounts.reduce((s, a) => s + (a.lifetime_points || 0), 0)
+  const totalRewardsRedeemed = loyaltyTransactions.length
+
   const tabs = [
     { key: 'dashboard', label: '📊 Dashboard' },
     { key: 'restaurants', label: '🍽️ Restaurants' },
     { key: 'orders', label: '📋 Commandes' },
     { key: 'finances', label: '💰 Finances' },
+    { key: 'loyalty', label: '🎁 Fidélité' },
     { key: 'alerts', label: `⚠️ Alertes${atRisk.length > 0 ? ` (${atRisk.length})` : ''}` },
   ]
 
@@ -281,6 +300,57 @@ export default function SuperAdminPage() {
                     <p className="font-bold" style={{ color: '#10b981' }}>{r.revenue.toFixed(2)}€</p>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* FIDÉLITÉ */}
+        {activeTab === 'loyalty' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Restaurants équipés', value: `${restosWithLoyalty}/${restaurants.length}`, sub: 'Programme activé', color: '#f97316' },
+                { label: 'Clients fidélité', value: customerCount, sub: 'Identités clients créées', color: '#3b82f6' },
+                { label: 'Tampons distribués', value: totalStampsGiven, sub: 'Cumul plateforme', color: '#a78bfa' },
+                { label: 'Récompenses données', value: totalRewardsRedeemed, sub: 'Tampons + points', color: '#10b981' },
+              ].map((kpi, i) => (
+                <div key={i} className="rounded-2xl p-5" style={{ background: '#1e293b', border: '1px solid #334155' }}>
+                  <p className="text-xs mb-1" style={{ color: '#64748b' }}>{kpi.label}</p>
+                  <p className="text-2xl font-bold" style={{ color: kpi.color }}>{kpi.value}</p>
+                  <p className="text-xs mt-1" style={{ color: '#475569' }}>{kpi.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {totalPointsGiven > 0 && (
+              <div className="rounded-2xl p-5" style={{ background: '#1e293b', border: '1px solid #334155' }}>
+                <p className="text-xs mb-1" style={{ color: '#64748b' }}>Points distribués (cumul plateforme)</p>
+                <p className="text-2xl font-bold" style={{ color: '#f59e0b' }}>{totalPointsGiven}</p>
+              </div>
+            )}
+
+            <div className="rounded-2xl p-5" style={{ background: '#1e293b', border: '1px solid #334155' }}>
+              <h2 className="font-bold text-white mb-4">Programme par restaurant</h2>
+              <div className="space-y-3">
+                {restoWithOrders.map(r => {
+                  const program = loyaltyPrograms.find(p => p.restaurant_id === r.id)
+                  const accounts = loyaltyAccounts.filter(a => a.restaurant_id === r.id)
+                  const active = program && (program.stamps_enabled || program.points_enabled)
+                  return (
+                    <div key={r.id} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid #334155' }}>
+                      <div>
+                        <p className="font-medium text-white">{r.name}</p>
+                        <p className="text-xs" style={{ color: '#64748b' }}>
+                          {active ? [program.stamps_enabled && 'Tampons', program.points_enabled && 'Points'].filter(Boolean).join(' + ') : 'Non activé'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold" style={{ color: active ? '#4ade80' : '#64748b' }}>{accounts.length} membre{accounts.length !== 1 ? 's' : ''}</p>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>

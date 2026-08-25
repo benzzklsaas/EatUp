@@ -169,3 +169,24 @@ create policy "customer reads own loyalty transactions" on loyalty_transactions
   for select using (
     exists (select 1 from customers c where c.id = loyalty_transactions.customer_id and lower(c.email) = lower(auth.jwt() ->> 'email'))
   );
+
+-- ------------------------------------------------------------
+-- Superadmin — vue plateforme (tous les restaurants confondus)
+-- ------------------------------------------------------------
+-- Même logique que le reste de la plateforme : la table `superadmins`
+-- (déjà utilisée par /superadmin) fait foi pour ces accès élargis.
+
+drop policy if exists "superadmin reads all customers" on customers;
+create policy "superadmin reads all customers" on customers
+  for select using (exists (select 1 from superadmins s where s.id = auth.uid()));
+
+drop policy if exists "superadmin reads all loyalty accounts" on loyalty_accounts;
+create policy "superadmin reads all loyalty accounts" on loyalty_accounts
+  for select using (exists (select 1 from superadmins s where s.id = auth.uid()));
+
+drop policy if exists "superadmin reads all loyalty transactions" on loyalty_transactions;
+create policy "superadmin reads all loyalty transactions" on loyalty_transactions
+  for select using (exists (select 1 from superadmins s where s.id = auth.uid()));
+
+-- (loyalty_programs est déjà lisible publiquement, cf. plus haut — inutile d'ajouter
+-- une policy superadmin dédiée dessus.)
