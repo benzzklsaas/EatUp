@@ -348,7 +348,7 @@ export default function RestaurantPage() {
       font-family: ${FONT.display}; color: transparent;
       -webkit-text-stroke: 1.5px rgba(255,255,255,.22);
     }
-    .cn-mast__stamp { position: absolute; right: 14px; bottom: 16px; z-index: 4; background: var(--cn-ink); }
+    .cn-mast__stamp { position: absolute; right: 14px; top: 16px; z-index: 4; background: var(--cn-ink); }
     .cn-mast__name {
       position: relative; z-index: 2; margin: -30px 0 0; padding: 0;
       font-size: clamp(52px, 16.5vw, 124px);
