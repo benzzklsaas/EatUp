@@ -3,10 +3,6 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useParams, useRouter } from 'next/navigation'
-import { getBrand, paletteVars, FONT } from '@/lib/brand'
-import { brandCss } from '@/lib/brand-styles'
-
-const price = (n: number) => Number(n).toFixed(2).replace('.', ',')
 
 export default function CheckoutPage() {
   const params = useParams()
@@ -15,9 +11,8 @@ export default function CheckoutPage() {
   const supabase = createClient()
 
   const [restaurant, setRestaurant] = useState<any>(null)
-  const [suggestions, setSuggestions] = useState<any[]>([])
   const [cart, setCart] = useState<any[]>([])
-  const [form, setForm] = useState({ fullName: '', phone: '', email: '' })
+  const [form, setForm] = useState({ firstName: '', lastName: '', phone: '', email: '' })
   const [pickupTime, setPickupTime] = useState('')
   const [pickupSlots, setPickupSlots] = useState<string[]>([])
   const [paymentMethod] = useState<'cash'>('cash')
@@ -43,15 +38,6 @@ export default function CheckoutPage() {
             setCart(cleaned)
           }
         }
-
-        // De quoi proposer un complément pertinent au moment de valider
-        const { data: extras } = await supabase
-          .from('products')
-          .select('*')
-          .eq('restaurant_id', data.id)
-          .neq('is_online', false)
-          .in('category', ['Boissons', 'Desserts', 'Accompagnements'])
-        setSuggestions((extras || []).filter((e: any) => e.is_available !== false && !(Number(e.menu_extra_price) > 0)))
 
         // Récupérer tous les horaires
         const { data: allSchedules } = await supabase
@@ -134,11 +120,6 @@ export default function CheckoutPage() {
     if (cart.length === 0) { setError('Votre panier est vide — retournez au menu.'); return }
     setLoading(true)
 
-    // « Jean Dupont » → prénom / nom, tels que les attend la base.
-    const parts = form.fullName.trim().split(/\s+/)
-    const firstName = parts[0] || ''
-    const lastName = parts.slice(1).join(' ')
-
     let orderNumber = generateOrderNumber()
 
     const items = cart.map((i: any) => ({
@@ -156,8 +137,8 @@ export default function CheckoutPage() {
         order: {
           restaurant_id: restaurant.id,
           order_number: orderNumber,
-          first_name: firstName,
-          last_name: lastName,
+          first_name: form.firstName,
+          last_name: form.lastName,
           phone: form.phone,
           email: form.email,
           total_price: total,
@@ -183,7 +164,7 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          order: { restaurant_id: restaurant.id, order_number: orderNumber, first_name: firstName, last_name: lastName, phone: form.phone, email: form.email, total_price: total, pickup_time: pickupTime, payment_method: paymentMethod, payment_status: 'unpaid', status: 'pending' },
+          order: { restaurant_id: restaurant.id, order_number: orderNumber, first_name: form.firstName, last_name: form.lastName, phone: form.phone, email: form.email, total_price: total, pickup_time: pickupTime, payment_method: paymentMethod, payment_status: 'unpaid', status: 'pending' },
           items,
           emailData: { customerEmail: form.email, restaurantEmail: restaurant.email, restaurantName: restaurant.name },
         }),
@@ -197,85 +178,6 @@ export default function CheckoutPage() {
     setLoading(false)
   }
 
-
-
-  const brand = getBrand(slug, restaurant?.name || '')
-  const p = brand.palette
-  const cssVars = paletteVars(p) as React.CSSProperties
-
-  function updateCart(next: any[]) {
-    setCart(next)
-    localStorage.setItem(`cart_${slug}`, JSON.stringify(next))
-  }
-  function incLine(cartKey: string) {
-    updateCart(cart.map((i: any) => i.cartKey === cartKey ? { ...i, quantity: i.quantity + 1 } : i))
-  }
-  function decLine(cartKey: string) {
-    const line = cart.find((i: any) => i.cartKey === cartKey)
-    if (!line) return
-    if (line.quantity === 1) updateCart(cart.filter((i: any) => i.cartKey !== cartKey))
-    else updateCart(cart.map((i: any) => i.cartKey === cartKey ? { ...i, quantity: i.quantity - 1 } : i))
-  }
-  function addSuggestion(product: any) {
-    updateCart([...cart, {
-      product, quantity: 1, selectedOptions: {}, optionGroups: [], extraPrice: 0,
-      cartKey: product.id + '-' + Date.now(),
-    }])
-  }
-
-  // On ne propose que ce qui n'est pas déjà dans le panier.
-  const inCart = new Set(cart.map((i: any) => i.product.id))
-  const offers = suggestions.filter((s: any) => !inCart.has(s.id)).slice(0, 6)
-
-  const CSS = brandCss() + `
-    .cn-co { max-width: 620px; margin: 0 auto; padding: 22px 16px 130px; }
-    .cn-card { background: var(--cn-surface); border: 1px solid var(--cn-line); border-radius: 12px; padding: 18px 16px; margin-bottom: 14px; }
-    .cn-card__t { font-family: ${FONT.display}; font-weight: 700; font-size: 17px; margin: 0 0 14px; }
-
-    .cn-ln { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--cn-line); }
-    .cn-ln:first-of-type { border-top: none; padding-top: 0; }
-    .cn-ln__b { flex: 1; min-width: 0; }
-    .cn-ln__n { font-weight: 600; font-size: 15px; }
-    .cn-ln__o { font-size: 13px; color: var(--cn-dim); margin: 3px 0 0; line-height: 1.45; }
-    .cn-ln__p { font-family: ${FONT.mono}; font-size: 15px; flex-shrink: 0; text-align: right; min-width: 62px; }
-
-    /* Les compléments : une rangée qui défile, une cible franche par carte */
-    .cn-offers { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 2px 16px 4px; }
-    .cn-offers::-webkit-scrollbar { display: none; }
-    .cn-offer {
-      flex-shrink: 0; width: 132px; text-align: left; cursor: pointer;
-      background: var(--cn-surface); border: 1px solid var(--cn-line); border-radius: 10px;
-      padding: 10px; font: inherit; color: inherit;
-      transition: border-color .14s ease, transform .2s var(--e);
-    }
-    .cn-offer:hover { border-color: var(--cn-hot-ink); transform: translateY(-2px); }
-    .cn-offer .cn-arch { width: 100%; height: 74px; margin-bottom: 8px; }
-    .cn-offer img { width: 100%; height: 100%; object-fit: cover; }
-    .cn-offer__n { font-size: 13px; font-weight: 600; line-height: 1.3; }
-    .cn-offer__f { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
-    .cn-offer__p { font-family: ${FONT.mono}; font-size: 13px; color: var(--cn-hot-ink); }
-    .cn-offer__a { width: 26px; height: 26px; border-radius: 50%; background: var(--cn-hot-soft); color: var(--cn-hot-ink);
-      display: flex; align-items: center; justify-content: center; font-size: 17px; line-height: 1; }
-
-    .cn-err { background: var(--cn-hot-soft); color: var(--cn-hot-ink); padding: 12px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 12px; }
-
-    /* La validation reste sous le pouce, avec le total toujours visible */
-    .cn-go {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
-      background: color-mix(in srgb, var(--cn-bg) 94%, transparent); backdrop-filter: blur(12px);
-      border-top: 1px solid var(--cn-line);
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    }
-    .cn-go__in { max-width: 620px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
-    .cn-go__sum { flex-shrink: 0; }
-    .cn-go__k { font-size: 12px; color: var(--cn-dim); }
-    .cn-go__v { font-family: ${FONT.mono}; font-size: 20px; }
-
-    .cn-done { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
-    .cn-done__num { font-family: ${FONT.mono}; font-size: clamp(26px, 8vw, 34px); margin: 8px 0 0; }
-  `
-
-  // ── La commande est passée ─────────────────────────────────────────────────
   if (success) {
     const pickupDate = new Date(success.pickupTime)
     const isToday = pickupDate.toDateString() === new Date().toDateString()
@@ -284,153 +186,144 @@ export default function CheckoutPage() {
       : pickupDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
 
     return (
-      <div className="cn" style={cssVars}>
-        <style>{CSS}</style>
-        <div className="cn-done">
-          <div style={{ width: '100%', maxWidth: 420 }}>
-            <div className="cn-card" style={{ padding: '26px 20px' }}>
-              <span className="cn-pill cn-pill--open"><span className="cn-pill__dot" />Commande envoyée</span>
-              <p className="cn-eyebrow" style={{ margin: '20px 0 0' }}>Votre numéro</p>
-              <p className="cn-done__num">{success.orderNumber}</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#080c14', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+        <div style={{ width: '100%', maxWidth: 400, borderRadius: 24, padding: '40px 32px', textAlign: 'center', background: '#0f172a', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div style={{ fontSize: 52, marginBottom: 16 }}>✅</div>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: 'white', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Commande confirmée !</h1>
+          <p style={{ color: '#4b5563', fontSize: 14, margin: '0 0 28px', lineHeight: 1.6 }}>Un email de confirmation vous a été envoyé.</p>
 
-              <div className="cn-recap__row" style={{ marginTop: 22 }}>
-                <span className="cn-recap__k">Retrait</span>
-                <span className="cn-recap__dots" />
-                <span className="cn-recap__v">{pickupLabel}</span>
-              </div>
-              <div className="cn-recap__row" style={{ marginBottom: 0 }}>
-                <span className="cn-recap__k">À régler sur place</span>
-                <span className="cn-recap__dots" />
-                <span className="cn-recap__v">{price(total)}€</span>
-              </div>
-
-              <p style={{ fontSize: 14, color: p.dim, margin: '20px 0 0', lineHeight: 1.5 }}>
-                Un email de confirmation vient de partir. Présentez votre numéro au comptoir.
-              </p>
-            </div>
-
-            <button className="cn-btn cn-btn--block" onClick={() => router.push(`/suivi/${success.orderNumber}`)}>
-              Suivre ma commande
-            </button>
-            <button className="cn-btn cn-btn--ghost cn-btn--block" style={{ marginTop: 10 }} onClick={() => router.push(`/restaurant/${slug}`)}>
-              Retour à la carte
-            </button>
+          <div style={{ borderRadius: 16, padding: '20px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', marginBottom: 12 }}>
+            <p style={{ fontSize: 11, color: '#6366f1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>Retrait prévu</p>
+            <p style={{ fontSize: 20, fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-0.3px' }}>{pickupLabel}</p>
           </div>
+
+          <div style={{ borderRadius: 12, padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', marginBottom: 28 }}>
+            <p style={{ fontSize: 11, color: '#374151', margin: '0 0 4px' }}>Numéro de commande</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: '#818cf8', margin: 0 }}>{success.orderNumber}</p>
+          </div>
+
+          <button
+            onClick={() => router.push(`/suivi/${success.orderNumber}`)}
+            style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15, marginBottom: 10 }}
+          >
+            📍 Suivre ma commande
+          </button>
+          <button
+            onClick={() => router.push(`/restaurant/${slug}`)}
+            style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: 'transparent', color: '#4b5563', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
+          >
+            Retour au menu
+          </button>
         </div>
       </div>
     )
   }
 
-  // ── Le bon de commande, en un seul écran ───────────────────────────────────
-  return (
-    <div className="cn" style={{ ...cssVars, minHeight: '100vh' }}>
-      <style>{CSS}</style>
+  const inputStyle: React.CSSProperties = {
+    width: '100%', borderRadius: 12, padding: '12px 14px', fontSize: 14,
+    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+    color: 'white', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
+  }
+  const sectionStyle: React.CSSProperties = {
+    borderRadius: 20, padding: '20px 20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+  }
+  const labelStyle: React.CSSProperties = {
+    display: 'block', fontSize: 12, fontWeight: 600, color: '#4b5563', marginBottom: 7,
+  }
 
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: p.bg, borderBottom: `1px solid ${p.line}` }}>
-        <div style={{ maxWidth: 620, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
-          <button onClick={() => router.back()} aria-label="Retour" className="cn-btn cn-btn--ghost" style={{ minHeight: 38, padding: '8px 12px' }}>←</button>
-          <span style={{ fontWeight: 600 }}>Ma commande</span>
-          {restaurant && <span style={{ marginLeft: 'auto', fontSize: 13, color: p.dim }}>{restaurant.name}</span>}
-        </div>
+  return (
+    <div style={{ minHeight: '100vh', background: '#080c14', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', paddingBottom: 40 }}>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: 'rgba(8,12,20,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <button onClick={() => router.back()} style={{ color: '#374151', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>←</button>
+        <p style={{ fontSize: 16, fontWeight: 700, color: 'white', margin: 0 }}>Finaliser la commande</p>
       </header>
 
-      <main className="cn-co">
+      <main style={{ padding: '24px 20px', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-        {/* Le panier, modifiable ici même */}
-        <div className="cn-card">
-          <p className="cn-card__t">Votre commande</p>
-
-          {cart.length === 0 && (
-            <p style={{ color: p.dim, margin: 0 }}>
-              Votre panier est vide. <button onClick={() => router.push(`/restaurant/${slug}`)} style={{ background: 'none', border: 'none', padding: 0, color: p.hotInk, cursor: 'pointer', font: 'inherit', textDecoration: 'underline' }}>Revenir à la carte</button>
-            </p>
-          )}
-
-          {cart.map((i: any) => {
-            const optionLabels = i.selectedOptions
-              ? Object.values(i.selectedOptions).flat().map((o: any) => o.name).join(', ')
-              : ''
-            const extras = [optionLabels, i.menuBoisson, i.menuAccomp].filter(Boolean).join(' · ')
-            const unitPrice = i.product.price + (i.extraPrice || 0)
-            return (
-              <div key={i.cartKey} className="cn-ln">
-                <span className="cn-step">
-                  <button onClick={() => decLine(i.cartKey)} aria-label={`Retirer un ${i.product.name}`}>−</button>
-                  <span className="cn-step__n">{i.quantity}</span>
-                  <button onClick={() => incLine(i.cartKey)} aria-label={`Ajouter un ${i.product.name}`}>+</button>
-                </span>
-                <span className="cn-ln__b">
-                  <span className="cn-ln__n" style={{ display: 'block' }}>{i.product.name}</span>
-                  {extras && <span className="cn-ln__o" style={{ display: 'block' }}>{extras}</span>}
-                </span>
-                <span className="cn-ln__p">{price(unitPrice * i.quantity)}€</span>
-              </div>
-            )
-          })}
+        {/* Récap panier */}
+        <div style={sectionStyle}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: '0 0 14px' }}>Votre panier</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {cart.map((i: any, idx: number) => {
+              const optionLabels = i.selectedOptions
+                ? Object.values(i.selectedOptions).flat().map((o: any) => o.name).join(', ')
+                : ''
+              const unitPrice = i.product.price + (i.extraPrice || 0)
+              return (
+                <div key={idx}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 14, color: '#d1d5db' }}>{i.product.name} × {i.quantity}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>{(unitPrice * i.quantity).toFixed(2)}€</span>
+                  </div>
+                  {optionLabels && <p style={{ fontSize: 11, color: '#374151', marginTop: 2 }}>{optionLabels}</p>}
+                  {i.menuBoisson && <p style={{ fontSize: 11, color: '#6366f1', marginTop: 2 }}>🥤 {i.menuBoisson}</p>}
+                  {i.menuAccomp && <p style={{ fontSize: 11, color: '#f59e0b', marginTop: 2 }}>🍟 {i.menuAccomp}</p>}
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, color: 'white', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 16 }}>
+            <span>Total</span>
+            <span style={{ color: '#818cf8' }}>{total.toFixed(2)}€</span>
+          </div>
         </div>
 
-        {/* Le complément, proposé là où la décision se prend */}
-        {offers.length > 0 && cart.length > 0 && (
-          <div className="cn-card">
-            <p className="cn-card__t">Avec ça ?</p>
-            <div className="cn-offers">
-              {offers.map((o: any) => (
-                <button key={o.id} className="cn-offer" onClick={() => addSuggestion(o)}>
-                  {o.image_url && <span className="cn-arch"><img src={o.image_url} alt="" /></span>}
-                  <span className="cn-offer__n" style={{ display: 'block' }}>{o.name}</span>
-                  <span className="cn-offer__f">
-                    <span className="cn-offer__p">{price(o.price)}€</span>
-                    <span className="cn-offer__a" aria-hidden="true">+</span>
-                  </span>
-                </button>
-              ))}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Infos client */}
+          <div style={sectionStyle}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: '0 0 14px' }}>Vos informations</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={labelStyle}>Prénom *</label>
+                  <input type="text" placeholder="Jean" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} required style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Nom *</label>
+                  <input type="text" placeholder="Dupont" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} required style={inputStyle} />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Email * <span style={{ fontSize: 11, color: '#374151', fontWeight: 400 }}>(confirmation envoyée ici)</span></label>
+                <input type="email" placeholder="jean@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Téléphone <span style={{ fontSize: 11, color: '#374151', fontWeight: 400 }}>(optionnel)</span></label>
+                <input type="tel" placeholder="06 00 00 00 00" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} style={inputStyle} />
+              </div>
             </div>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} id="cn-order">
-          {/* Trois champs, pas cinq */}
-          <div className="cn-card">
-            <p className="cn-card__t">Vos coordonnées</p>
-            <label className="cn-field">
-              <span className="cn-label">Nom</span>
-              <input className="cn-input" type="text" autoComplete="name" placeholder="Jean Dupont"
-                value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })} required />
-            </label>
-            <label className="cn-field">
-              <span className="cn-label">Email <span>— la confirmation part ici</span></span>
-              <input className="cn-input" type="email" autoComplete="email" placeholder="jean@email.com"
-                value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
-            </label>
-            <label className="cn-field" style={{ marginBottom: 0 }}>
-              <span className="cn-label">Téléphone <span>— facultatif</span></span>
-              <input className="cn-input" type="tel" autoComplete="tel" placeholder="06 00 00 00 00"
-                value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-            </label>
-          </div>
-
-          {/* Quand */}
-          <div className="cn-card">
-            <p className="cn-card__t">Heure de retrait</p>
+          {/* Heure de retrait */}
+          <div style={sectionStyle}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: '0 0 14px' }}>Heure de retrait</p>
             {pickupSlots.length === 0 ? (
-              <p style={{ color: p.hotInk, margin: 0 }}>Aucun créneau disponible sur les 7 prochains jours.</p>
+              <p style={{ fontSize: 13, color: '#f87171', textAlign: 'center', padding: '16px 0' }}>Aucun créneau disponible pour les 7 prochains jours.</p>
             ) : (
               <>
                 {(() => {
                   const slotDate = new Date(pickupSlots[0])
-                  if (slotDate.toDateString() !== new Date().toDateString()) return (
-                    <p style={{ fontSize: 13, color: p.hotInk, margin: '0 0 12px' }}>
-                      Fermé aujourd&apos;hui — premiers créneaux le {slotDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}.
+                  const isToday = slotDate.toDateString() === new Date().toDateString()
+                  if (!isToday) return (
+                    <p style={{ fontSize: 12, color: '#d97706', marginBottom: 12, fontWeight: 600 }}>
+                      🌙 Restaurant fermé aujourd'hui — créneaux disponibles le {slotDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </p>
                   )
                   return null
                 })()}
-                <div className="cn-slots">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   {pickupSlots.map(slot => {
                     const label = new Date(slot).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })
+                    const selected = pickupTime === slot
                     return (
-                      <button key={slot} type="button" onClick={() => setPickupTime(slot)}
-                        className={`cn-slot${pickupTime === slot ? ' cn-slot--on' : ''}`}>
+                      <button key={slot} type="button" onClick={() => setPickupTime(slot)} style={{
+                        padding: '12px 8px', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
+                        background: selected ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.03)',
+                        color: selected ? 'white' : '#6b7280',
+                        border: selected ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.06)',
+                        boxShadow: selected ? '0 4px 16px rgba(99,102,241,0.3)' : 'none',
+                      }}>
                         {label}
                       </button>
                     )
@@ -440,33 +333,40 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {/* Le règlement */}
-          <div className="cn-card" style={{ marginBottom: 0 }}>
-            <p className="cn-card__t">Paiement</p>
-            <div className="cn-note">
+          {/* Paiement */}
+          <div style={sectionStyle}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: '0 0 12px' }}>Paiement</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)' }}>
+              <span style={{ fontSize: 24, flexShrink: 0 }}>💵</span>
               <div>
-                <p className="cn-note__t">Sur place, au comptoir</p>
-                <p className="cn-note__d">Vous réglez au moment du retrait. Rien n&apos;est débité maintenant.</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 2px' }}>Paiement sur place</p>
+                <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>Règlement à la caisse lors du retrait</p>
               </div>
             </div>
           </div>
 
-          {error && <div className="cn-err" style={{ marginTop: 14 }}>{error}</div>}
+          {error && (
+            <div style={{ borderRadius: 12, padding: '12px 16px', background: 'rgba(239,68,68,0.08)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.2)', fontSize: 13 }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || pickupSlots.length === 0}
+            style={{
+              width: '100%', padding: '16px', borderRadius: 16, border: 'none',
+              cursor: loading || pickupSlots.length === 0 ? 'default' : 'pointer',
+              background: loading || pickupSlots.length === 0 ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              color: loading || pickupSlots.length === 0 ? '#374151' : 'white',
+              fontWeight: 800, fontSize: 16, transition: 'all 0.2s',
+              boxShadow: loading || pickupSlots.length === 0 ? 'none' : '0 8px 32px rgba(99,102,241,0.35)',
+            }}
+          >
+            {loading ? 'Envoi en cours…' : `Confirmer · ${total.toFixed(2)}€`}
+          </button>
         </form>
       </main>
-
-      <div className="cn-go">
-        <div className="cn-go__in">
-          <span className="cn-go__sum">
-            <span className="cn-go__k" style={{ display: 'block' }}>Total</span>
-            <span className="cn-go__v">{price(total)}€</span>
-          </span>
-          <button type="submit" form="cn-order" className="cn-btn" style={{ flex: 1 }}
-            disabled={loading || pickupSlots.length === 0 || cart.length === 0}>
-            {loading ? 'Envoi…' : 'Confirmer la commande'}
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
