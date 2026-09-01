@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useParams, useRouter } from 'next/navigation'
+import { getBrand, FONT, perforation } from '@/lib/brand'
+import { brandCss } from '@/lib/brand-styles'
+
+const price = (n: number) => Number(n).toFixed(2).replace('.', ',')
 
 export default function CheckoutPage() {
   const params = useParams()
@@ -178,6 +182,78 @@ export default function CheckoutPage() {
     setLoading(false)
   }
 
+
+  const brand = getBrand(slug, restaurant?.name || '')
+  const p = brand.palette
+  const cssVars = {
+    '--cn-ink': p.ink, '--cn-char': p.char, '--cn-char-up': p.charUp, '--cn-line': p.line,
+    '--cn-dough': p.dough, '--cn-dough-dim': p.doughDim, '--cn-paper': p.paper,
+    '--cn-paper-ink': p.paperInk, '--cn-hot': p.hot, '--cn-accent': p.accent,
+    '--cn-accent-ink': p.accentInk, '--cn-fresh': p.fresh,
+  } as React.CSSProperties
+
+  // Le bon de commande : une seule feuille de papier, dentelée en haut et en bas.
+  const CSS = brandCss() + `
+    .cn-cmd { max-width: 560px; margin: 0 auto; padding: 20px 12px 44px; }
+    .cn-sheetpaper {
+      position: relative; background: var(--cn-paper); color: var(--cn-paper-ink);
+      padding: 30px 20px 28px; margin-bottom: 20px;
+    }
+    .cn-sheetpaper__top, .cn-sheetpaper__bot { position: absolute; left: 0; right: 0; height: 12px; }
+    .cn-sheetpaper__top { top: 0; }
+    .cn-sheetpaper__bot { bottom: 0; }
+    .cn-kicker { font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; opacity: .55; margin: 0 0 7px; }
+    /* Un chapeau suivi d'un champ a besoin de respirer, pas d'une ligne de ticket */
+    .cn-kicker + .cn-duo, .cn-kicker + .cn-field, .cn-kicker + .cn-slots { margin-top: 16px; }
+
+    .cn-line { display: flex; align-items: baseline; gap: 8px; margin-bottom: 11px; }
+    .cn-line__n { font-family: ${FONT.mono}; font-size: 11px; opacity: .5; flex-shrink: 0; }
+    .cn-line__name { font-family: ${FONT.editorial}; font-size: 15.5px; }
+    .cn-line__dots { flex: 1; border-bottom: 1px dotted rgba(0,0,0,.3); transform: translateY(-3px); min-width: 12px; }
+    .cn-line__p { font-family: ${FONT.mono}; font-size: 13px; flex-shrink: 0; }
+    .cn-line__opt { font-family: ${FONT.mono}; font-size: 10px; letter-spacing: .04em; opacity: .55; margin: -6px 0 11px 22px; }
+    .cn-total {
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 2px solid var(--cn-paper-ink); margin-top: 18px; padding-top: 13px;
+    }
+    .cn-total__k { font-family: ${FONT.mono}; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; }
+    .cn-total__v { font-family: ${FONT.display}; font-size: 30px; }
+
+    .cn-field { margin-bottom: 17px; }
+    .cn-label { display: block; font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; opacity: .6; margin-bottom: 4px; }
+    .cn-input {
+      width: 100%; background: transparent; border: none;
+      border-bottom: 1.5px solid rgba(0,0,0,.28); padding: 8px 2px;
+      font-family: ${FONT.editorial}; font-size: 16px; color: var(--cn-paper-ink);
+      outline: none; border-radius: 0;
+    }
+    .cn-input::placeholder { color: rgba(0,0,0,.42); }
+    .cn-input:focus { border-bottom-color: var(--cn-hot); border-bottom-width: 2px; }
+    .cn-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .cn-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .cn-slot {
+      padding: 12px 4px; cursor: pointer; border: 1px solid rgba(0,0,0,.22); border-radius: 2px;
+      background: transparent; color: var(--cn-paper-ink);
+      font-family: ${FONT.mono}; font-size: 13px; letter-spacing: .04em;
+      transition: background .12s ease, color .12s ease;
+    }
+    .cn-slot:hover { border-color: var(--cn-paper-ink); }
+    .cn-slot--on { background: var(--cn-paper-ink); color: var(--cn-paper); border-color: var(--cn-paper-ink); }
+
+    .cn-pay { display: flex; align-items: center; gap: 14px; }
+    .cn-err {
+      background: var(--cn-hot); color: var(--cn-paper); padding: 12px 15px; margin-bottom: 12px;
+      font-family: ${FONT.mono}; font-size: 11px; letter-spacing: .04em; line-height: 1.5;
+    }
+
+    /* La confirmation : le ticket qu'on tend au comptoir */
+    .cn-done { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 14px; }
+    .cn-done__num { font-family: ${FONT.display}; font-size: clamp(30px, 10vw, 52px); letter-spacing: -.01em; margin: 6px 0 0; }
+    .cn-done__when { border: 1.5px solid rgba(0,0,0,.2); padding: 14px 16px; margin-top: 22px; }
+  `
+
+  // ── Le ticket de confirmation ─────────────────────────────────────────────
   if (success) {
     const pickupDate = new Date(success.pickupTime)
     const isToday = pickupDate.toDateString() === new Date().toDateString()
@@ -186,144 +262,151 @@ export default function CheckoutPage() {
       : pickupDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#080c14', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-        <div style={{ width: '100%', maxWidth: 400, borderRadius: 24, padding: '40px 32px', textAlign: 'center', background: '#0f172a', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div style={{ fontSize: 52, marginBottom: 16 }}>✅</div>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: 'white', margin: '0 0 8px', letterSpacing: '-0.5px' }}>Commande confirmée !</h1>
-          <p style={{ color: '#4b5563', fontSize: 14, margin: '0 0 28px', lineHeight: 1.6 }}>Un email de confirmation vous a été envoyé.</p>
+      <div className="cn" style={cssVars}>
+        <style>{CSS}</style>
+        <div className="cn-done">
+          <div style={{ width: '100%', maxWidth: 420 }}>
+            <div className="cn-sheetpaper" style={{ padding: '34px 22px 32px' }}>
+              <span className="cn-sheetpaper__top" style={perforation(p.ink, 'top')} />
 
-          <div style={{ borderRadius: 16, padding: '20px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', marginBottom: 12 }}>
-            <p style={{ fontSize: 11, color: '#6366f1', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>Retrait prévu</p>
-            <p style={{ fontSize: 20, fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-0.3px' }}>{pickupLabel}</p>
+              <p className="cn-kicker">Commande enregistrée</p>
+              <p className="cn-display cn-done__num">{success.orderNumber}</p>
+
+              <div className="cn-done__when">
+                <p className="cn-kicker" style={{ margin: 0 }}>Retrait prévu</p>
+                <p className="cn-ed" style={{ fontSize: 19, margin: '5px 0 0', fontStyle: 'italic' }}>{pickupLabel}</p>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 22, gap: 12 }}>
+                <p className="cn-ed" style={{ fontSize: 13.5, lineHeight: 1.5, margin: 0, opacity: .7, maxWidth: '18ch' }}>
+                  Un email de confirmation vient de partir.
+                </p>
+                <span className="cn-stamp" style={{ color: p.hot, flexShrink: 0 }}>À régler sur place</span>
+              </div>
+
+              <span className="cn-sheetpaper__bot" style={perforation(p.ink, 'bottom')} />
+            </div>
+
+            <button className="cn-confirm" style={{ marginTop: 0 }} onClick={() => router.push(`/suivi/${success.orderNumber}`)}>
+              <span>Suivre ma commande</span>
+              <span>→</span>
+            </button>
+            <button
+              onClick={() => router.push(`/restaurant/${slug}`)}
+              className="cn-mono"
+              style={{ width: '100%', marginTop: 10, padding: '14px', background: 'transparent', border: `1px solid ${p.line}`, color: p.doughDim, fontSize: 10, cursor: 'pointer' }}
+            >
+              Retour à la carte
+            </button>
           </div>
-
-          <div style={{ borderRadius: 12, padding: '12px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', marginBottom: 28 }}>
-            <p style={{ fontSize: 11, color: '#374151', margin: '0 0 4px' }}>Numéro de commande</p>
-            <p style={{ fontSize: 15, fontWeight: 700, color: '#818cf8', margin: 0 }}>{success.orderNumber}</p>
-          </div>
-
-          <button
-            onClick={() => router.push(`/suivi/${success.orderNumber}`)}
-            style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15, marginBottom: 10 }}
-          >
-            📍 Suivre ma commande
-          </button>
-          <button
-            onClick={() => router.push(`/restaurant/${slug}`)}
-            style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: 'transparent', color: '#4b5563', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
-          >
-            Retour au menu
-          </button>
         </div>
       </div>
     )
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', borderRadius: 12, padding: '12px 14px', fontSize: 14,
-    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-    color: 'white', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit',
-  }
-  const sectionStyle: React.CSSProperties = {
-    borderRadius: 20, padding: '20px 20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
-  }
-  const labelStyle: React.CSSProperties = {
-    display: 'block', fontSize: 12, fontWeight: 600, color: '#4b5563', marginBottom: 7,
-  }
-
+  // ── Le bon de commande ────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: '#080c14', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', paddingBottom: 40 }}>
-      <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: 'rgba(8,12,20,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)', position: 'sticky', top: 0, zIndex: 50 }}>
-        <button onClick={() => router.back()} style={{ color: '#374151', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>←</button>
-        <p style={{ fontSize: 16, fontWeight: 700, color: 'white', margin: 0 }}>Finaliser la commande</p>
+    <div className="cn" style={{ ...cssVars, minHeight: '100vh' }}>
+      <style>{CSS}</style>
+
+      <header style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '15px 18px', borderBottom: `1px solid ${p.line}`, position: 'sticky', top: 0, zIndex: 50, background: p.char }}>
+        <button onClick={() => router.back()} aria-label="Retour" style={{ background: 'none', border: 'none', cursor: 'pointer', color: p.dough, fontSize: 17, lineHeight: 1, padding: 0 }}>←</button>
+        <span className="cn-mono" style={{ fontSize: 10, color: p.dough }}>Bon de commande</span>
+        {restaurant && <span className="cn-mono" style={{ fontSize: 10, color: p.doughDim, marginLeft: 'auto' }}>{restaurant.name}</span>}
       </header>
 
-      <main style={{ padding: '24px 20px', maxWidth: 480, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <main className="cn-cmd">
 
-        {/* Récap panier */}
-        <div style={sectionStyle}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: '0 0 14px' }}>Votre panier</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {cart.map((i: any, idx: number) => {
-              const optionLabels = i.selectedOptions
-                ? Object.values(i.selectedOptions).flat().map((o: any) => o.name).join(', ')
-                : ''
-              const unitPrice = i.product.price + (i.extraPrice || 0)
-              return (
-                <div key={idx}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 14, color: '#d1d5db' }}>{i.product.name} × {i.quantity}</span>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>{(unitPrice * i.quantity).toFixed(2)}€</span>
-                  </div>
-                  {optionLabels && <p style={{ fontSize: 11, color: '#374151', marginTop: 2 }}>{optionLabels}</p>}
-                  {i.menuBoisson && <p style={{ fontSize: 11, color: '#6366f1', marginTop: 2 }}>🥤 {i.menuBoisson}</p>}
-                  {i.menuAccomp && <p style={{ fontSize: 11, color: '#f59e0b', marginTop: 2 }}>🍟 {i.menuAccomp}</p>}
+        {/* Le récapitulatif, en lignes de ticket */}
+        <div className="cn-sheetpaper">
+          <span className="cn-sheetpaper__top" style={perforation(p.ink, 'top')} />
+          <p className="cn-kicker">Votre commande</p>
+
+          {cart.length === 0 && (
+            <p className="cn-ed" style={{ fontStyle: 'italic', opacity: .6, margin: '10px 0 0' }}>Votre panier est vide.</p>
+          )}
+
+          {cart.map((i: any, idx: number) => {
+            const optionLabels = i.selectedOptions
+              ? Object.values(i.selectedOptions).flat().map((o: any) => o.name).join(', ')
+              : ''
+            const unitPrice = i.product.price + (i.extraPrice || 0)
+            const extras = [optionLabels, i.menuBoisson, i.menuAccomp].filter(Boolean).join(' · ')
+            return (
+              <div key={idx}>
+                <div className="cn-line">
+                  <span className="cn-line__n">{i.quantity}×</span>
+                  <span className="cn-line__name">{i.product.name}</span>
+                  <span className="cn-line__dots" />
+                  <span className="cn-line__p">{price(unitPrice * i.quantity)}€</span>
                 </div>
-              )
-            })}
+                {extras && <p className="cn-line__opt">{extras}</p>}
+              </div>
+            )
+          })}
+
+          <div className="cn-total">
+            <span className="cn-total__k">Total</span>
+            <span className="cn-total__v">{price(total)}€</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, color: 'white', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 16 }}>
-            <span>Total</span>
-            <span style={{ color: '#818cf8' }}>{total.toFixed(2)}€</span>
-          </div>
+          <span className="cn-sheetpaper__bot" style={perforation(p.ink, 'bottom')} />
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form onSubmit={handleSubmit}>
 
-          {/* Infos client */}
-          <div style={sectionStyle}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: '0 0 14px' }}>Vos informations</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div>
-                  <label style={labelStyle}>Prénom *</label>
-                  <input type="text" placeholder="Jean" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} required style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Nom *</label>
-                  <input type="text" placeholder="Dupont" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} required style={inputStyle} />
-                </div>
+          {/* Qui vient chercher */}
+          <div className="cn-sheetpaper">
+            <span className="cn-sheetpaper__top" style={perforation(p.ink, 'top')} />
+            <p className="cn-kicker">Qui vient chercher</p>
+
+            <div className="cn-duo">
+              <div className="cn-field">
+                <label className="cn-label" htmlFor="cn-fn">Prénom *</label>
+                <input id="cn-fn" className="cn-input" type="text" placeholder="Jean" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} required />
               </div>
-              <div>
-                <label style={labelStyle}>Email * <span style={{ fontSize: 11, color: '#374151', fontWeight: 400 }}>(confirmation envoyée ici)</span></label>
-                <input type="email" placeholder="jean@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Téléphone <span style={{ fontSize: 11, color: '#374151', fontWeight: 400 }}>(optionnel)</span></label>
-                <input type="tel" placeholder="06 00 00 00 00" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} style={inputStyle} />
+              <div className="cn-field">
+                <label className="cn-label" htmlFor="cn-ln">Nom *</label>
+                <input id="cn-ln" className="cn-input" type="text" placeholder="Dupont" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} required />
               </div>
             </div>
+            <div className="cn-field">
+              <label className="cn-label" htmlFor="cn-em">Email * — la confirmation part ici</label>
+              <input id="cn-em" className="cn-input" type="email" placeholder="jean@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
+            </div>
+            <div className="cn-field" style={{ marginBottom: 4 }}>
+              <label className="cn-label" htmlFor="cn-ph">Téléphone — facultatif</label>
+              <input id="cn-ph" className="cn-input" type="tel" placeholder="06 00 00 00 00" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+            </div>
+            <span className="cn-sheetpaper__bot" style={perforation(p.ink, 'bottom')} />
           </div>
 
-          {/* Heure de retrait */}
-          <div style={sectionStyle}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: '0 0 14px' }}>Heure de retrait</p>
+          {/* Quand */}
+          <div className="cn-sheetpaper">
+            <span className="cn-sheetpaper__top" style={perforation(p.ink, 'top')} />
+            <p className="cn-kicker">Heure de retrait</p>
+
             {pickupSlots.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#f87171', textAlign: 'center', padding: '16px 0' }}>Aucun créneau disponible pour les 7 prochains jours.</p>
+              <p className="cn-ed" style={{ fontStyle: 'italic', color: p.hot, margin: '12px 0 4px', fontSize: 14.5 }}>
+                Aucun créneau disponible sur les 7 prochains jours.
+              </p>
             ) : (
               <>
                 {(() => {
                   const slotDate = new Date(pickupSlots[0])
                   const isToday = slotDate.toDateString() === new Date().toDateString()
                   if (!isToday) return (
-                    <p style={{ fontSize: 12, color: '#d97706', marginBottom: 12, fontWeight: 600 }}>
-                      🌙 Restaurant fermé aujourd'hui — créneaux disponibles le {slotDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    <p className="cn-mono" style={{ fontSize: 9.5, color: p.hot, margin: '0 0 12px', lineHeight: 1.6 }}>
+                      Fermé aujourd&apos;hui — créneaux du {slotDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </p>
                   )
                   return null
                 })()}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                <div className="cn-slots">
                   {pickupSlots.map(slot => {
                     const label = new Date(slot).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })
                     const selected = pickupTime === slot
                     return (
-                      <button key={slot} type="button" onClick={() => setPickupTime(slot)} style={{
-                        padding: '12px 8px', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
-                        background: selected ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.03)',
-                        color: selected ? 'white' : '#6b7280',
-                        border: selected ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.06)',
-                        boxShadow: selected ? '0 4px 16px rgba(99,102,241,0.3)' : 'none',
-                      }}>
+                      <button key={slot} type="button" onClick={() => setPickupTime(slot)} className={`cn-slot${selected ? ' cn-slot--on' : ''}`}>
                         {label}
                       </button>
                     )
@@ -331,39 +414,27 @@ export default function CheckoutPage() {
                 </div>
               </>
             )}
+            <span className="cn-sheetpaper__bot" style={perforation(p.ink, 'bottom')} />
           </div>
 
-          {/* Paiement */}
-          <div style={sectionStyle}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: '0 0 12px' }}>Paiement</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)' }}>
-              <span style={{ fontSize: 24, flexShrink: 0 }}>💵</span>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: 'white', margin: '0 0 2px' }}>Paiement sur place</p>
-                <p style={{ fontSize: 12, color: '#374151', margin: 0 }}>Règlement à la caisse lors du retrait</p>
-              </div>
+          {/* Comment on règle */}
+          <div className="cn-sheetpaper">
+            <span className="cn-sheetpaper__top" style={perforation(p.ink, 'top')} />
+            <p className="cn-kicker">Paiement</p>
+            <div className="cn-pay">
+              <span className="cn-stamp" style={{ color: p.hot, flexShrink: 0 }}>Sur place</span>
+              <p className="cn-ed" style={{ fontSize: 14, lineHeight: 1.5, margin: 0, opacity: .75 }}>
+                Vous réglez au comptoir au moment du retrait.
+              </p>
             </div>
+            <span className="cn-sheetpaper__bot" style={perforation(p.ink, 'bottom')} />
           </div>
 
-          {error && (
-            <div style={{ borderRadius: 12, padding: '12px 16px', background: 'rgba(239,68,68,0.08)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.2)', fontSize: 13 }}>
-              {error}
-            </div>
-          )}
+          {error && <div className="cn-err">{error}</div>}
 
-          <button
-            type="submit"
-            disabled={loading || pickupSlots.length === 0}
-            style={{
-              width: '100%', padding: '16px', borderRadius: 16, border: 'none',
-              cursor: loading || pickupSlots.length === 0 ? 'default' : 'pointer',
-              background: loading || pickupSlots.length === 0 ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              color: loading || pickupSlots.length === 0 ? '#374151' : 'white',
-              fontWeight: 800, fontSize: 16, transition: 'all 0.2s',
-              boxShadow: loading || pickupSlots.length === 0 ? 'none' : '0 8px 32px rgba(99,102,241,0.35)',
-            }}
-          >
-            {loading ? 'Envoi en cours…' : `Confirmer · ${total.toFixed(2)}€`}
+          <button type="submit" className="cn-confirm" disabled={loading || pickupSlots.length === 0} style={{ marginTop: 0 }}>
+            <span>{loading ? 'Envoi en cours…' : 'Envoyer la commande'}</span>
+            <b>{price(total)}€</b>
           </button>
         </form>
       </main>

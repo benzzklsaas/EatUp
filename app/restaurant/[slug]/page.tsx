@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useParams, useRouter } from 'next/navigation'
+import { getBrand, FONT, ARCH_WIDE, perforation } from '@/lib/brand'
+import { brandCss } from '@/lib/brand-styles'
 
 type Product = {
   id: string
@@ -45,6 +47,8 @@ type CartItem = {
   menuBoisson?: string
   menuAccomp?: string
 }
+
+const price = (n: number) => Number(n).toFixed(2).replace('.', ',')
 
 export default function RestaurantPage() {
   const params = useParams()
@@ -301,641 +305,738 @@ export default function RestaurantPage() {
     : productCategories
   const getCatEmoji = (name: string) => dbCategories.find(c => c.name === name)?.emoji || ''
 
-  // ── Loading ──────────────────────────────────────────────────────────────
+  const brand = getBrand(slug, restaurant?.name || '')
+  const p = brand.palette
+
+  // Les couleurs de la marque descendent en variables CSS : la feuille de style
+  // ci-dessous est identique pour tous les restaurants, seule la palette change.
+  const cssVars = {
+    '--cn-ink': p.ink,
+    '--cn-char': p.char,
+    '--cn-char-up': p.charUp,
+    '--cn-line': p.line,
+    '--cn-dough': p.dough,
+    '--cn-dough-dim': p.doughDim,
+    '--cn-paper': p.paper,
+    '--cn-paper-ink': p.paperInk,
+    '--cn-hot': p.hot,
+    '--cn-accent': p.accent,
+    '--cn-accent-ink': p.accentInk,
+    '--cn-fresh': p.fresh,
+  } as React.CSSProperties
+
+  // Le socle de marque, plus ce que la carte seule met en scène.
+  const CSS = brandCss() + `
+
+    /* ── LE MASTHEAD : l'image sort à droite, le nom sort à gauche ── */
+    .cn-mast { position: relative; padding: 26px 18px 0; max-width: 760px; margin: 0 auto; }
+    .cn-mast__media {
+      position: relative; margin-left: auto; margin-right: -18px;
+      width: 66%; max-width: 380px; aspect-ratio: 4 / 5;
+      background: var(--cn-char-up);
+    }
+    .cn-mast__media img { width: 100%; height: 100%; object-fit: cover; }
+    .cn-mast__ember {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(90% 70% at 50% 108%, var(--cn-hot) 0%, transparent 62%),
+        radial-gradient(70% 50% at 50% 100%, var(--cn-accent) 0%, transparent 55%),
+        var(--cn-char-up);
+    }
+    .cn-mast__initial {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-family: ${FONT.display}; color: transparent;
+      -webkit-text-stroke: 1.5px rgba(255,255,255,.22);
+    }
+    .cn-mast__stamp { position: absolute; right: 14px; bottom: 16px; z-index: 4; background: var(--cn-ink); }
+    .cn-mast__name {
+      position: relative; z-index: 2; margin: -30px 0 0; padding: 0;
+      font-size: clamp(52px, 16.5vw, 124px);
+      transform: translateX(-.045em);
+      text-shadow: 0 6px 26px rgba(0,0,0,.75);
+      overflow-wrap: anywhere;
+    }
+    .cn-mast__voice {
+      font-style: italic; font-size: clamp(16px, 4.4vw, 22px); line-height: 1.35;
+      color: var(--cn-dough); margin: 16px 0 0; max-width: 22ch;
+    }
+    .cn-mast__meta {
+      display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
+      margin: 18px 0 0; font-size: 10px; color: var(--cn-dough-dim);
+    }
+    .cn-mast__meta a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--cn-line); }
+    @media (min-width: 700px) {
+      .cn-mast { padding-top: 44px; }
+      .cn-mast__media { width: 46%; margin-right: 0; }
+      .cn-mast__name { margin-top: -64px; }
+    }
+
+    /* ── L'ENSEIGNE COLLANTE : une seule barre, jamais deux ── */
+    .cn-board {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--cn-char); border-top: 1px solid var(--cn-line); border-bottom: 1px solid var(--cn-line);
+      display: flex; align-items: stretch;
+    }
+    .cn-board__mark {
+      display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+      padding-left: 16px; padding-right: 12px;
+      border-right: 1px solid transparent;
+      max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap;
+      transition: max-width .35s ease, opacity .25s ease, border-color .35s ease;
+    }
+    .cn-board__mark--on { max-width: 190px; opacity: 1; border-right-color: var(--cn-line); }
+    .cn-board__mark span { font-family: ${FONT.display}; font-size: 15px; text-transform: uppercase; }
+    .cn-board__cats { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; flex: 1; }
+    .cn-cat {
+      flex-shrink: 0; border: none; cursor: pointer; background: transparent;
+      font-family: ${FONT.mono}; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--cn-dough-dim); padding: 14px 15px; transition: color .15s ease;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .cn-cat:hover { color: var(--cn-dough); }
+    .cn-cat--on { background: var(--cn-accent); color: var(--cn-accent-ink); }
+
+    /* ── LA CARTE ── */
+    .cn-menu { max-width: 760px; margin: 0 auto; padding: 34px 18px 0; }
+    .cn-cathead { display: flex; align-items: baseline; gap: 12px; margin: 0 0 20px; }
+    .cn-cathead__name { font-size: clamp(28px, 8vw, 46px); }
+    .cn-cathead__rule { flex: 1; height: 1px; background: var(--cn-line); }
+    .cn-cathead__count { font-family: ${FONT.mono}; font-size: 9.5px; letter-spacing: .16em; color: var(--cn-dough-dim); text-transform: uppercase; }
+
+    /* La ligne de carte — un ticket, pas une carte à coins arrondis */
+    .cn-item {
+      display: flex; gap: 16px; align-items: flex-start;
+      padding: 20px 0; border-bottom: 1px solid var(--cn-line); position: relative;
+    }
+    .cn-item--out { opacity: .45; }
+    .cn-item__body { flex: 1; min-width: 0; }
+    .cn-item__head { display: flex; align-items: baseline; gap: 9px; }
+    .cn-num {
+      font-family: ${FONT.display}; font-size: 15px; flex-shrink: 0;
+      color: transparent; -webkit-text-stroke: 1px var(--cn-dough-dim); opacity: .75;
+    }
+    .cn-item__name { font-size: 19px; font-weight: 600; margin: 0; line-height: 1.2; letter-spacing: -.01em; }
+    .cn-item__desc {
+      font-size: 13.5px; line-height: 1.55; color: var(--cn-dough-dim); margin: 7px 0 0;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .cn-item__foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+    .cn-price { font-family: ${FONT.display}; font-size: 21px; color: var(--cn-accent); letter-spacing: 0; }
+    .cn-leader { flex: 1; border-bottom: 1px dotted var(--cn-line); transform: translateY(-3px); min-width: 14px; }
+    .cn-item__media { position: relative; flex-shrink: 0; width: 92px; margin-right: -12px; }
+    .cn-item__media img { width: 100%; height: 116px; object-fit: cover; display: block; }
+    .cn-item--out .cn-item__media img { filter: grayscale(1) brightness(.55); }
+
+    /* La vedette — première ligne illustrée d'une catégorie */
+    .cn-star { position: relative; padding: 0 0 26px; margin-bottom: 6px; }
+    .cn-star__media { position: relative; width: 100%; }
+    .cn-star__frame { aspect-ratio: 3 / 2; background: var(--cn-char-up); border-radius: ${ARCH_WIDE}; }
+    .cn-star__frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cn-star__sticker {
+      position: absolute; right: -6px; bottom: -14px; z-index: 3;
+      background: var(--cn-accent); color: var(--cn-accent-ink);
+      font-family: ${FONT.display}; font-size: 24px; padding: 12px 15px 10px;
+      transform: rotate(-6deg); border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    }
+    .cn-star__kicker { font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--cn-dough-dim); margin: 20px 0 0; display: flex; gap: 10px; align-items: center; }
+    .cn-star__kicker b { color: var(--cn-accent); font-weight: 400; }
+    .cn-star__name { font-size: clamp(26px, 7vw, 40px); margin: 9px 0 0; max-width: 15ch; }
+    .cn-star__desc { font-size: 14.5px; line-height: 1.6; color: var(--cn-dough-dim); margin: 10px 0 0; max-width: 42ch; }
+    .cn-star__foot { display: flex; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+
+    @media (min-width: 700px) {
+      .cn-star { display: grid; grid-template-columns: 1.05fr .95fr; gap: 30px; align-items: end; }
+      .cn-star__kicker { margin-top: 0; }
+      /* La pastille passe à gauche : à droite elle viendrait buter le bouton */
+      .cn-star__sticker { right: auto; left: -10px; }
+    }
+
+    /* Bandeau « victime de son succès », tamponné en travers de l'image */
+    .cn-sold {
+      position: absolute; left: -8px; top: 18px; z-index: 3;
+      background: var(--cn-hot); color: var(--cn-paper);
+      font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+      padding: 5px 12px; transform: rotate(-6deg); border-radius: 1px;
+    }
+
+    /* Le pas-à-pas de quantité */
+    .cn-step { display: inline-flex; align-items: center; border: 1px solid var(--cn-line); border-radius: 2px; }
+    .cn-step button {
+      width: 38px; height: 38px; border: none; background: transparent; cursor: pointer;
+      color: var(--cn-accent); font-family: ${FONT.mono}; font-size: 16px; line-height: 1;
+    }
+    .cn-step button:hover { background: var(--cn-char-up); }
+    .cn-step__n { font-family: ${FONT.display}; font-size: 16px; min-width: 26px; text-align: center; color: var(--cn-dough); }
+
+    /* La ligne d'option déjà au panier */
+    .cn-picked {
+      display: flex; align-items: center; gap: 10px; justify-content: space-between;
+      margin-top: 9px; padding: 9px 12px;
+      background: var(--cn-char-up); border-left: 3px solid var(--cn-accent);
+      font-family: ${FONT.mono}; font-size: 10px; letter-spacing: .06em; text-transform: none;
+      color: var(--cn-dough-dim);
+    }
+
+    /* ── LE TICKET : papier de caisse, dentelé, en bas de l'écran ── */
+    .cn-ticket {
+      position: fixed; left: 12px; right: 12px; bottom: 14px; z-index: 70;
+      max-width: 760px; margin: 0 auto;
+      background: var(--cn-paper); color: var(--cn-paper-ink);
+      border-radius: 2px; box-shadow: 0 14px 40px rgba(0,0,0,.6);
+      display: flex; align-items: stretch; width: calc(100% - 24px); border: none;
+      cursor: pointer; text-align: left; padding: 0; font: inherit;
+      animation: cn-rise .3s ease;
+    }
+    .cn-ticket__notch { position: absolute; left: 0; right: 0; top: -1px; height: 12px; }
+    .cn-ticket__body { flex: 1; padding: 15px 16px; min-width: 0; }
+    .cn-ticket__label { font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; opacity: .6; }
+    .cn-ticket__total { font-family: ${FONT.display}; font-size: 25px; margin-top: 3px; }
+    .cn-ticket__go {
+      display: flex; align-items: center; gap: 9px; padding: 0 20px;
+      background: var(--cn-hot); color: var(--cn-paper);
+      font-family: ${FONT.mono}; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    }
+    .cn-ticket--punch { animation: cn-punch .35s ease; }
+  `
+
+  const stampTone = isOpenNow ? p.fresh : p.doughDim
+
+  // ── Chargement : la braise qui monte ────────────────────────────────────────
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080c14' }}>
+    <div className="cn" style={{ ...cssVars, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <style>{CSS}</style>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 56, height: 56, borderRadius: '50%', margin: '0 auto 16px', background: '#0d1424', border: '1.5px solid rgba(99,102,241,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'pulse 1.5s ease-in-out infinite', overflow: 'hidden' }}><img src="/LogoEatUp.PNG" alt="EatUp" style={{ width: 46, height: 46, objectFit: 'contain' }} /></div>
-        <p style={{ color: '#374151', fontSize: 13, fontFamily: 'system-ui', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Chargement du menu</p>
+        <div className="cn-arch" style={{ width: 46, height: 58, margin: '0 auto 18px', background: `linear-gradient(to top, ${p.hot}, ${p.accent})`, animation: 'cn-ember 1.4s ease-in-out infinite' }} />
+        <p className="cn-mono" style={{ fontSize: 9.5, color: p.doughDim, margin: 0 }}>On allume le four</p>
       </div>
-      <style>{`@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.95)}}`}</style>
+      <style>{`@keyframes cn-ember{0%,100%{opacity:1;transform:translateY(0)}50%{opacity:.45;transform:translateY(3px)}}`}</style>
     </div>
   )
 
-  // ── 404 ──────────────────────────────────────────────────────────────────
+  // ── 404 ────────────────────────────────────────────────────────────────────
   if (!restaurant) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080c14' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
-        <p style={{ color: 'white', fontSize: 20, fontWeight: 800, marginBottom: 8, fontFamily: 'system-ui' }}>Restaurant introuvable</p>
-        <p style={{ color: '#374151', fontSize: 14, fontFamily: 'system-ui' }}>Ce lien ne correspond à aucun restaurant.</p>
+    <div className="cn" style={{ ...cssVars, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <style>{CSS}</style>
+      <div style={{ textAlign: 'center', maxWidth: 340 }}>
+        <p className="cn-display" style={{ fontSize: 62, margin: '0 0 14px', color: 'transparent', WebkitTextStroke: `1.5px ${p.line}` }}>404</p>
+        <p className="cn-ed" style={{ fontSize: 21, margin: '0 0 8px', fontStyle: 'italic' }}>Rien ne cuit à cette adresse.</p>
+        <p className="cn-mono" style={{ fontSize: 9.5, color: p.doughDim }}>Ce lien ne correspond à aucun restaurant</p>
       </div>
     </div>
   )
 
+  const wordmarkLines = brand.wordmark.split('\n')
 
-  // ── Page principale ───────────────────────────────────────────────────────
+  // ── La carte ───────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: '#080c14', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', paddingBottom: cartCount > 0 ? 110 : 48 }}>
-      <style>{`
-        @keyframes slideUp { from { transform:translateY(20px);opacity:0 } to { transform:translateY(0);opacity:1 } }
-        @keyframes bounceIn { 0%{transform:scale(1)} 30%{transform:scale(1.12)} 60%{transform:scale(0.95)} 100%{transform:scale(1)} }
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { display: none; }
-      `}</style>
+    <div className="cn" style={{ ...cssVars, minHeight: '100vh', paddingBottom: cartCount > 0 ? 120 : 56 }}>
+      <style>{CSS}</style>
 
-      {/* ── Header sticky (apparaît au scroll) ── */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        background: 'rgba(8,12,20,0.92)', backdropFilter: 'blur(24px)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12,
-        transform: scrolled ? 'translateY(0)' : 'translateY(-100%)',
-        transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
-      }}>
-        {restaurant.logo_url
-          ? <img src={restaurant.logo_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
-          : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🍽️</div>
-        }
-        <span style={{ fontWeight: 800, fontSize: 15, color: 'white' }}>{restaurant.name}</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: isOpenNow ? '#4ade80' : '#ef4444', display: 'inline-block', boxShadow: `0 0 8px ${isOpenNow ? '#4ade80' : '#ef4444'}` }} />
-          <span style={{ fontSize: 12, color: isOpenNow ? '#4ade80' : '#ef4444', fontWeight: 700 }}>{isOpenNow ? 'Ouvert' : 'Fermé'}</span>
-        </div>
-      </div>
-
-      {/* ── Bannière panier restauré ── */}
+      {/* Panier retrouvé — un bout de ticket de la dernière visite */}
       {hasRestoredCart && cartCount > 0 && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', animation: 'slideUp 0.3s ease' }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'white' }}>🛒 Vous avez {cartCount} article{cartCount > 1 ? 's' : ''} dans votre panier</p>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={() => setHasRestoredCart(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>×</button>
-          </div>
+        <div style={{ background: p.accent, color: p.accentInk, padding: '9px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <p className="cn-mono" style={{ margin: 0, fontSize: 9.5 }}>
+            Panier repris · {cartCount} article{cartCount > 1 ? 's' : ''}
+          </p>
+          <button onClick={() => setHasRestoredCart(false)} aria-label="Fermer" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
         </div>
       )}
 
-      {/* ── Hero ── */}
-      <div style={{ position: 'relative', height: restaurant.cover_image_url ? 260 : 200, overflow: 'hidden' }}>
-        {restaurant.cover_image_url
-          ? <>
-              <img src={restaurant.cover_image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(8,12,20,0.2) 0%, rgba(8,12,20,0.95) 100%)' }} />
-            </>
-          : <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)' }}>
-              <div style={{ position: 'absolute', top: -60, left: '50%', transform: 'translateX(-50%)', width: 400, height: 400, background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            </div>
+      {/* ── MASTHEAD ── */}
+      <header className="cn-mast">
+        <div className="cn-mast__media cn-arch">
+          {restaurant.cover_image_url
+            ? <img src={restaurant.cover_image_url} alt="" />
+            : <div className="cn-mast__ember">
+                <div className="cn-mast__initial" style={{ fontSize: 'min(38vw, 190px)' }}>{(restaurant.name || '?').trim().charAt(0).toUpperCase()}</div>
+              </div>
+          }
+          <span className="cn-stamp cn-mast__stamp" style={{ color: stampTone }}>
+            {isOpenNow ? 'Ouvert · service en cours' : 'Fermé'}
+          </span>
+        </div>
+
+        <h1 className="cn-display cn-mast__name">
+          {wordmarkLines.map((line, i) => (
+            <span key={i} style={{ display: 'block' }}>{line}</span>
+          ))}
+        </h1>
+
+        {restaurant.description
+          ? <p className="cn-ed cn-mast__voice">{restaurant.description}</p>
+          : <p className="cn-ed cn-mast__voice">{brand.voice}</p>
         }
 
-        {/* Infos restaurant sur le hero */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 20px 24px', display: 'flex', alignItems: 'flex-end', gap: 16 }}>
-          {restaurant.logo_url
-            ? <div style={{ width: 80, height: 80, borderRadius: 18, flexShrink: 0, background: '#000', padding: 6, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <img src={restaurant.logo_url} alt={restaurant.name} style={{ width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'screen' }} />
+        <div className="cn-mast__meta cn-mono">
+          {restaurant.logo_url && (
+            <img src={restaurant.logo_url} alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
+          )}
+          {restaurant.address && (
+            <span>{(() => {
+              const parts = restaurant.address.split(',')
+              const short = parts.slice(0, 3).join(',').trim()
+              return short || restaurant.address
+            })()}</span>
+          )}
+          {restaurant.phone && <a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a>}
+        </div>
+      </header>
+
+      {/* ── LA BANDE ── */}
+      <div className="cn-band-wrap" aria-hidden="true">
+        <div className="cn-band">
+          <div className="cn-band__track">
+            {[0, 1].map(copy => (
+              <div key={copy} style={{ display: 'flex' }}>
+                {brand.band.map((word, i) => (
+                  <span key={i} className="cn-band__word">{word}</span>
+                ))}
               </div>
-            : <div style={{ width: 72, height: 72, borderRadius: 18, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, flexShrink: 0, border: '3px solid rgba(255,255,255,0.12)', boxShadow: '0 8px 32px rgba(99,102,241,0.4)' }}>🍽️</div>
-          }
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', margin: '0 0 6px', letterSpacing: '-0.5px', lineHeight: 1.1 }}>{restaurant.name}</h1>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 100, background: isOpenNow ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)', border: `1px solid ${isOpenNow ? 'rgba(74,222,128,0.3)' : 'rgba(239,68,68,0.3)'}` }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: isOpenNow ? '#4ade80' : '#ef4444', boxShadow: `0 0 6px ${isOpenNow ? '#4ade80' : '#ef4444'}`, display: 'inline-block' }} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: isOpenNow ? '#4ade80' : '#ef4444' }}>{isOpenNow ? 'Ouvert · Click & Collect' : 'Fermé'}</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
-              {restaurant.address && (
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
-                  📍 {(() => {
-                    const parts = restaurant.address.split(',')
-                    const short = parts.slice(0, 3).join(',').trim()
-                    return short || restaurant.address
-                  })()}
-                </span>
-              )}
-              {restaurant.phone && (
-                <a href={`tel:${restaurant.phone}`} style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
-                  📞 {restaurant.phone}
-                </a>
-              )}
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Bannière fermé — commandes programmées */}
+      {/* Fermé — on commande quand même, pour plus tard */}
       {!isOpenNow && (
-        <div style={{ margin: '16px 20px 0', padding: '14px 16px', borderRadius: 14, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 20 }}>🌙</span>
-          <div>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fbbf24' }}>Fermé pour le moment</p>
-            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#78716c' }}>
-              {nextOpening ? <>Prochain retrait disponible : <strong style={{ color: '#d97706' }}>{nextOpening}</strong></> : 'Parcourez le menu et commandez pour plus tard'}
-            </p>
+        <div style={{ padding: '0 18px 18px' }}>
+          <div className="cn-note">
+            <div>
+              <p className="cn-note__k" style={{ margin: 0 }}>Four éteint</p>
+              <p className="cn-note__v">
+                {nextOpening
+                  ? <>Prochain retrait possible <strong style={{ color: p.accent }}>{nextOpening.toLowerCase()}</strong>. La carte reste ouverte, commandez pour plus tard.</>
+                  : <>La carte reste ouverte — composez votre commande pour plus tard.</>}
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Description */}
-      {restaurant.description && (
-        <div style={{ padding: '16px 20px 0' }}>
-          <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.6, margin: 0, maxWidth: 560 }}>{restaurant.description}</p>
-        </div>
-      )}
-
-      {/* Message du jour */}
+      {/* Le mot du jour, écrit à la main sur l'ardoise */}
       {restaurant.daily_message && (
-        <div style={{ margin: '12px 20px 0', padding: '12px 16px', borderRadius: 14, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          <span style={{ fontSize: 16, flexShrink: 0 }}>📢</span>
-          <p style={{ margin: 0, fontSize: 13, color: '#a5b4fc', lineHeight: 1.5 }}>{restaurant.daily_message}</p>
+        <div style={{ padding: '0 18px 18px' }}>
+          <div className="cn-note" style={{ borderLeftColor: p.hot }}>
+            <div>
+              <p className="cn-note__k" style={{ margin: 0, color: p.hot }}>Le mot du jour</p>
+              <p className="cn-note__v cn-ed" style={{ fontStyle: 'italic', fontSize: 16 }}>{restaurant.daily_message}</p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ── Barre catégories sticky ── */}
-      {orderedCategories.length > 1 && (
-        <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(8,12,20,0.97)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)', marginTop: 16 }}>
-          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '10px 16px', scrollbarWidth: 'none' }}>
+      {/* ── L'ENSEIGNE COLLANTE ── */}
+      {orderedCategories.length > 0 && (
+        <nav className="cn-board" aria-label="Catégories">
+          <div className={`cn-board__mark${scrolled ? ' cn-board__mark--on' : ''}`}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: isOpenNow ? p.fresh : p.doughDim, flexShrink: 0 }} />
+            <span>{restaurant.name}</span>
+          </div>
+          <div className="cn-board__cats">
             {orderedCategories.map(cat => {
               const emoji = getCatEmoji(cat)
               const isActive = activeCategory === cat
               return (
                 <button
                   key={cat}
+                  className={`cn-cat${isActive ? ' cn-cat--on' : ''}`}
                   onClick={() => {
                     setActiveCategory(cat)
                     document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }}
-                  style={{
-                    flexShrink: 0, padding: '8px 16px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
-                    background: isActive ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.05)',
-                    color: isActive ? 'white' : '#6b7280',
-                    boxShadow: isActive ? '0 4px 16px rgba(99,102,241,0.4)' : 'none',
-                    transition: 'all 0.2s',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                  }}
                 >
-                  {emoji && <span style={{ fontSize: 15 }}>{emoji}</span>}
+                  {emoji && <span style={{ fontSize: 13 }}>{emoji}</span>}
                   {cat}
                 </button>
               )
             })}
           </div>
-        </div>
+        </nav>
       )}
 
-      {/* ── Menu ── */}
-      <main style={{ padding: '20px 16px', maxWidth: 700, margin: '0 auto' }}>
+      {/* ── LA CARTE ── */}
+      <main className="cn-menu">
         {products.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🍽️</div>
-            <p style={{ fontSize: 17, fontWeight: 800, color: 'white', margin: '0 0 8px' }}>Menu en cours de configuration</p>
-            <p style={{ color: '#4b5563', fontSize: 14, lineHeight: 1.6, margin: '0 auto', maxWidth: 280 }}>Le restaurant prépare sa carte. Revenez dans quelques instants !</p>
+          <div style={{ textAlign: 'center', padding: '70px 20px' }}>
+            <p className="cn-display" style={{ fontSize: 34, margin: '0 0 12px' }}>La carte arrive</p>
+            <p className="cn-ed" style={{ color: p.doughDim, fontSize: 15, fontStyle: 'italic', margin: 0 }}>Le restaurant prépare son menu. Repassez dans un instant.</p>
           </div>
         )}
 
-        {orderedCategories.map(cat => (
-          <div key={cat} id={`cat-${cat}`} style={{ marginBottom: 36, scrollMarginTop: 80 }}>
+        {orderedCategories.map((cat, catIdx) => {
+          const catProducts = products.filter(prod => (prod.category || 'Autres') === cat)
+          return (
+            <section key={cat} id={`cat-${cat}`} style={{ marginBottom: 46, scrollMarginTop: 54 }}>
 
-            {/* En-tête catégorie */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              {getCatEmoji(cat) && <span style={{ fontSize: 20 }}>{getCatEmoji(cat)}</span>}
-              <span style={{ fontSize: 18, fontWeight: 900, color: 'white', letterSpacing: '-0.3px' }}>{cat}</span>
-              <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)', marginLeft: 4 }} />
-              <span style={{ fontSize: 11, color: '#374151', fontWeight: 600 }}>{products.filter(p => (p.category || 'Autres') === cat).length} plats</span>
-            </div>
+              <div className="cn-cathead">
+                <h2 className="cn-display cn-cathead__name" style={{ margin: 0 }}>{cat}</h2>
+                <span className="cn-cathead__rule" />
+                <span className="cn-cathead__count">{String(catIdx + 1).padStart(2, '0')} · {catProducts.length} plat{catProducts.length > 1 ? 's' : ''}</span>
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {products.filter(p => (p.category || 'Autres') === cat).map(product => {
+              {catProducts.map((product, idx) => {
                 const cartItems = cart.filter(i => i.product.id === product.id)
                 const totalQty = cartItems.reduce((s, i) => s + i.quantity, 0)
                 const unavailable = !product.is_available
+                const hasFormule = (product as any).menu_extra_price > 0
+                const isStar = idx === 0 && !!product.image_url
 
-                return (
-                  <div key={product.id} style={{
-                    borderRadius: 20, overflow: 'hidden', position: 'relative',
-                    background: unavailable ? '#0a0d15' : totalQty > 0 ? 'linear-gradient(145deg, #0d1526, #10192e)' : '#0d1424',
-                    border: unavailable ? '1px solid rgba(255,255,255,0.04)' : totalQty > 0 ? '1.5px solid rgba(99,102,241,0.4)' : '1px solid rgba(255,255,255,0.07)',
-                    transition: 'border-color 0.2s',
-                    opacity: unavailable ? 0.6 : 1,
-                  }}>
-                    {unavailable && (
-                      <div style={{ background: 'linear-gradient(90deg,#7f1d1d,#991b1b)', padding: '5px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 12 }}>🔥</span>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: '#fecaca', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Victime de son succès</span>
-                        <span style={{ fontSize: 12 }}>🔥</span>
+                // Le pied de ligne : prix, pointillés, action — partagé vedette/ligne
+                const foot = (
+                  <>
+                    {unavailable ? (
+                      <span className="cn-mono" style={{ fontSize: 9.5, color: p.doughDim }}>Indisponible</span>
+                    ) : totalQty > 0 && cartItems.every(ci => !ci.optionGroups?.length) ? (
+                      <div className="cn-step">
+                        <button onClick={() => removeFromCart(cartItems[cartItems.length - 1].cartKey)} aria-label={`Retirer un ${product.name}`}>−</button>
+                        <span className="cn-step__n">{totalQty}</span>
+                        <button onClick={() => handleAddToCart(product)} aria-label={`Ajouter un ${product.name}`}>+</button>
                       </div>
+                    ) : (
+                      <button className="cn-btn" onClick={() => handleAddToCart(product)} disabled={loadingOptions}>
+                        {totalQty > 0 ? `Ajouter · ${totalQty}` : 'Ajouter'}
+                      </button>
                     )}
+                  </>
+                )
 
-                    <div style={{ padding: '14px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 15, fontWeight: 700, color: unavailable ? '#4b5563' : 'white', margin: '0 0 4px', lineHeight: 1.3 }}>{product.name}</p>
-                        {product.description && (
-                          <p style={{ fontSize: 13, color: '#4b5563', margin: '0 0 8px', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{product.description}</p>
-                        )}
-                        {!unavailable && (product as any).menu_extra_price > 0 && (
-                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 10, padding: '4px 10px', borderRadius: 100, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)' }}>
-                            <span style={{ fontSize: 12 }}>🍟</span>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b' }}>Formule disponible</span>
-                          </div>
-                        )}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontSize: 17, fontWeight: 900, color: unavailable ? '#374151' : '#818cf8', letterSpacing: '-0.3px' }}>{Number(product.price).toFixed(2)}€</span>
-
-                          {unavailable ? (
-                            <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, padding: '6px 12px', borderRadius: 100, background: 'rgba(255,255,255,0.04)' }}>Indisponible</span>
-                          ) : totalQty > 0 && cartItems.every(ci => !ci.optionGroups?.length) ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <button
-                                onClick={() => removeFromCart(cartItems[cartItems.length - 1].cartKey)}
-                                style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(99,102,241,0.4)', cursor: 'pointer', background: 'rgba(99,102,241,0.1)', color: '#818cf8', fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                              >−</button>
-                              <span style={{ fontSize: 15, fontWeight: 800, color: 'white', minWidth: 20, textAlign: 'center' }}>{totalQty}</span>
-                              <button
-                                onClick={() => handleAddToCart(product)}
-                                style={{ width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: 'white', fontWeight: 800, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.4)' }}
-                              >+</button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => handleAddToCart(product)}
-                              disabled={loadingOptions}
-                              style={{
-                                padding: '9px 20px', borderRadius: 100, border: 'none', cursor: 'pointer',
-                                background: totalQty > 0 ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(99,102,241,0.12)',
-                                color: totalQty > 0 ? 'white' : '#818cf8',
-                                fontSize: 13, fontWeight: 700,
-                                display: 'flex', alignItems: 'center', gap: 6,
-                                boxShadow: totalQty > 0 ? '0 4px 16px rgba(99,102,241,0.35)' : 'none',
-                                transition: 'all 0.2s',
-                              }}
-                            >
-                              {totalQty > 0 && <span style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>{totalQty}</span>}
-                              + Ajouter
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Options sélectionnées dans le panier */}
-                        {cartItems.length > 0 && cartItems.some(i => i.optionGroups && i.optionGroups.length > 0) && (
-                          <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                            {cartItems.map(ci => (
-                              <div key={ci.cartKey} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 12px', borderRadius: 12, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                                <span style={{ fontSize: 12, color: '#818cf8', flex: 1 }}>
-                                  {Object.values(ci.selectedOptions || {}).flat().map((i: any) => i.name).join(' · ')}
-                                  {ci.menuBoisson && <span style={{ color: '#f59e0b' }}> · 🥤 {ci.menuBoisson}</span>}
-                                  {ci.menuAccomp && <span style={{ color: '#f59e0b' }}> · 🍟 {ci.menuAccomp}</span>}
-                                  {ci.extraPrice > 0 && <span style={{ color: '#f59e0b' }}> +{ci.extraPrice.toFixed(2)}€</span>}
-                                </span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 10 }}>
-                                  <button onClick={() => removeFromCart(ci.cartKey)} style={{ width: 24, height: 24, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', background: 'transparent', color: '#6b7280', fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                                  <span style={{ fontSize: 12, color: 'white', fontWeight: 700 }}>{ci.quantity}</span>
-                                  <button onClick={() => handleAddToCart(product)} style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', cursor: 'pointer', background: '#6366f1', color: 'white', fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                // Les options déjà choisies, listées sous la ligne
+                const picked = cartItems.length > 0 && cartItems.some(i => i.optionGroups && i.optionGroups.length > 0) && (
+                  <div>
+                    {cartItems.map(ci => (
+                      <div key={ci.cartKey} className="cn-picked">
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          {Object.values(ci.selectedOptions || {}).flat().map((i: any) => i.name).join(' · ')}
+                          {ci.menuBoisson && <span style={{ color: p.accent }}> · {ci.menuBoisson}</span>}
+                          {ci.menuAccomp && <span style={{ color: p.accent }}> · {ci.menuAccomp}</span>}
+                          {ci.extraPrice > 0 && <span style={{ color: p.accent }}> +{price(ci.extraPrice)}€</span>}
+                        </span>
+                        <span className="cn-step" style={{ borderColor: 'transparent' }}>
+                          <button onClick={() => removeFromCart(ci.cartKey)} style={{ width: 30, height: 30, color: p.doughDim }} aria-label="Retirer">−</button>
+                          <span className="cn-step__n" style={{ fontSize: 13, minWidth: 18 }}>{ci.quantity}</span>
+                          <button onClick={() => handleAddToCart(product)} style={{ width: 30, height: 30 }} aria-label="Ajouter">+</button>
+                        </span>
                       </div>
-
-                      {/* Image produit */}
-                      {product.image_url && (
-                        <div style={{ flexShrink: 0 }}>
-                          <img
-                            src={product.image_url}
-                            alt={product.name}
-                            style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 16, filter: unavailable ? 'grayscale(0.7) brightness(0.5)' : 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
-                          />
-                        </div>
-                      )}
-                    </div>
+                    ))}
                   </div>
                 )
+
+                // ── La vedette : première ligne illustrée de la catégorie ──
+                if (isStar) return (
+                  <article key={product.id} className={`cn-star${unavailable ? ' cn-item--out' : ''}`}>
+                    <div className="cn-star__media">
+                      <div className="cn-arch cn-star__frame">
+                        <img src={product.image_url} alt={product.name} style={unavailable ? { filter: 'grayscale(1) brightness(.55)' } : undefined} />
+                      </div>
+                      {unavailable && <span className="cn-sold">Victime de son succès</span>}
+                      <span className="cn-star__sticker">{price(product.price)}€</span>
+                    </div>
+                    <div className="cn-star__txt">
+                      <p className="cn-star__kicker">
+                        <span>N°{String(idx + 1).padStart(2, '0')}</span>
+                        {!unavailable && hasFormule && <b>Formule disponible</b>}
+                      </p>
+                      <h3 className="cn-display cn-star__name">{product.name}</h3>
+                      {product.description && <p className="cn-star__desc">{product.description}</p>}
+                      <div className="cn-star__foot">{foot}</div>
+                      {picked}
+                    </div>
+                  </article>
+                )
+
+                // ── La ligne de carte ──
+                return (
+                  <article key={product.id} className={`cn-item${unavailable ? ' cn-item--out' : ''}`}>
+                    <div className="cn-item__body">
+                      <div className="cn-item__head">
+                        <span className="cn-num">{String(idx + 1).padStart(2, '0')}</span>
+                        <h3 className="cn-ed cn-item__name">{product.name}</h3>
+                      </div>
+                      {product.description && <p className="cn-item__desc">{product.description}</p>}
+                      {!unavailable && hasFormule && (
+                        <p className="cn-mono" style={{ fontSize: 9, color: p.accent, margin: '9px 0 0' }}>Formule disponible</p>
+                      )}
+                      <div className="cn-item__foot">
+                        <span className="cn-price">{price(product.price)}€</span>
+                        <span className="cn-leader" />
+                        {foot}
+                      </div>
+                      {picked}
+                    </div>
+
+                    {product.image_url && (
+                      <div className="cn-item__media">
+                        <div className="cn-arch" style={{ background: p.charUp }}>
+                          <img src={product.image_url} alt={product.name} />
+                        </div>
+                        {unavailable && <span className="cn-sold">Épuisé</span>}
+                      </div>
+                    )}
+                  </article>
+                )
               })}
-            </div>
-          </div>
-        ))}
+            </section>
+          )
+        })}
       </main>
 
-      {/* ── Bouton panier sticky ── */}
+      {/* ── LE TICKET ── */}
       {cartCount > 0 && (
-        <div style={{ position: 'fixed', bottom: 20, left: 16, right: 16, zIndex: 60, maxWidth: 680, margin: '0 auto', animation: 'slideUp 0.3s ease' }}>
-          <button
-            onClick={() => router.push(`/restaurant/${slug}/checkout`)}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '15px 20px', borderRadius: 20, border: 'none', cursor: 'pointer',
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              boxShadow: '0 8px 40px rgba(99,102,241,0.55), 0 2px 8px rgba(0,0,0,0.3)',
-              animation: cartBounce ? 'bounceIn 0.35s ease' : 'none',
-            }}
-          >
-            <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'white' }}>{cartCount}</span>
-            <span style={{ fontSize: 15, fontWeight: 800, color: 'white', letterSpacing: '-0.2px' }}>Voir mon panier</span>
-            <span style={{ fontSize: 15, fontWeight: 900, color: 'white' }}>{total.toFixed(2)}€</span>
-          </button>
-        </div>
+        <button
+          className={`cn-ticket${cartBounce ? ' cn-ticket--punch' : ''}`}
+          onClick={() => router.push(`/restaurant/${slug}/checkout`)}
+        >
+          <span className="cn-ticket__notch" style={perforation(p.ink, 'top')} />
+          <span className="cn-ticket__body">
+            <span className="cn-ticket__label" style={{ display: 'block' }}>{cartCount} article{cartCount > 1 ? 's' : ''} · à retirer sur place</span>
+            <span className="cn-ticket__total" style={{ display: 'block' }}>{price(total)}€</span>
+          </span>
+          <span className="cn-ticket__go">Commander →</span>
+        </button>
       )}
 
-      {/* ── Modal options ── */}
-      {optionsModal && (
-        <div
-          onClick={(e) => { if (e.target === e.currentTarget) setOptionsModal(null) }}
-          style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-        >
-          <div style={{ width: '100%', maxWidth: 560, borderRadius: '24px 24px 0 0', padding: '8px 20px 36px', background: '#0d1424', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '85vh', overflowY: 'auto', overscrollBehavior: 'contain', animation: 'slideUp 0.3s ease' }}>
+      {/* ── LA FEUILLE : personnaliser un plat ── */}
+      {optionsModal && (() => {
+        const prod = optionsModal.product
+        const menuPrice = Number((prod as any).menu_extra_price || 0)
+        const menuLabel = (prod as any).menu_label
+        const accomps = products.filter(a => a.category === 'Accompagnements' && a.is_available !== false)
+        const boissons = products.filter(b => b.category === 'Boissons' && b.is_available !== false)
+        const wantsAccomp = (prod as any).has_accompagnement !== false
 
-            {/* Handle */}
-            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.15)', margin: '12px auto 20px' }} />
+        const optExtra = optionsModal.groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
+        const menuExtra = wantsMenu ? Math.max(0, menuPrice - Number(prod.price)) : 0
+        const accompExtra = wantsMenu && selectedAccomp ? Number(selectedAccomp.price) : 0
+        const boissonExtra = wantsMenu && selectedBoisson ? Number((selectedBoisson as any).menu_supplement || 0) : 0
+        const totalItem = Number(prod.price) + optExtra + menuExtra + accompExtra + boissonExtra
+        const valid = optionsValid()
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-              <div>
-                <h3 style={{ color: 'white', fontWeight: 800, fontSize: 18, margin: '0 0 4px' }}>{optionsModal.product.name}</h3>
-                <p style={{ color: '#4b5563', fontSize: 13, margin: 0 }}>Personnalisez votre commande</p>
-              </div>
-              <button onClick={() => setOptionsModal(null)} style={{ color: '#4b5563', background: 'rgba(255,255,255,0.06)', border: 'none', cursor: 'pointer', fontSize: 16, width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-            </div>
+        return (
+          <div className="cn-sheet-wrap" onClick={(e) => { if (e.target === e.currentTarget) setOptionsModal(null) }}>
+            <div className="cn-sheet">
+              <span className="cn-sheet__notch" style={perforation(p.ink, 'top')} />
+              <button className="cn-sheet__close" onClick={() => setOptionsModal(null)} aria-label="Fermer">✕</button>
 
-            {/* Toggle menu / plat seul */}
-            {(optionsModal.product as any).menu_extra_price > 0 && (() => {
-              const menuPrice = Number((optionsModal.product as any).menu_extra_price)
-              const menuLabel = (optionsModal.product as any).menu_label
-              return (
-                <div style={{ marginBottom: 20, borderRadius: 16, overflow: 'hidden', border: '1.5px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.05)' }}>
-                  <div style={{ padding: '8px 14px 6px', borderBottom: '1px solid rgba(245,158,11,0.15)' }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🍟 Formule disponible</span>
+              <p className="cn-mono" style={{ fontSize: 9, opacity: .55, margin: '0 0 8px' }}>Votre composition</p>
+              <h3 className="cn-display cn-sheet__title">{prod.name}</h3>
+
+              {menuPrice > 0 && (
+                <div style={{ marginTop: 22 }}>
+                  <div className="cn-group__head" style={{ marginTop: 0 }}>
+                    <span>La formule</span>
+                    <span className="cn-group__rule" />
                   </div>
-                  <div style={{ display: 'flex' }}>
-                    <button onClick={() => setWantsMenu(false)} style={{ flex: 1, padding: '14px 10px', border: 'none', cursor: 'pointer', textAlign: 'center', background: !wantsMenu ? 'rgba(99,102,241,0.18)' : 'transparent', color: !wantsMenu ? '#818cf8' : '#6b7280', transition: 'all 0.2s', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-                      <div style={{ fontWeight: 800, fontSize: 14 }}>Plat seul</div>
-                      <div style={{ fontWeight: 700, fontSize: 13, marginTop: 3, color: !wantsMenu ? '#818cf8' : '#4b5563' }}>{Number(optionsModal.product.price).toFixed(2)}€</div>
+                  <div className="cn-formule">
+                    <button type="button" className={!wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(false)}>
+                      <div className="cn-formule__t">Plat seul</div>
+                      <div className="cn-formule__p">{price(prod.price)}€</div>
                     </button>
-                    <button onClick={() => setWantsMenu(true)} style={{ flex: 1, padding: '14px 10px', border: 'none', cursor: 'pointer', textAlign: 'center', background: wantsMenu ? 'rgba(99,102,241,0.18)' : 'transparent', color: wantsMenu ? '#818cf8' : '#6b7280', transition: 'all 0.2s', position: 'relative' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                        <span style={{ fontWeight: 800, fontSize: 14 }}>En menu</span>
-                        <span style={{ fontSize: 9, fontWeight: 800, background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Recommandé</span>
-                      </div>
-                      {menuLabel && <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{menuLabel}</div>}
-                      <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2, color: '#f59e0b' }}>+{Math.max(0, menuPrice - Number(optionsModal.product.price)).toFixed(2)}€</div>
+                    <button type="button" className={wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(true)}>
+                      <div className="cn-formule__t">En menu</div>
+                      <div className="cn-formule__p">+{price(Math.max(0, menuPrice - Number(prod.price)))}€</div>
                     </button>
                   </div>
+                  {menuLabel && <p className="cn-mono" style={{ fontSize: 9, opacity: .6, margin: '8px 0 0' }}>{menuLabel}</p>}
                 </div>
-              )
-            })()}
+              )}
 
-            {optionsModal.groups.map(group => (
-              <div key={group.id} style={{ marginBottom: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>{group.name}</p>
-                  <span style={{ fontSize: 11, color: '#4b5563', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>
-                    {group.max_choices === 1 ? '1 choix' : `Jusqu'à ${group.max_choices} choix`}
-                    {group.min_choices > 0 && ' · Requis'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {group.items.map(item => {
-                    const selected = (selectedOptions[group.id] || []).some(i => i.id === item.id)
-                    const unavailable = item.is_available === false
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => toggleOption(group, item)}
-                        disabled={unavailable}
-                        style={{
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          padding: '13px 15px', borderRadius: 14, border: 'none', cursor: unavailable ? 'not-allowed' : 'pointer', textAlign: 'left',
-                          background: unavailable ? 'rgba(255,255,255,0.02)' : selected ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)',
-                          outline: unavailable ? 'none' : selected ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)',
-                          opacity: unavailable ? 0.4 : 1, transition: 'all 0.15s',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: group.max_choices === 1 ? '50%' : 6, border: `2px solid ${selected ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selected ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            {selected && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
-                          </div>
-                          <span style={{ fontSize: 14, color: unavailable ? '#374151' : selected ? 'white' : '#d1d5db', fontWeight: selected ? 600 : 400, textDecoration: unavailable ? 'line-through' : 'none' }}>{item.name}</span>
-                        </div>
-                        {item.extra_price > 0 && (
-                          <span style={{ fontSize: 13, color: unavailable ? '#374151' : '#f59e0b', fontWeight: 700 }}>+{Number(item.extra_price).toFixed(2)}€</span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-
-            {/* Sélecteur d'accompagnement — après la config du plat */}
-            {wantsMenu && (optionsModal.product as any).has_accompagnement !== false && (() => {
-              const accomps = products.filter(p => p.category === 'Accompagnements' && p.is_available !== false)
-              if (!accomps.length) return null
-              return (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🍟 Choisir votre accompagnement</p>
-                    <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
+              {optionsModal.groups.map(group => (
+                <div key={group.id}>
+                  <div className="cn-group__head">
+                    <span>{group.name}</span>
+                    <span className="cn-group__rule" />
+                    <span className={group.min_choices > 0 ? 'cn-group__req' : ''}>
+                      {group.max_choices === 1 ? '1 choix' : `jusqu'à ${group.max_choices}`}{group.min_choices > 0 ? ' · requis' : ''}
+                    </span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {accomps.map(a => (
-                      <button key={a.id} onClick={() => setSelectedAccomp(a)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedAccomp?.id === a.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedAccomp?.id === a.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedAccomp?.id === a.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedAccomp?.id === a.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            {selectedAccomp?.id === a.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
-                          </div>
-                          <span style={{ fontSize: 14, color: selectedAccomp?.id === a.id ? 'white' : '#d1d5db', fontWeight: selectedAccomp?.id === a.id ? 600 : 400 }}>{a.name}</span>
-                        </div>
-                        <span style={{ fontSize: 12, color: Number(a.price) === 0 ? '#6b7280' : '#4ade80', fontWeight: Number(a.price) === 0 ? 400 : 600 }}>{Number(a.price) === 0 ? 'Inclus' : `+${Number(a.price).toFixed(2)}€`}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )
-            })()}
-
-            {/* Sélecteur de boisson — après la config du plat */}
-            {wantsMenu && (() => {
-              const boissons = products.filter(p => p.category === 'Boissons' && p.is_available !== false)
-              if (!boissons.length) return null
-              return (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🥤 Choisir votre boisson</p>
-                    <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {boissons.map(b => (
-                      <button key={b.id} onClick={() => setSelectedBoisson(b)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedBoisson?.id === b.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedBoisson?.id === b.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedBoisson?.id === b.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedBoisson?.id === b.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            {selectedBoisson?.id === b.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
-                          </div>
-                          <span style={{ fontSize: 14, color: selectedBoisson?.id === b.id ? 'white' : '#d1d5db', fontWeight: selectedBoisson?.id === b.id ? 600 : 400 }}>{b.name}</span>
-                        </div>
-                        <span style={{ fontSize: 12, color: Number((b as any).menu_supplement) > 0 ? '#4ade80' : '#6b7280', fontWeight: Number((b as any).menu_supplement) > 0 ? 600 : 400 }}>{Number((b as any).menu_supplement) > 0 ? `+${Number((b as any).menu_supplement).toFixed(2)}€` : 'Incluse'}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )
-            })()}
-
-            {(() => {
-              const extra = optionsModal.groups.reduce((sum, g) => sum + (selectedOptions[g.id] || []).reduce((s, i) => s + Number(i.extra_price), 0), 0)
-              const totalItem = optionsModal.product.price + extra
-              const valid = optionsValid()
-              return (
-                <button
-                  onClick={confirmOptions}
-                  disabled={!valid}
-                  style={{
-                    width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: valid ? 'pointer' : 'default',
-                    background: valid ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.05)',
-                    color: valid ? 'white' : '#374151', fontWeight: 800, fontSize: 15, marginTop: 4,
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    boxShadow: valid ? '0 4px 20px rgba(99,102,241,0.4)' : 'none',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  <span>Ajouter au panier</span>
-                  <span>{totalItem.toFixed(2)}€</span>
-                </button>
-              )
-            })()}
-          </div>
-        </div>
-      )}
-
-      {/* Mini-modal : Plat seul / En menu (produits sans groupes d'options) */}
-      {menuOnlyModal && (
-        <div
-          onClick={() => setMenuOnlyModal(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ background: '#1a1a2e', borderRadius: '24px 24px 0 0', padding: '28px 20px 36px', width: '100%', maxWidth: 480, maxHeight: '85vh', overflowY: 'auto', overscrollBehavior: 'contain' }}
-          >
-            <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '0 auto 24px' }} />
-            <p style={{ fontSize: 18, fontWeight: 800, color: 'white', marginBottom: 6 }}>{menuOnlyModal.name}</p>
-            <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 24 }}>{menuOnlyModal.description}</p>
-
-            {/* Toggle Plat seul / En menu */}
-            <div style={{ borderRadius: 16, overflow: 'hidden', border: '1.5px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.05)', marginBottom: 24 }}>
-              <div style={{ padding: '7px 14px 5px', borderBottom: '1px solid rgba(245,158,11,0.15)' }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🍟 Formule disponible</span>
-              </div>
-              <div style={{ display: 'flex' }}>
-                <button
-                  onClick={() => setWantsMenu(false)}
-                  style={{
-                    flex: 1, padding: '14px 8px', border: 'none', cursor: 'pointer', textAlign: 'center',
-                    background: !wantsMenu ? 'rgba(99,102,241,0.18)' : 'transparent',
-                    color: !wantsMenu ? '#818cf8' : '#6b7280', transition: 'all 0.2s',
-                    borderRight: '1px solid rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <div style={{ fontWeight: 800, fontSize: 14 }}>Plat seul</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginTop: 3, color: !wantsMenu ? '#818cf8' : '#4b5563' }}>{Number(menuOnlyModal.price).toFixed(2)}€</div>
-                </button>
-                <button
-                  onClick={() => setWantsMenu(true)}
-                  style={{
-                    flex: 1, padding: '14px 8px', border: 'none', cursor: 'pointer', textAlign: 'center',
-                    background: wantsMenu ? 'rgba(99,102,241,0.18)' : 'transparent',
-                    color: wantsMenu ? '#818cf8' : '#6b7280', transition: 'all 0.2s',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                    <span style={{ fontWeight: 800, fontSize: 14 }}>En menu</span>
-                    <span style={{ fontSize: 9, fontWeight: 800, background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Recommandé</span>
-                  </div>
-                  {(menuOnlyModal as any).menu_label && (
-                    <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 2, fontWeight: 600 }}>{(menuOnlyModal as any).menu_label}</div>
-                  )}
-                  <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2, color: wantsMenu ? '#818cf8' : '#4b5563' }}>
-                    +{Math.max(0, Number((menuOnlyModal as any).menu_extra_price) - Number(menuOnlyModal.price)).toFixed(2)}€
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* Sélecteur de boisson obligatoire si En menu */}
-            {wantsMenu && (() => {
-              const boissons = products.filter(p => p.category === 'Boissons' && p.is_available !== false)
-              if (!boissons.length) return null
-              return (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                    <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🥤 Choisir votre boisson</p>
-                    <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {boissons.map(b => (
-                      <button key={b.id} onClick={() => setSelectedBoisson(b)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedBoisson?.id === b.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedBoisson?.id === b.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedBoisson?.id === b.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedBoisson?.id === b.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            {selectedBoisson?.id === b.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
-                          </div>
-                          <span style={{ fontSize: 14, color: selectedBoisson?.id === b.id ? 'white' : '#d1d5db', fontWeight: selectedBoisson?.id === b.id ? 600 : 400 }}>{b.name}</span>
-                        </div>
-                        <span style={{ fontSize: 12, color: Number((b as any).menu_supplement) > 0 ? '#4ade80' : '#6b7280', fontWeight: Number((b as any).menu_supplement) > 0 ? 600 : 400 }}>{Number((b as any).menu_supplement) > 0 ? `+${Number((b as any).menu_supplement).toFixed(2)}€` : 'Incluse'}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )
-            })()}
-
-            {/* Sélecteur d'accompagnement obligatoire si En menu */}
-            {wantsMenu && (menuOnlyModal as any).has_accompagnement !== false && (() => {
-              const accomps = products.filter(p => p.category === 'Accompagnements' && p.is_available !== false)
-              if (!accomps.length) return null
-              return (
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <p style={{ color: 'white', fontWeight: 700, fontSize: 15, margin: 0 }}>🍟 Choisir votre accompagnement</p>
-                  <span style={{ fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 100, fontWeight: 600 }}>Requis</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {accomps.map(a => (
-                    <button key={a.id} onClick={() => setSelectedAccomp(a)}
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: selectedAccomp?.id === a.id ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.04)', outline: selectedAccomp?.id === a.id ? '1.5px solid #6366f1' : '1px solid rgba(255,255,255,0.07)', transition: 'all 0.15s' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${selectedAccomp?.id === a.id ? '#6366f1' : 'rgba(255,255,255,0.2)'}`, background: selectedAccomp?.id === a.id ? '#6366f1' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          {selectedAccomp?.id === a.id && <span style={{ color: 'white', fontSize: 11, fontWeight: 800 }}>✓</span>}
-                        </div>
-                        <span style={{ fontSize: 14, color: selectedAccomp?.id === a.id ? 'white' : '#d1d5db', fontWeight: selectedAccomp?.id === a.id ? 600 : 400 }}>{a.name}</span>
-                      </div>
-                      <span style={{ fontSize: 12, color: Number(a.price) === 0 ? '#6b7280' : '#4ade80', fontWeight: Number(a.price) === 0 ? 400 : 600 }}>{Number(a.price) === 0 ? 'Inclus' : `+${Number(a.price).toFixed(2)}€`}</span>
-                    </button>
+                  {group.items.map(item => (
+                    <OptRow
+                      key={item.id}
+                      label={item.name}
+                      single={group.max_choices === 1}
+                      on={(selectedOptions[group.id] || []).some(i => i.id === item.id)}
+                      disabled={item.is_available === false}
+                      extra={Number(item.extra_price) > 0 ? `+${price(item.extra_price)}€` : undefined}
+                      onClick={() => toggleOption(group, item)}
+                    />
                   ))}
                 </div>
-              </div>
-              )
-            })()}
+              ))}
 
-            <button
-              onClick={() => {
-                const productWantsAccomp = (menuOnlyModal as any).has_accompagnement !== false
-                const hasAccomps = products.some(p => p.category === 'Accompagnements' && p.is_available !== false)
-                if (wantsMenu && !selectedBoisson) return
-                if (wantsMenu && productWantsAccomp && hasAccomps && !selectedAccomp) return
-                const menuExtra = wantsMenu ? Math.max(0, Number((menuOnlyModal as any).menu_extra_price || 0) - Number(menuOnlyModal.price)) : 0
-                const accompExtra = wantsMenu && selectedAccomp ? Number(selectedAccomp.price) : 0
-                const boissonExtra = wantsMenu && selectedBoisson ? Number((selectedBoisson as any).menu_supplement || 0) : 0
-                addToCart(menuOnlyModal, {}, [], menuExtra + accompExtra + boissonExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined, wantsMenu && selectedAccomp ? selectedAccomp.name : undefined)
-                setMenuOnlyModal(null)
-                setWantsMenu(false)
-                setSelectedBoisson(null)
-                setSelectedAccomp(null)
-              }}
-              disabled={wantsMenu && (!selectedBoisson || ((menuOnlyModal as any).has_accompagnement !== false && products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp))}
-              style={{
-                width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: wantsMenu && (!selectedBoisson || ((menuOnlyModal as any).has_accompagnement !== false && products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? 'default' : 'pointer',
-                background: wantsMenu && (!selectedBoisson || ((menuOnlyModal as any).has_accompagnement !== false && products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-                color: wantsMenu && (!selectedBoisson || ((menuOnlyModal as any).has_accompagnement !== false && products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? '#374151' : 'white',
-                fontWeight: 800, fontSize: 15, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                boxShadow: wantsMenu && (!selectedBoisson || ((menuOnlyModal as any).has_accompagnement !== false && products.some(p => p.category === 'Accompagnements' && p.is_available !== false) && !selectedAccomp)) ? 'none' : '0 4px 20px rgba(99,102,241,0.4)',
-                transition: 'all 0.2s',
-              }}
-            >
-              <span>Ajouter au panier</span>
-              <span>{(wantsMenu ? Number((menuOnlyModal as any).menu_extra_price || 0) + (selectedAccomp ? Number(selectedAccomp.price) : 0) + (selectedBoisson ? Number((selectedBoisson as any).menu_supplement || 0) : 0) : Number(menuOnlyModal.price)).toFixed(2)}€</span>
-            </button>
+              {wantsMenu && wantsAccomp && accomps.length > 0 && (
+                <div>
+                  <div className="cn-group__head">
+                    <span>L&apos;accompagnement</span>
+                    <span className="cn-group__rule" />
+                    <span className="cn-group__req">requis</span>
+                  </div>
+                  {accomps.map(a => (
+                    <OptRow
+                      key={a.id}
+                      label={a.name}
+                      single
+                      on={selectedAccomp?.id === a.id}
+                      extra={Number(a.price) === 0 ? 'inclus' : `+${price(a.price)}€`}
+                      onClick={() => setSelectedAccomp(a)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {wantsMenu && boissons.length > 0 && (
+                <div>
+                  <div className="cn-group__head">
+                    <span>La boisson</span>
+                    <span className="cn-group__rule" />
+                    <span className="cn-group__req">requis</span>
+                  </div>
+                  {boissons.map(b => (
+                    <OptRow
+                      key={b.id}
+                      label={b.name}
+                      single
+                      on={selectedBoisson?.id === b.id}
+                      extra={Number((b as any).menu_supplement) > 0 ? `+${price((b as any).menu_supplement)}€` : 'incluse'}
+                      onClick={() => setSelectedBoisson(b)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <button className="cn-confirm" onClick={confirmOptions} disabled={!valid}>
+                <span>Mettre au panier</span>
+                <b>{price(totalItem)}€</b>
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
+
+      {/* ── LA FEUILLE : plat seul ou en menu (produits sans options) ── */}
+      {menuOnlyModal && (() => {
+        const prod = menuOnlyModal
+        const menuPrice = Number((prod as any).menu_extra_price || 0)
+        const menuLabel = (prod as any).menu_label
+        const accomps = products.filter(a => a.category === 'Accompagnements' && a.is_available !== false)
+        const boissons = products.filter(b => b.category === 'Boissons' && b.is_available !== false)
+        const wantsAccomp = (prod as any).has_accompagnement !== false
+        const needsAccomp = wantsMenu && wantsAccomp && accomps.length > 0 && !selectedAccomp
+        const needsBoisson = wantsMenu && boissons.length > 0 && !selectedBoisson
+        const blocked = needsAccomp || needsBoisson
+
+        const accompExtra = wantsMenu && selectedAccomp ? Number(selectedAccomp.price) : 0
+        const boissonExtra = wantsMenu && selectedBoisson ? Number((selectedBoisson as any).menu_supplement || 0) : 0
+        const totalItem = wantsMenu ? menuPrice + accompExtra + boissonExtra : Number(prod.price)
+
+        return (
+          <div className="cn-sheet-wrap" onClick={(e) => { if (e.target === e.currentTarget) setMenuOnlyModal(null) }}>
+            <div className="cn-sheet">
+              <span className="cn-sheet__notch" style={perforation(p.ink, 'top')} />
+              <button className="cn-sheet__close" onClick={() => setMenuOnlyModal(null)} aria-label="Fermer">✕</button>
+
+              <p className="cn-mono" style={{ fontSize: 9, opacity: .55, margin: '0 0 8px' }}>Seul ou en formule</p>
+              <h3 className="cn-display cn-sheet__title">{prod.name}</h3>
+              {prod.description && <p className="cn-ed" style={{ fontSize: 14.5, lineHeight: 1.55, opacity: .7, margin: '12px 0 0' }}>{prod.description}</p>}
+
+              <div style={{ marginTop: 22 }}>
+                <div className="cn-formule">
+                  <button type="button" className={!wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(false)}>
+                    <div className="cn-formule__t">Plat seul</div>
+                    <div className="cn-formule__p">{price(prod.price)}€</div>
+                  </button>
+                  <button type="button" className={wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(true)}>
+                    <div className="cn-formule__t">En menu</div>
+                    <div className="cn-formule__p">+{price(Math.max(0, menuPrice - Number(prod.price)))}€</div>
+                  </button>
+                </div>
+                {menuLabel && <p className="cn-mono" style={{ fontSize: 9, opacity: .6, margin: '8px 0 0' }}>{menuLabel}</p>}
+              </div>
+
+              {wantsMenu && wantsAccomp && accomps.length > 0 && (
+                <div>
+                  <div className="cn-group__head">
+                    <span>L&apos;accompagnement</span>
+                    <span className="cn-group__rule" />
+                    <span className="cn-group__req">requis</span>
+                  </div>
+                  {accomps.map(a => (
+                    <OptRow
+                      key={a.id}
+                      label={a.name}
+                      single
+                      on={selectedAccomp?.id === a.id}
+                      extra={Number(a.price) === 0 ? 'inclus' : `+${price(a.price)}€`}
+                      onClick={() => setSelectedAccomp(a)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {wantsMenu && boissons.length > 0 && (
+                <div>
+                  <div className="cn-group__head">
+                    <span>La boisson</span>
+                    <span className="cn-group__rule" />
+                    <span className="cn-group__req">requis</span>
+                  </div>
+                  {boissons.map(b => (
+                    <OptRow
+                      key={b.id}
+                      label={b.name}
+                      single
+                      on={selectedBoisson?.id === b.id}
+                      extra={Number((b as any).menu_supplement) > 0 ? `+${price((b as any).menu_supplement)}€` : 'incluse'}
+                      onClick={() => setSelectedBoisson(b)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <button
+                className="cn-confirm"
+                disabled={blocked}
+                onClick={() => {
+                  if (blocked) return
+                  const menuExtra = wantsMenu ? Math.max(0, menuPrice - Number(prod.price)) : 0
+                  addToCart(prod, {}, [], menuExtra + accompExtra + boissonExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined, wantsMenu && selectedAccomp ? selectedAccomp.name : undefined)
+                  setMenuOnlyModal(null)
+                  setWantsMenu(false)
+                  setSelectedBoisson(null)
+                  setSelectedAccomp(null)
+                }}
+              >
+                <span>Mettre au panier</span>
+                <b>{price(totalItem)}€</b>
+              </button>
+            </div>
+          </div>
+        )
+      })()}
     </div>
+  )
+}
+
+/** Une case à cocher de bon de commande : on croise la case à l'encre. */
+function OptRow({ label, on, extra, disabled, single, onClick }: {
+  label: string
+  on: boolean
+  extra?: string
+  disabled?: boolean
+  single?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`cn-opt${on ? ' cn-opt--on' : ''}${disabled ? ' cn-opt--off' : ''}`}
+    >
+      <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+        <span className="cn-opt__box" style={{ borderRadius: single ? '50%' : 2 }}>{on ? '✕' : ''}</span>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+      </span>
+      {extra && <span className="cn-opt__extra">{extra}</span>}
+    </button>
   )
 }
