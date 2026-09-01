@@ -2,155 +2,198 @@ import { FONT, ARCH, GRAIN } from './brand'
 
 /**
  * La feuille de style de marque, partagée par toutes les pages client
- * (carte, bon de commande, confirmation, suivi). Les couleurs n'y figurent
- * jamais en dur : chaque page pose la palette de son restaurant en variables
- * CSS, et ces règles s'y adaptent. Voir lib/brand.ts pour la direction.
+ * (vitrine, carte, bon de commande, confirmation, suivi).
+ *
+ * Aucune couleur en dur : tout passe par les variables posées par paletteVars().
+ * Règle de lisibilité tenue partout — le texte coloré utilise toujours les
+ * teintes « ink » (assombries), les teintes vives restent aux aplats.
  */
 export function brandCss(): string {
   return `
-
-    .cn * { box-sizing: border-box; }
+    .cn *, .cn *::before, .cn *::after { box-sizing: border-box; }
     .cn {
-      background: var(--cn-ink);
-      color: var(--cn-dough);
-      font-family: ${FONT.editorial};
+      background: var(--cn-bg);
+      color: var(--cn-text);
+      font-family: ${FONT.ui};
+      font-size: 16px; line-height: 1.55;
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
-    /* Grain de farine — retire le rendu « écran » sans coûter une requête */
+    /* Un grain à peine perceptible : le blanc respire au lieu d'être un aplat */
     .cn::after {
       content: ''; position: fixed; inset: 0; z-index: 400; pointer-events: none;
-      background-image: ${GRAIN}; opacity: .05;
+      background-image: ${GRAIN}; opacity: .022;
     }
-    .cn ::-webkit-scrollbar { display: none; }
+    .cn img { max-width: 100%; }
 
-    .cn-display { font-family: ${FONT.display}; font-weight: 400; text-transform: uppercase; line-height: .84; letter-spacing: -.01em; }
-    .cn-ed { font-family: ${FONT.editorial}; }
-    .cn-mono { font-family: ${FONT.mono}; text-transform: uppercase; letter-spacing: .14em; }
+    /* ── Typographie ─────────────────────────────────────────────────────── */
+    .cn-display { font-family: ${FONT.display}; font-weight: 700; line-height: 1.04; letter-spacing: -.022em; }
+    .cn-ui { font-family: ${FONT.ui}; }
+    .cn-mono { font-family: ${FONT.mono}; font-variant-numeric: tabular-nums; }
+    .cn-eyebrow {
+      font-family: ${FONT.mono}; font-size: 11px; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--cn-dim);
+    }
 
-    /* ── L'ARCHE : la gueule du tandoor, seul rayon autorisé sur une image ── */
-    .cn-arch { border-radius: ${ARCH}; overflow: hidden; display: block; }
+    /* ── L'arche : le seul rayon autorisé sur une image ──────────────────── */
+    .cn-arch { border-radius: ${ARCH}; overflow: hidden; display: block; background: var(--cn-shade); }
 
-    /* ── LE TAMPON : encre posée de travers ── */
-    .cn-stamp {
+    /* ── La pastille d'état : lisible d'un coup d'œil, jamais décorative ─── */
+    .cn-pill {
       display: inline-flex; align-items: center; gap: 7px;
-      font-family: ${FONT.mono}; font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase;
-      padding: 6px 11px; border: 1.5px solid currentColor; border-radius: 2px;
-      outline: 1px solid currentColor; outline-offset: 2.5px;
-      transform: rotate(-4deg); white-space: nowrap;
+      font-family: ${FONT.mono}; font-size: 12px; letter-spacing: .02em;
+      padding: 6px 12px; border-radius: 999px; white-space: nowrap;
+      background: var(--cn-shade); color: var(--cn-dim);
     }
+    .cn-pill--open { background: var(--cn-fresh-soft); color: var(--cn-fresh-ink); }
+    .cn-pill--shut { background: var(--cn-hot-soft); color: var(--cn-hot-ink); }
+    .cn-pill__dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
-    /* ── LA BANDE : l'enseigne inclinée qui chevauche les sections ── */
-    /* Le conteneur absorbe le débord de la rotation : sans lui, toute la page
-       gagne une barre de défilement horizontale. Il n'englobe pas l'enseigne
-       collante, dont le position:sticky serait cassé par un parent clippé. */
-    .cn-band-wrap { overflow: hidden; padding: 15px 0; margin: 12px 0 16px; }
-    .cn-band {
-      position: relative; z-index: 3; overflow: hidden;
-      background: var(--cn-accent); color: var(--cn-accent-ink);
-      transform: rotate(-1.4deg) scale(1.06);
-      padding: 9px 0;
-      border-top: 2px solid var(--cn-ink); border-bottom: 2px solid var(--cn-ink);
-    }
-    .cn-band__track { display: flex; width: max-content; animation: cn-slide 34s linear infinite; }
-    .cn-band__word {
-      font-family: ${FONT.display}; text-transform: uppercase; font-size: 15px;
-      letter-spacing: .06em; padding: 0 18px; display: inline-flex; align-items: center; gap: 18px;
-    }
-    .cn-band__word::after { content: ''; width: 5px; height: 5px; background: currentColor; transform: rotate(45deg); }
-    @keyframes cn-slide { from { transform: translateX(0) } to { transform: translateX(-50%) } }
-
-    /* ── LE BOUTON : encre imprimée, ombre dure, aucun dégradé ── */
+    /* ── Les commandes ───────────────────────────────────────────────────── */
     .cn-btn {
-      font-family: ${FONT.mono}; font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
-      background: var(--cn-accent); color: var(--cn-accent-ink);
-      border: none; border-radius: 2px; padding: 11px 16px; cursor: pointer;
-      box-shadow: 3px 3px 0 var(--cn-hot);
-      transition: transform .1s ease, box-shadow .1s ease;
+      font-family: ${FONT.ui}; font-size: 15px; font-weight: 600; letter-spacing: -.01em;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 44px; padding: 11px 20px; border: none; border-radius: 6px;
+      background: var(--cn-hot-ink); color: #fff; cursor: pointer;
+      transition: background .14s ease, transform .1s ease;
     }
-    .cn-btn:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--cn-hot); }
-    .cn-btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--cn-hot); }
-    .cn-btn:disabled { opacity: .45; cursor: default; box-shadow: 3px 3px 0 var(--cn-line); }
-    .cn-btn--ghost {
-      background: transparent; color: var(--cn-dough);
-      box-shadow: none; border: 1px solid var(--cn-line);
-    }
-    .cn-btn--ghost:hover { border-color: var(--cn-accent); color: var(--cn-accent); transform: none; }
-    @keyframes cn-rise { from { transform: translateY(18px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
-    @keyframes cn-punch { 0%,100% { transform: scale(1) } 35% { transform: scale(1.035) } }
+    .cn-btn:hover { background: var(--cn-hot); }
+    .cn-btn:active { transform: translateY(1px); }
+    .cn-btn:disabled { background: var(--cn-shade); color: var(--cn-dim); cursor: default; transform: none; }
+    .cn-btn--soft { background: var(--cn-hot-soft); color: var(--cn-hot-ink); }
+    .cn-btn--soft:hover { background: var(--cn-hot); color: #fff; }
+    .cn-btn--ghost { background: transparent; color: var(--cn-text); border: 1px solid var(--cn-line); }
+    .cn-btn--ghost:hover { background: var(--cn-shade); }
+    .cn-btn--block { display: flex; width: 100%; }
+    .cn :focus-visible { outline: 2px solid var(--cn-hot-ink); outline-offset: 2px; }
 
-    /* ── LA FEUILLE : les modales sont du papier, pas du verre ── */
+    /* Le pas-à-pas de quantité : deux cibles franches, jamais deux pastilles */
+    .cn-step { display: inline-flex; align-items: center; border: 1px solid var(--cn-line); border-radius: 6px; background: var(--cn-surface); }
+    .cn-step button {
+      width: 42px; height: 42px; border: none; background: transparent; cursor: pointer;
+      color: var(--cn-hot-ink); font-size: 19px; line-height: 1; border-radius: 6px;
+    }
+    .cn-step button:hover { background: var(--cn-hot-soft); }
+    .cn-step__n { font-family: ${FONT.mono}; font-size: 15px; min-width: 26px; text-align: center; }
+
+    /* ── La ligne de carte : on lit un menu, pas une grille de vignettes ─── */
+    .cn-leader { flex: 1; border-bottom: 1px dotted var(--cn-line); transform: translateY(-4px); min-width: 12px; }
+    .cn-price { font-family: ${FONT.mono}; font-size: 16px; color: var(--cn-hot-ink); flex-shrink: 0; }
+
+    /* ── Les feuilles (modales) ──────────────────────────────────────────── */
     .cn-sheet-wrap {
-      position: fixed; inset: 0; z-index: 200; background: rgba(10,7,4,.82);
+      position: fixed; inset: 0; z-index: 200; background: rgba(27,33,20,.45);
       display: flex; align-items: flex-end; justify-content: center;
     }
     .cn-sheet {
-      width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; overscroll-behavior: contain;
-      background: var(--cn-paper); color: var(--cn-paper-ink);
-      padding: 26px 20px 32px; position: relative; animation: cn-rise .28s ease;
+      width: 100%; max-width: 560px; max-height: 90vh; display: flex; flex-direction: column;
+      background: var(--cn-surface); color: var(--cn-text);
+      border-radius: 14px 14px 0 0; position: relative; animation: cn-rise .26s ease;
     }
-    .cn-sheet__notch { position: absolute; top: 0; left: 0; right: 0; height: 12px; }
-    .cn-sheet__title { font-size: clamp(26px, 7vw, 38px); margin: 0; padding-right: 48px; }
+    .cn-sheet__head {
+      padding: 20px 20px 14px; border-bottom: 1px solid var(--cn-line);
+      display: flex; align-items: flex-start; gap: 14px; flex-shrink: 0;
+    }
+    .cn-sheet__title { font-family: ${FONT.display}; font-weight: 700; font-size: 22px; margin: 0; line-height: 1.15; }
+    .cn-sheet__body { overflow-y: auto; overscroll-behavior: contain; padding: 4px 20px 16px; flex: 1; }
+    .cn-sheet__foot { padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--cn-line); flex-shrink: 0; }
     .cn-sheet__close {
-      position: absolute; top: 22px; right: 18px; width: 34px; height: 34px; border-radius: 50%;
-      border: 1px solid rgba(0,0,0,.2); background: transparent; cursor: pointer;
-      font-family: ${FONT.mono}; font-size: 13px; color: var(--cn-paper-ink);
+      width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; margin-left: auto;
+      border: none; background: var(--cn-shade); color: var(--cn-text); cursor: pointer; font-size: 15px;
     }
-    .cn-group__head {
-      display: flex; align-items: baseline; gap: 10px; margin: 26px 0 11px;
-      font-family: ${FONT.mono}; font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+    .cn-sheet__close:hover { background: var(--cn-line); }
+    @keyframes cn-rise { from { transform: translateY(16px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+
+    /* ── Les groupes de choix ────────────────────────────────────────────── */
+    .cn-group { margin-top: 22px; }
+    .cn-group__head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+    .cn-group__name { font-family: ${FONT.display}; font-weight: 700; font-size: 16px; }
+    .cn-group__req {
+      font-family: ${FONT.mono}; font-size: 11px; letter-spacing: .06em; margin-left: auto;
+      color: var(--cn-hot-ink); background: var(--cn-hot-soft); padding: 3px 9px; border-radius: 999px;
     }
-    .cn-group__rule { flex: 1; height: 1px; background: rgba(0,0,0,.16); }
-    .cn-group__req { color: var(--cn-hot); }
+    .cn-group__opt { font-family: ${FONT.mono}; font-size: 11px; color: var(--cn-dim); margin-left: auto; }
+
     .cn-opt {
       width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      padding: 13px 14px; margin-bottom: 7px; cursor: pointer; text-align: left;
-      background: transparent; border: 1px solid rgba(0,0,0,.18); border-radius: 2px;
-      font-family: ${FONT.editorial}; font-size: 15px; color: var(--cn-paper-ink);
-      transition: background .12s ease, border-color .12s ease;
+      min-height: 52px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; text-align: left;
+      background: var(--cn-surface); border: 1px solid var(--cn-line); border-radius: 8px;
+      font-family: ${FONT.ui}; font-size: 15px; color: var(--cn-text);
+      transition: border-color .12s ease, background .12s ease;
     }
-    .cn-opt:hover { border-color: var(--cn-paper-ink); }
-    .cn-opt--on { background: var(--cn-accent); border-color: var(--cn-accent-ink); }
-    .cn-opt--off { opacity: .38; cursor: not-allowed; text-decoration: line-through; }
+    .cn-opt:hover { border-color: var(--cn-dim); }
+    .cn-opt--on { border-color: var(--cn-hot-ink); background: var(--cn-hot-soft); }
+    .cn-opt--off { opacity: .5; cursor: not-allowed; }
+    .cn-opt--off .cn-opt__name { text-decoration: line-through; }
     .cn-opt__box {
-      width: 18px; height: 18px; flex-shrink: 0; border: 1.5px solid currentColor;
-      display: flex; align-items: center; justify-content: center; font-size: 10px;
+      width: 22px; height: 22px; flex-shrink: 0; border: 1.5px solid var(--cn-line);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: #fff; background: var(--cn-surface);
     }
-    .cn-opt__extra { font-family: ${FONT.mono}; font-size: 11px; letter-spacing: .06em; }
+    .cn-opt--on .cn-opt__box { background: var(--cn-hot-ink); border-color: var(--cn-hot-ink); }
+    .cn-opt__extra { font-family: ${FONT.mono}; font-size: 13px; color: var(--cn-dim); flex-shrink: 0; }
+    .cn-opt--on .cn-opt__extra { color: var(--cn-hot-ink); }
 
-    /* Le choix formule — deux moitiés de ticket, l'active passe en négatif */
-    .cn-formule { display: flex; border: 1.5px solid var(--cn-paper-ink); border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+    /* Le choix formule : deux moitiés franches, l'active se remplit */
+    .cn-formule { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .cn-formule button {
-      flex: 1; padding: 14px 10px; border: none; cursor: pointer; background: transparent;
-      color: var(--cn-paper-ink); text-align: center; font-family: ${FONT.mono};
-      transition: background .12s ease;
+      padding: 14px 12px; cursor: pointer; text-align: left; border-radius: 8px;
+      border: 1px solid var(--cn-line); background: var(--cn-surface); color: var(--cn-text);
+      font-family: ${FONT.ui}; transition: border-color .12s ease, background .12s ease;
     }
-    .cn-formule button + button { border-left: 1.5px solid var(--cn-paper-ink); }
-    .cn-formule button.on { background: var(--cn-paper-ink); color: var(--cn-paper); }
-    .cn-formule__t { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
-    .cn-formule__p { font-family: ${FONT.display}; font-size: 19px; margin-top: 5px; }
+    .cn-formule button.on { border-color: var(--cn-hot-ink); background: var(--cn-hot-soft); }
+    .cn-formule__t { font-size: 14px; font-weight: 600; }
+    .cn-formule__p { font-family: ${FONT.mono}; font-size: 15px; margin-top: 4px; color: var(--cn-hot-ink); }
+    .cn-formule__n { font-size: 12px; color: var(--cn-dim); margin-top: 3px; line-height: 1.35; }
 
-    .cn-confirm {
-      width: 100%; margin-top: 22px; padding: 17px 20px; border: none; border-radius: 2px; cursor: pointer;
-      background: var(--cn-hot); color: var(--cn-paper);
-      font-family: ${FONT.mono}; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
-      display: flex; align-items: center; justify-content: space-between;
+    /* ── Les champs ──────────────────────────────────────────────────────── */
+    .cn-field { display: block; margin-bottom: 15px; }
+    .cn-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+    .cn-label span { font-weight: 400; color: var(--cn-dim); }
+    .cn-input {
+      width: 100%; min-height: 46px; padding: 11px 13px;
+      background: var(--cn-surface); border: 1px solid var(--cn-line); border-radius: 8px;
+      font-family: ${FONT.ui}; font-size: 16px; color: var(--cn-text);
+      outline: none; transition: border-color .12s ease, box-shadow .12s ease;
     }
-    .cn-confirm:disabled { background: rgba(0,0,0,.12); color: rgba(0,0,0,.4); cursor: default; }
-    .cn-confirm b { font-family: ${FONT.display}; font-size: 19px; letter-spacing: 0; font-weight: 400; }
+    .cn-input::placeholder { color: var(--cn-dim); opacity: .75; }
+    .cn-input:focus { border-color: var(--cn-hot-ink); box-shadow: 0 0 0 3px var(--cn-hot-soft); }
+    .cn-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-    /* Avis : fermé, message du jour, panier restauré */
+    .cn-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
+    .cn-slot {
+      min-height: 46px; padding: 12px 6px; cursor: pointer; border-radius: 8px;
+      border: 1px solid var(--cn-line); background: var(--cn-surface); color: var(--cn-text);
+      font-family: ${FONT.mono}; font-size: 15px;
+      transition: border-color .12s ease, background .12s ease;
+    }
+    .cn-slot:hover { border-color: var(--cn-dim); }
+    .cn-slot--on { border-color: var(--cn-hot-ink); background: var(--cn-hot-ink); color: #fff; }
+
+    /* ── Les avis ────────────────────────────────────────────────────────── */
     .cn-note {
-      display: flex; gap: 13px; align-items: flex-start;
-      max-width: 760px; margin: 0 auto; padding: 15px 18px;
-      border-left: 3px solid var(--cn-accent); background: var(--cn-char);
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 14px 16px; border-radius: 10px;
+      background: var(--cn-surface); border: 1px solid var(--cn-line);
     }
-    .cn-note__k { font-family: ${FONT.mono}; font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--cn-accent); }
-    .cn-note__v { font-size: 14px; line-height: 1.5; margin: 5px 0 0; color: var(--cn-dough); }
+    .cn-note--warn { background: var(--cn-hot-soft); border-color: transparent; }
+    .cn-note__t { font-weight: 600; font-size: 14px; margin: 0; }
+    .cn-note__d { font-size: 14px; color: var(--cn-dim); margin: 3px 0 0; line-height: 1.5; }
+
+    /* ── Le récapitulatif en lignes de ticket ────────────────────────────── */
+    .cn-recap__row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 11px; }
+    .cn-recap__k { font-size: 14px; color: var(--cn-dim); flex-shrink: 0; }
+    .cn-recap__dots { flex: 1; border-bottom: 1px dotted var(--cn-line); transform: translateY(-4px); min-width: 12px; }
+    .cn-recap__v { font-family: ${FONT.mono}; font-size: 14px; flex-shrink: 0; }
+    .cn-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .cn-total__k { font-size: 15px; font-weight: 600; }
+    .cn-total__v { font-family: ${FONT.mono}; font-size: 26px; }
 
     @media (prefers-reduced-motion: reduce) {
-      .cn-band__track { animation: none; }
-      .cn-ticket, .cn-sheet, .cn-ticket--punch { animation: none; }
-      .cn-btn, .cn-board__mark { transition: none; }
+      .cn *, .cn *::before, .cn *::after {
+        animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important; scroll-behavior: auto !important;
+      }
     }
   `
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useParams } from 'next/navigation'
-import { getBrand, FONT, ARCH, perforation } from '@/lib/brand'
+import { getBrand, paletteVars, FONT, ARCH } from '@/lib/brand'
 import { brandCss } from '@/lib/brand-styles'
 
 // Les trois temps de la commande, dits avec la voix de la maison.
@@ -42,63 +42,48 @@ export default function SuiviPage() {
 
   const brand = getBrand(restaurant?.slug, restaurant?.name || '')
   const p = brand.palette
-  const cssVars = {
-    '--cn-ink': p.ink, '--cn-char': p.char, '--cn-char-up': p.charUp, '--cn-line': p.line,
-    '--cn-dough': p.dough, '--cn-dough-dim': p.doughDim, '--cn-paper': p.paper,
-    '--cn-paper-ink': p.paperInk, '--cn-hot': p.hot, '--cn-accent': p.accent,
-    '--cn-accent-ink': p.accentInk, '--cn-fresh': p.fresh,
-  } as React.CSSProperties
+  const cssVars = paletteVars(p) as React.CSSProperties
 
   const CSS = brandCss() + `
-    .cn-track { max-width: 480px; margin: 0 auto; padding: 32px 18px 48px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+    .cn-track { max-width: 480px; margin: 0 auto; padding: 28px 16px 48px; min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: center; }
+    .cn-track__head { display: flex; align-items: center; gap: 11px; margin-bottom: 30px; }
+    .cn-track__name { font-family: ${FONT.display}; font-weight: 700; font-size: 17px; }
+    .cn-track__ref { font-family: ${FONT.mono}; font-size: 12px; color: var(--cn-dim); margin-left: auto; }
 
-    .cn-track__head { display: flex; align-items: center; gap: 12px; margin-bottom: 34px; }
-    .cn-track__name { font-family: ${FONT.display}; font-size: 20px; text-transform: uppercase; }
-    .cn-track__ref { font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .16em; color: var(--cn-dough-dim); text-transform: uppercase; margin-left: auto; }
+    .cn-state__v { font-family: ${FONT.display}; font-weight: 800; font-size: clamp(40px, 13vw, 62px);
+      line-height: 1; letter-spacing: -.035em; margin: 12px 0 0; }
+    .cn-state__d { font-size: 17px; line-height: 1.45; color: var(--cn-dim); margin: 12px 0 0; max-width: 26ch; }
 
-    /* L'état, dit en grand */
-    .cn-state__k { font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--cn-accent); margin: 0; }
-    .cn-state__v { font-family: ${FONT.display}; font-size: clamp(46px, 15vw, 74px); text-transform: uppercase; line-height: .88; margin: 10px 0 0; }
-    .cn-state__d { font-family: ${FONT.editorial}; font-style: italic; font-size: 17px; line-height: 1.45; color: var(--cn-dough-dim); margin: 14px 0 0; max-width: 24ch; }
-
-    /* Les trois temps, marqués par des arches qui se remplissent */
-    .cn-steps { margin: 36px 0 0; border-top: 1px solid var(--cn-line); }
-    .cn-step-row { display: flex; align-items: center; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--cn-line); }
-    .cn-mark { width: 20px; height: 26px; border-radius: ${ARCH}; flex-shrink: 0; border: 1px solid var(--cn-line); }
-    .cn-mark--done { background: var(--cn-accent); border-color: var(--cn-accent); }
-    .cn-mark--now { background: var(--cn-hot); border-color: var(--cn-hot); animation: cn-heat 1.6s ease-in-out infinite; }
-    .cn-step-row__l { font-family: ${FONT.mono}; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cn-dough-dim); }
-    .cn-step-row--on .cn-step-row__l { color: var(--cn-dough); }
-    .cn-step-row__t { font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .1em; color: var(--cn-dough-dim); margin-left: auto; }
+    /* Les trois temps : des arches qui se remplissent, dans l'ordre */
+    .cn-steps { margin: 32px 0 0; }
+    .cn-step-row { display: flex; align-items: center; gap: 13px; padding: 14px 0; border-bottom: 1px solid var(--cn-line); }
+    .cn-step-row:first-child { border-top: 1px solid var(--cn-line); }
+    .cn-mark { width: 19px; height: 25px; border-radius: ${ARCH}; flex-shrink: 0;
+      border: 1.5px solid var(--cn-line); background: transparent; }
+    .cn-mark--done { background: var(--cn-fresh); border-color: var(--cn-fresh); }
+    .cn-mark--now { background: var(--cn-hot); border-color: var(--cn-hot); animation: cn-heat 1.7s ease-in-out infinite; }
+    .cn-step-row__l { font-size: 15px; color: var(--cn-dim); }
+    .cn-step-row--on .cn-step-row__l { color: var(--cn-text); font-weight: 600; }
+    .cn-step-row__t { font-family: ${FONT.mono}; font-size: 12px; color: var(--cn-dim); margin-left: auto; }
     @keyframes cn-heat { 0%, 100% { opacity: 1 } 50% { opacity: .45 } }
 
-    /* Le ticket récapitulatif */
-    .cn-recap { position: relative; background: var(--cn-paper); color: var(--cn-paper-ink); padding: 26px 20px; margin-top: 30px; }
-    .cn-recap__top, .cn-recap__bot { position: absolute; left: 0; right: 0; height: 12px; }
-    .cn-recap__top { top: 0; }
-    .cn-recap__bot { bottom: 0; }
-    .cn-recap__row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
-    .cn-recap__k { font-family: ${FONT.mono}; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; opacity: .55; }
-    .cn-recap__dots { flex: 1; border-bottom: 1px dotted rgba(0,0,0,.3); transform: translateY(-3px); }
-    .cn-recap__v { font-family: ${FONT.mono}; font-size: 12.5px; }
-
-    @media (prefers-reduced-motion: reduce) { .cn-mark--now { animation: none } }
+    .cn-recap { background: var(--cn-surface); border: 1px solid var(--cn-line); border-radius: 12px; padding: 18px 16px; margin-top: 26px; }
   `
 
   if (loading) return (
-    <div className="cn" style={{ ...cssVars, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="cn" style={{ ...cssVars, minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
       <style>{CSS}</style>
-      <div className="cn-arch" style={{ width: 26, height: 34, background: p.hot, animation: 'cn-heat 1.3s ease-in-out infinite' }} />
-      <style>{`@keyframes cn-heat{0%,100%{opacity:1}50%{opacity:.4}}`}</style>
+      <div className="cn-arch" style={{ width: 26, height: 34, background: p.hot, animation: 'cn-heat 1.4s ease-in-out infinite' }} />
     </div>
   )
 
   if (notFound) return (
-    <div className="cn" style={{ ...cssVars, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div className="cn" style={{ ...cssVars, minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24 }}>
       <style>{CSS}</style>
       <div style={{ textAlign: 'center', maxWidth: 320 }}>
-        <p className="cn-display" style={{ fontSize: 44, margin: '0 0 12px', color: 'transparent', WebkitTextStroke: `1.5px ${p.line}` }}>Introuvable</p>
-        <p className="cn-ed" style={{ fontStyle: 'italic', fontSize: 17, margin: 0, color: p.doughDim }}>Aucune commande ne porte ce numéro.</p>
+        <p className="cn-display" style={{ fontSize: 30, margin: '0 0 8px' }}>Commande introuvable</p>
+        <p style={{ color: p.dim, margin: 0 }}>Aucune commande ne porte ce numéro.</p>
       </div>
     </div>
   )
@@ -122,26 +107,29 @@ export default function SuiviPage() {
       <style>{CSS}</style>
 
       <main className="cn-track">
-
         <header className="cn-track__head">
           {restaurant?.logo_url
-            ? <img src={restaurant.logo_url} alt="" style={{ width: 30, height: 30, objectFit: 'contain' }} />
-            : <span className="cn-arch" style={{ width: 18, height: 24, background: p.accent, display: 'block' }} />
+            ? <img src={restaurant.logo_url} alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            : <span className="cn-arch" style={{ width: 17, height: 23, background: p.hot, display: 'block' }} />
           }
           <span className="cn-track__name">{restaurant?.name}</span>
           <span className="cn-track__ref">{orderNumber}</span>
         </header>
 
-        {/* L'état du moment */}
         {!isCompleted ? (
           <section>
-            <p className="cn-state__k">{order.status === 'ready' ? 'À retirer maintenant' : 'En cours'}</p>
+            <span className={`cn-pill ${order.status === 'ready' ? 'cn-pill--open' : ''}`}>
+              <span className="cn-pill__dot" />
+              {order.status === 'ready' ? 'À retirer maintenant' : 'En cours'}
+            </span>
             <h1 className="cn-state__v">{STEPS[stepIndex]?.label}</h1>
             <p className="cn-state__d">{STEPS[stepIndex]?.desc}</p>
           </section>
         ) : (
           <section>
-            <p className="cn-state__k" style={{ color: cancelled ? p.hot : p.fresh }}>{cancelled ? 'Annulée' : 'Terminée'}</p>
+            <span className={`cn-pill ${cancelled ? 'cn-pill--shut' : 'cn-pill--open'}`}>
+              <span className="cn-pill__dot" />{cancelled ? 'Annulée' : 'Terminée'}
+            </span>
             <h1 className="cn-state__v">{cancelled ? 'Annulée' : 'Merci'}</h1>
             <p className="cn-state__d">
               {cancelled ? 'Contactez le restaurant pour en savoir plus.' : 'À très vite au comptoir.'}
@@ -149,7 +137,6 @@ export default function SuiviPage() {
           </section>
         )}
 
-        {/* Les trois temps */}
         {!isCompleted && (
           <div className="cn-steps">
             {STEPS.map((step, i) => {
@@ -159,38 +146,30 @@ export default function SuiviPage() {
                 <div key={step.key} className={`cn-step-row${now ? ' cn-step-row--on' : ''}`}>
                   <span className={`cn-mark${done ? ' cn-mark--done' : now ? ' cn-mark--now' : ''}`} />
                   <span className="cn-step-row__l">{step.label}</span>
-                  <span className="cn-step-row__t">{done ? 'fait' : now ? 'en cours' : '—'}</span>
+                  <span className="cn-step-row__t">{done ? 'fait' : now ? 'en cours' : ''}</span>
                 </div>
               )
             })}
           </div>
         )}
 
-        {/* Le ticket */}
         <div className="cn-recap">
-          <span className="cn-recap__top" style={perforation(p.ink, 'top')} />
-
           <div className="cn-recap__row">
-            <span className="cn-recap__k">Retrait</span>
-            <span className="cn-recap__dots" />
+            <span className="cn-recap__k">Retrait</span><span className="cn-recap__dots" />
             <span className="cn-recap__v">{pickupLabel}</span>
           </div>
           <div className="cn-recap__row">
-            <span className="cn-recap__k">Total</span>
-            <span className="cn-recap__dots" />
+            <span className="cn-recap__k">Total</span><span className="cn-recap__dots" />
             <span className="cn-recap__v">{price(order.total_price)}€</span>
           </div>
           <div className="cn-recap__row" style={{ marginBottom: 0 }}>
-            <span className="cn-recap__k">Paiement</span>
-            <span className="cn-recap__dots" />
+            <span className="cn-recap__k">Paiement</span><span className="cn-recap__dots" />
             <span className="cn-recap__v">{order.payment_method === 'cash' ? 'Sur place' : 'Payé en ligne'}</span>
           </div>
-
-          <span className="cn-recap__bot" style={perforation(p.ink, 'bottom')} />
         </div>
 
-        <p className="cn-mono" style={{ fontSize: 8.5, letterSpacing: '.18em', color: p.doughDim, textAlign: 'center', marginTop: 26, opacity: .7 }}>
-          Mise à jour en direct
+        <p style={{ fontSize: 12, color: p.dim, textAlign: 'center', marginTop: 22 }}>
+          Cette page se met à jour toute seule.
         </p>
       </main>
     </div>

@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useParams, useRouter } from 'next/navigation'
-import { getBrand, FONT, ARCH_WIDE, perforation } from '@/lib/brand'
+import { getBrand, paletteVars, FONT } from '@/lib/brand'
 import { brandCss } from '@/lib/brand-styles'
 
 type Product = {
@@ -65,7 +65,6 @@ export default function RestaurantPage() {
   const [dbCategories, setDbCategories] = useState<Category[]>([])
   const [nextOpening, setNextOpening] = useState<string | null>(null)
   const [isOpenNow, setIsOpenNow] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const [cartBounce, setCartBounce] = useState(false)
 
   const [optionsModal, setOptionsModal] = useState<{ product: Product; groups: OptionGroup[] } | null>(null)
@@ -177,11 +176,35 @@ export default function RestaurantPage() {
     }
   }, [products])
 
+  // La vitrine : un seul écrit de variable CSS par image, le reste est du GPU.
+  const heroRef = useRef<HTMLElement | null>(null)
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 160)
+    const el = heroRef.current
+    if (!el) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const h = el.offsetHeight || 1
+      el.style.setProperty('--p', String(Math.min(1, Math.max(0, window.scrollY / h))))
+    }
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update) }
+    const onMove = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect()
+      el.style.setProperty('--mx', String(((e.clientX - r.left) / r.width - 0.5) * 2))
+      el.style.setProperty('--my', String(((e.clientY - r.top) / r.height - 0.5) * 2))
+    }
+
+    update()
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+    el.addEventListener('pointermove', onMove)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      el.removeEventListener('pointermove', onMove)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [restaurant])
 
   useEffect(() => {
     const lock = !!(optionsModal || menuOnlyModal)
@@ -208,6 +231,60 @@ export default function RestaurantPage() {
       if (top) window.scrollTo(0, -parseInt(top))
     }
   }, [optionsModal, menuOnlyModal])
+
+  // L'ouverture de la vitrine, une fois le restaurant connu.
+  useEffect(() => {
+    if (loading || !restaurant) return
+    const el = heroRef.current
+    if (!el) return
+    const id = requestAnimationFrame(() => el.classList.add('is-ready'))
+    return () => cancelAnimationFrame(id)
+  }, [loading, restaurant])
+
+  // Tout le mouvement de la page tient dans un observateur et une boucle rAF.
+  useEffect(() => {
+    if (loading) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const reveals = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'))
+    let obs: IntersectionObserver | null = null
+    if ('IntersectionObserver' in window) {
+      obs = new IntersectionObserver((entries, o) => {
+        for (const e of entries) {
+          if (e.isIntersecting) { e.target.classList.add('is-in'); o.unobserve(e.target) }
+        }
+      }, { rootMargin: '0px 0px -40px 0px', threshold: 0.04 })
+      reveals.forEach(el => obs!.observe(el))
+    } else {
+      reveals.forEach(el => el.classList.add('is-in'))
+    }
+
+    const media = Array.from(document.querySelectorAll<HTMLElement>('[data-parallax]'))
+    const bar = document.querySelector<HTMLElement>('.cn-bar')
+    let raf = 0
+    const frame = () => {
+      raf = 0
+      const vh = window.innerHeight
+      for (const el of media) {
+        const r = el.getBoundingClientRect()
+        if (r.bottom < -100 || r.top > vh + 100) continue
+        const centred = (r.top + r.height / 2 - vh / 2) / vh
+        el.style.setProperty('--y', (centred * 14).toFixed(2))
+      }
+      if (bar) bar.classList.toggle('is-stuck', bar.getBoundingClientRect().top <= 0.5)
+    }
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(frame) }
+
+    frame()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      obs?.disconnect()
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [loading, products.length, dbCategories.length])
 
   function saveCart(newCart: CartItem[]) {
     setCart(newCart)
@@ -307,472 +384,449 @@ export default function RestaurantPage() {
 
   const brand = getBrand(slug, restaurant?.name || '')
   const p = brand.palette
+  const cssVars = paletteVars(p) as React.CSSProperties
 
-  // Les couleurs de la marque descendent en variables CSS : la feuille de style
-  // ci-dessous est identique pour tous les restaurants, seule la palette change.
-  const cssVars = {
-    '--cn-ink': p.ink,
-    '--cn-char': p.char,
-    '--cn-char-up': p.charUp,
-    '--cn-line': p.line,
-    '--cn-dough': p.dough,
-    '--cn-dough-dim': p.doughDim,
-    '--cn-paper': p.paper,
-    '--cn-paper-ink': p.paperInk,
-    '--cn-hot': p.hot,
-    '--cn-accent': p.accent,
-    '--cn-accent-ink': p.accentInk,
-    '--cn-fresh': p.fresh,
-  } as React.CSSProperties
-
-  // Le socle de marque, plus ce que la carte seule met en scène.
   const CSS = brandCss() + `
-
-    /* ── LE MASTHEAD : l'image sort à droite, le nom sort à gauche ── */
-    .cn-mast { position: relative; padding: 26px 18px 0; max-width: 760px; margin: 0 auto; }
-    .cn-mast__media {
-      position: relative; margin-left: auto; margin-right: -18px;
-      width: 66%; max-width: 380px; aspect-ratio: 4 / 5;
-      background: var(--cn-char-up);
-    }
-    .cn-mast__media img { width: 100%; height: 100%; object-fit: cover; }
-    .cn-mast__ember {
-      position: absolute; inset: 0;
+    /* ══ LA VITRINE ══════════════════════════════════════════════════════════
+       Quatre plans à des profondeurs différentes dans une même perspective.
+       Le défilement écrit --p (0 → 1), tout le reste est du transform GPU.   */
+    .cn-hero {
+      --p: 0; --mx: 0; --my: 0;
+      position: relative; overflow: hidden; isolation: isolate;
+      min-height: 84svh; display: flex; align-items: flex-end;
+      padding: 0 20px 40px;
+      perspective: 1100px; perspective-origin: 62% 38%;
       background:
-        radial-gradient(90% 70% at 50% 108%, var(--cn-hot) 0%, transparent 62%),
-        radial-gradient(70% 50% at 50% 100%, var(--cn-accent) 0%, transparent 55%),
-        var(--cn-char-up);
+        radial-gradient(120% 78% at 80% 4%, var(--cn-hot-soft) 0%, transparent 56%),
+        radial-gradient(96% 68% at 6% 96%, var(--cn-fresh-soft) 0%, transparent 58%),
+        var(--cn-bg);
     }
-    .cn-mast__initial {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      font-family: ${FONT.display}; color: transparent;
-      -webkit-text-stroke: 1.5px rgba(255,255,255,.22);
-    }
-    .cn-mast__stamp { position: absolute; right: 14px; top: 16px; z-index: 4; background: var(--cn-ink); }
-    .cn-mast__name {
-      position: relative; z-index: 2; margin: -30px 0 0; padding: 0;
-      font-size: clamp(52px, 16.5vw, 124px);
-      transform: translateX(-.045em);
-      text-shadow: 0 6px 26px rgba(0,0,0,.75);
-      overflow-wrap: anywhere;
-    }
-    .cn-mast__voice {
-      font-style: italic; font-size: clamp(16px, 4.4vw, 22px); line-height: 1.35;
-      color: var(--cn-dough); margin: 16px 0 0; max-width: 22ch;
-    }
-    .cn-mast__meta {
-      display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
-      margin: 18px 0 0; font-size: 10px; color: var(--cn-dough-dim);
-    }
-    .cn-mast__meta a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--cn-line); }
-    @media (min-width: 700px) {
-      .cn-mast { padding-top: 44px; }
-      .cn-mast__media { width: 46%; margin-right: 0; }
-      .cn-mast__name { margin-top: -64px; }
+    .cn-hero__scene { position: absolute; inset: 0; transform-style: preserve-3d; pointer-events: none; }
+    /* Le voile : garantit la lisibilité du texte quelle que soit la photo posée
+       derrière. En bas sur mobile, sur la gauche dès que le texte passe à côté. */
+    .cn-hero__veil {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      background: linear-gradient(to top,
+        var(--cn-bg) 20%,
+        color-mix(in srgb, var(--cn-bg) 62%, transparent) 52%,
+        transparent 86%);
     }
 
-    /* ── L'ENSEIGNE COLLANTE : une seule barre, jamais deux ── */
-    .cn-board {
+    /* Plan 1 — la gueule du four, loin derrière, qui grandit quand on avance */
+    .cn-hero__oven {
+      position: absolute; left: 50%; top: 4%; width: min(84vw, 520px); aspect-ratio: 3 / 4.1;
+      border-radius: 999px 999px 14px 14px;
+      background: linear-gradient(178deg, var(--cn-hot) 0%, #EFA23C 52%, var(--cn-fresh) 128%);
+      opacity: .17; filter: blur(3px);
+      transform: translate3d(-50%, calc(var(--p) * -30px), -340px) scale(calc(1 + var(--p) * .18));
+    }
+    /* Plan 2 — le plat, cintré, qui bascule légèrement au pointeur */
+    .cn-hero__dish {
+      position: absolute; left: 50%; top: 7%; width: min(58vw, 300px); aspect-ratio: 4 / 5;
+      border-radius: 999px 999px 8px 8px; overflow: hidden;
+      background: var(--cn-shade);
+      box-shadow: 0 30px 70px rgba(27, 33, 20, .18);
+      transform:
+        translate3d(-50%, calc(var(--p) * -110px), -40px)
+        rotateY(calc(var(--mx) * 6deg)) rotateX(calc(var(--my) * -5deg));
+    }
+    .cn-hero__dish img { width: 100%; height: 100%; object-fit: cover; }
+    /* Plan 3 — les herbes, au premier plan, qui filent plus vite */
+    .cn-hero__leaf {
+      position: absolute; width: 26px; height: 26px;
+      border-radius: 0 62% 0 62%; background: var(--cn-fresh); opacity: .5;
+    }
+    .cn-hero__leaf--a { left: 8%;  top: 30%; transform: translate3d(0, calc(var(--p) * -230px), 110px) rotate(18deg); }
+    .cn-hero__leaf--b { right: 11%; top: 46%; width: 18px; height: 18px; opacity: .38;
+      transform: translate3d(0, calc(var(--p) * -300px), 60px) rotate(-32deg); }
+    .cn-hero__leaf--c { left: 22%; top: 12%; width: 14px; height: 14px; opacity: .3;
+      transform: translate3d(0, calc(var(--p) * -170px), 20px) rotate(48deg); }
+
+    /* Le texte, devant tout, et seul à recevoir les clics */
+    .cn-hero__inner { position: relative; z-index: 5; width: 100%; max-width: 940px; margin: 0 auto; }
+    .cn-hero__name {
+      font-family: ${FONT.display}; font-weight: 800;
+      font-size: clamp(44px, 12.5vw, 96px); line-height: .96; letter-spacing: -.035em;
+      margin: 0; text-wrap: balance;
+    }
+    .cn-hero__voice {
+      font-size: clamp(17px, 4.4vw, 22px); line-height: 1.4; color: var(--cn-dim);
+      margin: 14px 0 0; max-width: 30ch;
+    }
+    .cn-hero__marks { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 0; padding: 0; list-style: none; }
+    .cn-hero__mark {
+      font-family: ${FONT.mono}; font-size: 12px; color: var(--cn-fresh-ink);
+      background: var(--cn-fresh-soft); padding: 6px 12px; border-radius: 999px;
+    }
+    .cn-hero__cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 26px; }
+    .cn-hero__meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 22px 0 0;
+      font-size: 13px; color: var(--cn-dim); }
+    .cn-hero__meta a { color: inherit; }
+    @media (min-width: 760px) {
+      .cn-hero { align-items: center; padding-bottom: 0; min-height: 90svh; }
+      .cn-hero__dish { left: auto; right: 4%; top: 12%; width: min(38vw, 380px);
+        transform: translate3d(0, calc(var(--p) * -110px), -40px)
+                   rotateY(calc(var(--mx) * 6deg)) rotateX(calc(var(--my) * -5deg)); }
+      .cn-hero__oven { left: 68%; top: 2%; width: min(46vw, 560px); }
+      .cn-hero__inner { max-width: 620px; margin: 0; }
+      .cn-hero__veil {
+        background: linear-gradient(to right,
+          var(--cn-bg) 26%,
+          color-mix(in srgb, var(--cn-bg) 55%, transparent) 58%,
+          transparent 82%);
+      }
+    }
+
+    /* ══ LA BARRE ════════════════════════════════════════════════════════════
+       Une seule barre collante : la marque, les catégories, le panier.       */
+    .cn-bar {
       position: sticky; top: 0; z-index: 50;
-      background: var(--cn-char); border-top: 1px solid var(--cn-line); border-bottom: 1px solid var(--cn-line);
-      display: flex; align-items: stretch;
+      background: color-mix(in srgb, var(--cn-bg) 92%, transparent);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--cn-line);
     }
-    .cn-board__mark {
-      display: flex; align-items: center; gap: 7px; flex-shrink: 0;
-      padding-left: 16px; padding-right: 12px;
-      border-right: 1px solid transparent;
-      max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap;
-      transition: max-width .35s ease, opacity .25s ease, border-color .35s ease;
-    }
-    .cn-board__mark--on { max-width: 190px; opacity: 1; border-right-color: var(--cn-line); }
-    .cn-board__mark span { font-family: ${FONT.display}; font-size: 15px; text-transform: uppercase; }
-    .cn-board__cats { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; flex: 1; }
+    .cn-bar__in { max-width: 940px; margin: 0 auto; display: flex; align-items: center; gap: 14px; padding: 0 16px; }
+    .cn-bar__name { font-family: ${FONT.display}; font-weight: 700; font-size: 16px; flex-shrink: 0; padding: 12px 0; }
+    .cn-bar__cats { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+    .cn-bar__cats::-webkit-scrollbar { display: none; }
     .cn-cat {
-      flex-shrink: 0; border: none; cursor: pointer; background: transparent;
-      font-family: ${FONT.mono}; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
-      color: var(--cn-dough-dim); padding: 14px 15px; transition: color .15s ease;
-      display: inline-flex; align-items: center; gap: 7px;
+      flex-shrink: 0; border: none; cursor: pointer; background: transparent; color: var(--cn-dim);
+      font-family: ${FONT.ui}; font-size: 14px; font-weight: 500; padding: 13px 12px;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
     }
-    .cn-cat:hover { color: var(--cn-dough); }
-    .cn-cat--on { background: var(--cn-accent); color: var(--cn-accent-ink); }
+    .cn-cat:hover { color: var(--cn-text); }
+    .cn-cat--on { color: var(--cn-hot-ink); border-bottom-color: var(--cn-hot-ink); }
 
-    /* ── LA CARTE ── */
-    .cn-menu { max-width: 760px; margin: 0 auto; padding: 34px 18px 0; }
-    .cn-cathead { display: flex; align-items: baseline; gap: 12px; margin: 0 0 20px; }
-    .cn-cathead__name { font-size: clamp(28px, 8vw, 46px); }
-    .cn-cathead__rule { flex: 1; height: 1px; background: var(--cn-line); }
-    .cn-cathead__count { font-family: ${FONT.mono}; font-size: 9.5px; letter-spacing: .16em; color: var(--cn-dough-dim); text-transform: uppercase; }
+    /* ══ LA CARTE ════════════════════════════════════════════════════════════ */
+    .cn-menu { max-width: 940px; margin: 0 auto; padding: 30px 16px 0; }
+    .cn-cathead { display: flex; align-items: baseline; gap: 12px; margin: 0 0 4px; }
+    .cn-cathead__name { font-family: ${FONT.display}; font-weight: 700; font-size: clamp(24px, 5vw, 32px); margin: 0; }
+    .cn-cathead__count { font-family: ${FONT.mono}; font-size: 12px; color: var(--cn-dim); margin-left: auto; flex-shrink: 0; }
 
-    /* La ligne de carte — un ticket, pas une carte à coins arrondis */
     .cn-item {
-      display: flex; gap: 16px; align-items: flex-start;
-      padding: 20px 0; border-bottom: 1px solid var(--cn-line); position: relative;
+      display: flex; gap: 16px; align-items: center; width: 100%; text-align: left;
+      padding: 16px 0; border-bottom: 1px solid var(--cn-line);
+      background: none; border-left: none; border-right: none; border-top: none;
+      font: inherit; color: inherit; cursor: pointer;
     }
-    .cn-item--out { opacity: .45; }
+    .cn-item:hover .cn-item__name { color: var(--cn-hot-ink); }
+    .cn-item:disabled { cursor: default; opacity: .55; }
+    .cn-item:disabled:hover .cn-item__name { color: inherit; }
     .cn-item__body { flex: 1; min-width: 0; }
-    .cn-item__head { display: flex; align-items: baseline; gap: 9px; }
-    .cn-num {
-      font-family: ${FONT.display}; font-size: 15px; flex-shrink: 0;
-      color: transparent; -webkit-text-stroke: 1px var(--cn-dough-dim); opacity: .75;
-    }
-    .cn-item__name { font-size: 19px; font-weight: 600; margin: 0; line-height: 1.2; letter-spacing: -.01em; }
+    .cn-item__name { font-family: ${FONT.display}; font-weight: 700; font-size: 17px; margin: 0; line-height: 1.25; }
     .cn-item__desc {
-      font-size: 13.5px; line-height: 1.55; color: var(--cn-dough-dim); margin: 7px 0 0;
+      font-size: 14px; line-height: 1.5; color: var(--cn-dim); margin: 5px 0 0;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
-    .cn-item__foot { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
-    .cn-price { font-family: ${FONT.display}; font-size: 21px; color: var(--cn-accent); letter-spacing: 0; }
-    .cn-leader { flex: 1; border-bottom: 1px dotted var(--cn-line); transform: translateY(-3px); min-width: 14px; }
-    .cn-item__media { position: relative; flex-shrink: 0; width: 92px; margin-right: -12px; }
-    .cn-item__media img { width: 100%; height: 116px; object-fit: cover; display: block; }
-    .cn-item--out .cn-item__media img { filter: grayscale(1) brightness(.55); }
-
-    /* La vedette — première ligne illustrée d'une catégorie */
-    .cn-star { position: relative; padding: 0 0 26px; margin-bottom: 6px; }
-    .cn-star__media { position: relative; width: 100%; }
-    .cn-star__frame { aspect-ratio: 3 / 2; background: var(--cn-char-up); border-radius: ${ARCH_WIDE}; }
-    .cn-star__frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .cn-star__sticker {
-      position: absolute; right: -6px; bottom: -14px; z-index: 3;
-      background: var(--cn-accent); color: var(--cn-accent-ink);
-      font-family: ${FONT.display}; font-size: 24px; padding: 12px 15px 10px;
-      transform: rotate(-6deg); border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    .cn-item__foot { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .cn-item__media { position: relative; flex-shrink: 0; width: 86px; }
+    .cn-item__media .cn-arch { width: 86px; height: 100px; }
+    .cn-item__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cn-item--out .cn-item__media img { filter: grayscale(1); }
+    .cn-item__add {
+      position: absolute; right: -6px; bottom: -8px;
+      width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+      background: var(--cn-hot-ink); color: #fff; font-size: 19px; line-height: 1;
+      box-shadow: 0 3px 10px rgba(27,33,20,.24);
+      display: flex; align-items: center; justify-content: center;
     }
-    .cn-star__kicker { font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--cn-dough-dim); margin: 20px 0 0; display: flex; gap: 10px; align-items: center; }
-    .cn-star__kicker b { color: var(--cn-accent); font-weight: 400; }
-    .cn-star__name { font-size: clamp(26px, 7vw, 40px); margin: 9px 0 0; max-width: 15ch; }
-    .cn-star__desc { font-size: 14.5px; line-height: 1.6; color: var(--cn-dough-dim); margin: 10px 0 0; max-width: 42ch; }
-    .cn-star__foot { display: flex; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
-
-    @media (min-width: 700px) {
-      .cn-star { display: grid; grid-template-columns: 1.05fr .95fr; gap: 30px; align-items: end; }
-      .cn-star__kicker { margin-top: 0; }
-      /* La pastille passe à gauche : à droite elle viendrait buter le bouton */
-      .cn-star__sticker { right: auto; left: -10px; }
+    .cn-item__qty {
+      position: absolute; right: -6px; top: -6px; min-width: 22px; height: 22px; padding: 0 6px;
+      border-radius: 999px; background: var(--cn-fresh-ink); color: #fff;
+      font-family: ${FONT.mono}; font-size: 12px; display: flex; align-items: center; justify-content: center;
     }
-
-    /* Bandeau « victime de son succès », tamponné en travers de l'image */
-    .cn-sold {
-      position: absolute; left: -8px; top: 18px; z-index: 3;
-      background: var(--cn-hot); color: var(--cn-paper);
-      font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
-      padding: 5px 12px; transform: rotate(-6deg); border-radius: 1px;
+    .cn-tag {
+      font-family: ${FONT.mono}; font-size: 11px; color: var(--cn-fresh-ink);
+      background: var(--cn-fresh-soft); padding: 3px 9px; border-radius: 999px;
     }
-
-    /* Le pas-à-pas de quantité */
-    .cn-step { display: inline-flex; align-items: center; border: 1px solid var(--cn-line); border-radius: 2px; }
-    .cn-step button {
-      width: 38px; height: 38px; border: none; background: transparent; cursor: pointer;
-      color: var(--cn-accent); font-family: ${FONT.mono}; font-size: 16px; line-height: 1;
-    }
-    .cn-step button:hover { background: var(--cn-char-up); }
-    .cn-step__n { font-family: ${FONT.display}; font-size: 16px; min-width: 26px; text-align: center; color: var(--cn-dough); }
-
-    /* La ligne d'option déjà au panier */
+    .cn-tag--out { color: var(--cn-dim); background: var(--cn-shade); }
     .cn-picked {
       display: flex; align-items: center; gap: 10px; justify-content: space-between;
-      margin-top: 9px; padding: 9px 12px;
-      background: var(--cn-char-up); border-left: 3px solid var(--cn-accent);
-      font-family: ${FONT.mono}; font-size: 10px; letter-spacing: .06em; text-transform: none;
-      color: var(--cn-dough-dim);
+      margin-top: 8px; padding: 8px 12px; border-radius: 8px;
+      background: var(--cn-shade); font-size: 13px; color: var(--cn-dim);
     }
 
-    /* ── LE TICKET : papier de caisse, dentelé, en bas de l'écran ── */
-    .cn-ticket {
-      position: fixed; left: 12px; right: 12px; bottom: 14px; z-index: 70;
-      max-width: 760px; margin: 0 auto;
-      background: var(--cn-paper); color: var(--cn-paper-ink);
-      border-radius: 2px; box-shadow: 0 14px 40px rgba(0,0,0,.6);
-      display: flex; align-items: stretch; width: calc(100% - 24px); border: none;
-      cursor: pointer; text-align: left; padding: 0; font: inherit;
-      animation: cn-rise .3s ease;
+    /* ══ LE PANIER ═══════════════════════════════════════════════════════════ */
+    .cn-cart {
+      position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
+      z-index: 70; max-width: 560px; margin: 0 auto;
+      display: flex; align-items: center; gap: 14px; width: calc(100% - 24px);
+      padding: 13px 16px; border: none; border-radius: 12px; cursor: pointer; text-align: left;
+      background: var(--cn-text); color: var(--cn-bg); font: inherit;
+      box-shadow: 0 12px 34px rgba(27,33,20,.3); animation: cn-rise .28s ease;
     }
-    .cn-ticket__notch { position: absolute; left: 0; right: 0; top: -1px; height: 12px; }
-    .cn-ticket__body { flex: 1; padding: 15px 16px; min-width: 0; }
-    .cn-ticket__label { font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; opacity: .6; }
-    .cn-ticket__total { font-family: ${FONT.display}; font-size: 25px; margin-top: 3px; }
-    .cn-ticket__go {
-      display: flex; align-items: center; gap: 9px; padding: 0 20px;
-      background: var(--cn-hot); color: var(--cn-paper);
-      font-family: ${FONT.mono}; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    .cn-cart__n {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: var(--cn-hot); color: #fff; font-family: ${FONT.mono}; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
     }
-    .cn-ticket--punch { animation: cn-punch .35s ease; }
+    .cn-cart__t { flex: 1; font-weight: 600; font-size: 15px; }
+    .cn-cart__p { font-family: ${FONT.mono}; font-size: 17px; }
+    @keyframes cn-punch { 0%,100% { transform: scale(1) } 40% { transform: scale(1.03) } }
+    .cn-cart--punch { animation: cn-punch .3s ease; }
+
+    /* ══ LES INFOS PRATIQUES, en pied de vitrine ═════════════════════════════ */
+    .cn-foot { max-width: 940px; margin: 54px auto 0; padding: 30px 16px 40px; border-top: 1px solid var(--cn-line); }
+    .cn-foot__grid { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .cn-foot__k { font-family: ${FONT.mono}; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cn-dim); margin: 0 0 6px; }
+    .cn-foot__v { margin: 0; font-size: 15px; line-height: 1.5; }
+    .cn-foot__v a { color: inherit; }
+ 
+    /* ══ MOUVEMENT ═══════════════════════════════════════════════════════════
+       Une seule courbe, trois durées. Tout le reste s'y range — c'est la
+       cohérence du timing qui fait « premium », pas le nombre d'effets.
+       Rien n'est masqué quand l'utilisateur refuse les animations : les états
+       de départ vivent tous dans le no-preference.                           */
+    .cn { --e: cubic-bezier(.22, 1, .36, 1); }
+
+    @media (prefers-reduced-motion: no-preference) {
+
+      /* Apparition au défilement, échelonnée par --d */
+      .cn [data-reveal] { opacity: 0; transform: translateY(20px); }
+      .cn [data-reveal].is-in {
+        opacity: 1; transform: none;
+        transition: opacity .55s var(--e) var(--d, 0s), transform .7s var(--e) var(--d, 0s);
+      }
+
+      /* Le cadre est fixe, l'image respire derrière : c'est ça, la profondeur */
+      .cn [data-parallax] img {
+        transform: translate3d(0, calc(var(--y, 0) * 1px), 0) scale(1.14);
+        will-change: transform;
+      }
+
+      /* Ouverture de la vitrine : l'arche se remplit, le texte suit */
+      .cn-hero__dish { opacity: 0; }
+      .cn-hero.is-ready .cn-hero__dish { animation: cn-arch-in 1.05s var(--e) .08s forwards; }
+      @keyframes cn-arch-in {
+        from { opacity: 0; clip-path: inset(100% 0 0 0); }
+        to   { opacity: 1; clip-path: inset(0 0 0 0); }
+      }
+      .cn-hero__oven { opacity: 0; }
+      .cn-hero.is-ready .cn-hero__oven { animation: cn-oven-in 1.4s var(--e) forwards; }
+      @keyframes cn-oven-in { to { opacity: .17; } }
+
+      .cn-hero__name, .cn-hero__voice, .cn-hero__marks,
+      .cn-hero__cta, .cn-hero__meta { opacity: 0; transform: translateY(16px); }
+      .cn-hero.is-ready .cn-hero__name  { animation: cn-in .75s var(--e) .14s forwards; }
+      .cn-hero.is-ready .cn-hero__voice { animation: cn-in .75s var(--e) .24s forwards; }
+      .cn-hero.is-ready .cn-hero__marks { animation: cn-in .75s var(--e) .32s forwards; }
+      .cn-hero.is-ready .cn-hero__cta   { animation: cn-in .75s var(--e) .4s forwards; }
+      .cn-hero.is-ready .cn-hero__meta  { animation: cn-in .75s var(--e) .48s forwards; }
+      @keyframes cn-in { to { opacity: 1; transform: none; } }
+
+      .cn-hero__leaf { opacity: 0; }
+      .cn-hero.is-ready .cn-hero__leaf--a { animation: cn-leaf .9s var(--e) .5s forwards; }
+      .cn-hero.is-ready .cn-hero__leaf--b { animation: cn-leaf .9s var(--e) .62s forwards; }
+      .cn-hero.is-ready .cn-hero__leaf--c { animation: cn-leaf .9s var(--e) .72s forwards; }
+      @keyframes cn-leaf { to { opacity: .45; } }
+
+      /* Micro-interactions : la ligne de carte se soulève, l'image avance */
+      .cn-item { transition: transform .3s var(--e); }
+      .cn-item:hover:not(:disabled) { transform: translateX(3px); }
+      .cn-item__media .cn-arch { transition: transform .45s var(--e), box-shadow .45s var(--e); }
+      .cn-item:hover:not(:disabled) .cn-item__media .cn-arch {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 12px 26px rgba(27, 33, 20, .16);
+      }
+      .cn-item__add { transition: transform .22s var(--e), background .16s ease; }
+      .cn-item:hover:not(:disabled) .cn-item__add { transform: scale(1.1); }
+
+      /* La barre collante se pose au lieu d'apparaître */
+      .cn-bar { transition: box-shadow .3s var(--e); }
+      .cn-bar.is-stuck { box-shadow: 0 6px 20px rgba(27, 33, 20, .07); }
+
+      /* Le prix qui change ne saute pas */
+      .cn-cart__p, .cn-total__v { transition: transform .3s var(--e); }
+    }
+
   `
 
-  const stampTone = isOpenNow ? p.fresh : p.doughDim
+  const goToMenu = () => document.getElementById('carte')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
-  // ── Chargement : la braise qui monte ────────────────────────────────────────
+  // ── Chargement ─────────────────────────────────────────────────────────────
   if (loading) return (
-    <div className="cn" style={{ ...cssVars, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="cn" style={{ ...cssVars, minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
       <style>{CSS}</style>
       <div style={{ textAlign: 'center' }}>
-        <div className="cn-arch" style={{ width: 46, height: 58, margin: '0 auto 18px', background: `linear-gradient(to top, ${p.hot}, ${p.accent})`, animation: 'cn-ember 1.4s ease-in-out infinite' }} />
-        <p className="cn-mono" style={{ fontSize: 9.5, color: p.doughDim, margin: 0 }}>On allume le four</p>
+        <div className="cn-arch" style={{ width: 42, height: 54, margin: '0 auto 16px', background: `linear-gradient(180deg, ${p.hot}, ${p.fresh})`, animation: 'cn-breathe 1.5s ease-in-out infinite' }} />
+        <p className="cn-eyebrow" style={{ margin: 0 }}>On sort la carte</p>
       </div>
-      <style>{`@keyframes cn-ember{0%,100%{opacity:1;transform:translateY(0)}50%{opacity:.45;transform:translateY(3px)}}`}</style>
+      <style>{`@keyframes cn-breathe{0%,100%{opacity:1;transform:translateY(0)}50%{opacity:.5;transform:translateY(4px)}}`}</style>
     </div>
   )
 
-  // ── 404 ────────────────────────────────────────────────────────────────────
+  // ── Restaurant inconnu ─────────────────────────────────────────────────────
   if (!restaurant) return (
-    <div className="cn" style={{ ...cssVars, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div className="cn" style={{ ...cssVars, minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24 }}>
       <style>{CSS}</style>
       <div style={{ textAlign: 'center', maxWidth: 340 }}>
-        <p className="cn-display" style={{ fontSize: 62, margin: '0 0 14px', color: 'transparent', WebkitTextStroke: `1.5px ${p.line}` }}>404</p>
-        <p className="cn-ed" style={{ fontSize: 21, margin: '0 0 8px', fontStyle: 'italic' }}>Rien ne cuit à cette adresse.</p>
-        <p className="cn-mono" style={{ fontSize: 9.5, color: p.doughDim }}>Ce lien ne correspond à aucun restaurant</p>
+        <p className="cn-display" style={{ fontSize: 44, margin: '0 0 10px' }}>Page introuvable</p>
+        <p style={{ color: p.dim, margin: 0 }}>Ce lien ne correspond à aucun restaurant.</p>
       </div>
     </div>
   )
 
-  const wordmarkLines = brand.wordmark.split('\n')
-
-  // ── La carte ───────────────────────────────────────────────────────────────
   return (
-    <div className="cn" style={{ ...cssVars, minHeight: '100vh', paddingBottom: cartCount > 0 ? 120 : 56 }}>
+    <div className="cn" style={{ ...cssVars, minHeight: '100vh', paddingBottom: cartCount > 0 ? 96 : 0 }}>
       <style>{CSS}</style>
 
-      {/* Panier retrouvé — un bout de ticket de la dernière visite */}
-      {hasRestoredCart && cartCount > 0 && (
-        <div style={{ background: p.accent, color: p.accentInk, padding: '9px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <p className="cn-mono" style={{ margin: 0, fontSize: 9.5 }}>
-            Panier repris · {cartCount} article{cartCount > 1 ? 's' : ''}
-          </p>
-          <button onClick={() => setHasRestoredCart(false)} aria-label="Fermer" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
+      {/* ══ LA VITRINE ══ */}
+      <section className="cn-hero" ref={heroRef}>
+        <div className="cn-hero__scene" aria-hidden="true">
+          <div className="cn-hero__oven" />
+          <div className="cn-hero__dish">
+            {restaurant.cover_image_url && <img src={restaurant.cover_image_url} alt="" />}
+          </div>
+          <span className="cn-hero__leaf cn-hero__leaf--a" />
+          <span className="cn-hero__leaf cn-hero__leaf--b" />
+          <span className="cn-hero__leaf cn-hero__leaf--c" />
+        </div>
+        <div className="cn-hero__veil" aria-hidden="true" />
+
+        <div className="cn-hero__inner">
+          <h1 className="cn-hero__name cn-display">{brand.wordmark}</h1>
+          <p className="cn-hero__voice">{restaurant.description || brand.voice}</p>
+
+          <ul className="cn-hero__marks">
+            {brand.marks.map(m => <li key={m} className="cn-hero__mark">{m}</li>)}
+          </ul>
+
+          <div className="cn-hero__cta">
+            <button className="cn-btn" onClick={goToMenu}>Voir la carte</button>
+            <span className={`cn-pill ${isOpenNow ? 'cn-pill--open' : 'cn-pill--shut'}`}>
+              <span className="cn-pill__dot" />
+              {isOpenNow ? 'Ouvert maintenant' : nextOpening ? `Ouvre ${nextOpening.toLowerCase()}` : 'Fermé'}
+            </span>
+          </div>
+
+          <div className="cn-hero__meta">
+            {restaurant.address && <span>{restaurant.address.split(',').slice(0, 3).join(',').trim()}</span>}
+            {restaurant.phone && <a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a>}
+          </div>
+        </div>
+      </section>
+
+      {/* Le mot du jour, s'il y en a un */}
+      {restaurant.daily_message && (
+        <div style={{ maxWidth: 940, margin: '0 auto', padding: '20px 16px 0' }}>
+          <div className="cn-note" data-reveal>
+            <div>
+              <p className="cn-note__t">Le mot du jour</p>
+              <p className="cn-note__d">{restaurant.daily_message}</p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ── MASTHEAD ── */}
-      <header className="cn-mast">
-        <div className="cn-mast__media cn-arch">
-          {restaurant.cover_image_url
-            ? <img src={restaurant.cover_image_url} alt="" />
-            : <div className="cn-mast__ember">
-                <div className="cn-mast__initial" style={{ fontSize: 'min(38vw, 190px)' }}>{(restaurant.name || '?').trim().charAt(0).toUpperCase()}</div>
-              </div>
-          }
-          <span className="cn-stamp cn-mast__stamp" style={{ color: stampTone }}>
-            {isOpenNow ? 'Ouvert · service en cours' : 'Fermé'}
-          </span>
-        </div>
-
-        <h1 className="cn-display cn-mast__name">
-          {wordmarkLines.map((line, i) => (
-            <span key={i} style={{ display: 'block' }}>{line}</span>
-          ))}
-        </h1>
-
-        {restaurant.description
-          ? <p className="cn-ed cn-mast__voice">{restaurant.description}</p>
-          : <p className="cn-ed cn-mast__voice">{brand.voice}</p>
-        }
-
-        <div className="cn-mast__meta cn-mono">
-          {restaurant.logo_url && (
-            <img src={restaurant.logo_url} alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
-          )}
-          {restaurant.address && (
-            <span>{(() => {
-              const parts = restaurant.address.split(',')
-              const short = parts.slice(0, 3).join(',').trim()
-              return short || restaurant.address
-            })()}</span>
-          )}
-          {restaurant.phone && <a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a>}
-        </div>
-      </header>
-
-      {/* ── LA BANDE ── */}
-      <div className="cn-band-wrap" aria-hidden="true">
-        <div className="cn-band">
-          <div className="cn-band__track">
-            {[0, 1].map(copy => (
-              <div key={copy} style={{ display: 'flex' }}>
-                {brand.band.map((word, i) => (
-                  <span key={i} className="cn-band__word">{word}</span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Fermé — on commande quand même, pour plus tard */}
+      {/* Fermé : on commande quand même, pour plus tard */}
       {!isOpenNow && (
-        <div style={{ padding: '0 18px 18px' }}>
-          <div className="cn-note">
+        <div style={{ maxWidth: 940, margin: '0 auto', padding: '20px 16px 0' }}>
+          <div className="cn-note cn-note--warn" data-reveal>
             <div>
-              <p className="cn-note__k" style={{ margin: 0 }}>Four éteint</p>
-              <p className="cn-note__v">
+              <p className="cn-note__t">Fermé pour le moment</p>
+              <p className="cn-note__d">
                 {nextOpening
-                  ? <>Prochain retrait possible <strong style={{ color: p.accent }}>{nextOpening.toLowerCase()}</strong>. La carte reste ouverte, commandez pour plus tard.</>
-                  : <>La carte reste ouverte — composez votre commande pour plus tard.</>}
+                  ? <>Composez votre commande dès maintenant : le premier retrait possible est <strong>{nextOpening.toLowerCase()}</strong>.</>
+                  : <>Composez votre commande dès maintenant, elle sera préparée à la réouverture.</>}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Le mot du jour, écrit à la main sur l'ardoise */}
-      {restaurant.daily_message && (
-        <div style={{ padding: '0 18px 18px' }}>
-          <div className="cn-note" style={{ borderLeftColor: p.hot }}>
-            <div>
-              <p className="cn-note__k" style={{ margin: 0, color: p.hot }}>Le mot du jour</p>
-              <p className="cn-note__v cn-ed" style={{ fontStyle: 'italic', fontSize: 16 }}>{restaurant.daily_message}</p>
-            </div>
+      {/* ══ LA BARRE ══ */}
+      <nav className="cn-bar" aria-label="Catégories" id="carte">
+        <div className="cn-bar__in">
+          <span className="cn-bar__name">{restaurant.name}</span>
+          <div className="cn-bar__cats">
+            {orderedCategories.map(cat => (
+              <button
+                key={cat}
+                className={`cn-cat${activeCategory === cat ? ' cn-cat--on' : ''}`}
+                onClick={() => {
+                  setActiveCategory(cat)
+                  document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
         </div>
-      )}
+      </nav>
 
-      {/* ── L'ENSEIGNE COLLANTE ── */}
-      {orderedCategories.length > 0 && (
-        <nav className="cn-board" aria-label="Catégories">
-          <div className={`cn-board__mark${scrolled ? ' cn-board__mark--on' : ''}`}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: isOpenNow ? p.fresh : p.doughDim, flexShrink: 0 }} />
-            <span>{restaurant.name}</span>
-          </div>
-          <div className="cn-board__cats">
-            {orderedCategories.map(cat => {
-              const emoji = getCatEmoji(cat)
-              const isActive = activeCategory === cat
-              return (
-                <button
-                  key={cat}
-                  className={`cn-cat${isActive ? ' cn-cat--on' : ''}`}
-                  onClick={() => {
-                    setActiveCategory(cat)
-                    document.getElementById(`cat-${cat}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  }}
-                >
-                  {emoji && <span style={{ fontSize: 13 }}>{emoji}</span>}
-                  {cat}
-                </button>
-              )
-            })}
-          </div>
-        </nav>
-      )}
-
-      {/* ── LA CARTE ── */}
+      {/* ══ LA CARTE ══ */}
       <main className="cn-menu">
         {products.length === 0 && (
           <div style={{ textAlign: 'center', padding: '70px 20px' }}>
-            <p className="cn-display" style={{ fontSize: 34, margin: '0 0 12px' }}>La carte arrive</p>
-            <p className="cn-ed" style={{ color: p.doughDim, fontSize: 15, fontStyle: 'italic', margin: 0 }}>Le restaurant prépare son menu. Repassez dans un instant.</p>
+            <p className="cn-display" style={{ fontSize: 28, margin: '0 0 10px' }}>La carte arrive</p>
+            <p style={{ color: p.dim, margin: 0 }}>Le restaurant prépare son menu. Repassez dans un instant.</p>
           </div>
         )}
 
-        {orderedCategories.map((cat, catIdx) => {
+        {orderedCategories.map(cat => {
           const catProducts = products.filter(prod => (prod.category || 'Autres') === cat)
           return (
-            <section key={cat} id={`cat-${cat}`} style={{ marginBottom: 46, scrollMarginTop: 54 }}>
-
-              <div className="cn-cathead">
-                <h2 className="cn-display cn-cathead__name" style={{ margin: 0 }}>{cat}</h2>
-                <span className="cn-cathead__rule" />
-                <span className="cn-cathead__count">{String(catIdx + 1).padStart(2, '0')} · {catProducts.length} plat{catProducts.length > 1 ? 's' : ''}</span>
+            <section key={cat} id={`cat-${cat}`} style={{ marginBottom: 42, scrollMarginTop: 62 }}>
+              <div className="cn-cathead" data-reveal>
+                <h2 className="cn-cathead__name">{cat}</h2>
+                <span className="cn-cathead__count">{catProducts.length} plat{catProducts.length > 1 ? 's' : ''}</span>
               </div>
 
               {catProducts.map((product, idx) => {
-                const cartItems = cart.filter(i => i.product.id === product.id)
-                const totalQty = cartItems.reduce((s, i) => s + i.quantity, 0)
+                const totalQty = cart.filter(i => i.product.id === product.id).reduce((s, i) => s + i.quantity, 0)
                 const unavailable = !product.is_available
                 const hasFormule = (product as any).menu_extra_price > 0
-                const isStar = idx === 0 && !!product.image_url
+                const cartLines = cart.filter(i => i.product.id === product.id && i.optionGroups && i.optionGroups.length > 0)
 
-                // Le pied de ligne : prix, pointillés, action — partagé vedette/ligne
-                const foot = (
-                  <>
-                    {unavailable ? (
-                      <span className="cn-mono" style={{ fontSize: 9.5, color: p.doughDim }}>Indisponible</span>
-                    ) : totalQty > 0 && cartItems.every(ci => !ci.optionGroups?.length) ? (
-                      <div className="cn-step">
-                        <button onClick={() => removeFromCart(cartItems[cartItems.length - 1].cartKey)} aria-label={`Retirer un ${product.name}`}>−</button>
-                        <span className="cn-step__n">{totalQty}</span>
-                        <button onClick={() => handleAddToCart(product)} aria-label={`Ajouter un ${product.name}`}>+</button>
-                      </div>
-                    ) : (
-                      <button className="cn-btn" onClick={() => handleAddToCart(product)} disabled={loadingOptions}>
-                        {totalQty > 0 ? `Ajouter · ${totalQty}` : 'Ajouter'}
-                      </button>
-                    )}
-                  </>
-                )
+                return (
+                  <div key={product.id} data-reveal style={{ ['--d' as any]: `${Math.min(idx, 6) * 55}ms` }}>
+                    <button
+                      className={`cn-item${unavailable ? ' cn-item--out' : ''}`}
+                      onClick={() => handleAddToCart(product)}
+                      disabled={unavailable || loadingOptions}
+                    >
+                      <span className="cn-item__body">
+                        <span className="cn-item__name" style={{ display: 'block' }}>{product.name}</span>
+                        {product.description && <span className="cn-item__desc" style={{ display: '-webkit-box' }}>{product.description}</span>}
+                        <span className="cn-item__foot">
+                          <span className="cn-price">{price(product.price)}€</span>
+                          {hasFormule && !unavailable && <span className="cn-tag">Formule possible</span>}
+                          {unavailable && <span className="cn-tag cn-tag--out">Épuisé</span>}
+                        </span>
+                      </span>
 
-                // Les options déjà choisies, listées sous la ligne
-                const picked = cartItems.length > 0 && cartItems.some(i => i.optionGroups && i.optionGroups.length > 0) && (
-                  <div>
-                    {cartItems.map(ci => (
+                      {product.image_url ? (
+                        <span className="cn-item__media">
+                          <span className="cn-arch" data-parallax>
+                            <img src={product.image_url} alt="" />
+                          </span>
+                          {!unavailable && <span className="cn-item__add" aria-hidden="true">+</span>}
+                          {totalQty > 0 && <span className="cn-item__qty">{totalQty}</span>}
+                        </span>
+                      ) : !unavailable && (
+                        <span className="cn-item__media" style={{ width: 34 }}>
+                          <span className="cn-item__add" style={{ position: 'static' }} aria-hidden="true">+</span>
+                          {totalQty > 0 && <span className="cn-item__qty">{totalQty}</span>}
+                        </span>
+                      )}
+                    </button>
+
+                    {cartLines.map(ci => (
                       <div key={ci.cartKey} className="cn-picked">
                         <span style={{ flex: 1, minWidth: 0 }}>
-                          {Object.values(ci.selectedOptions || {}).flat().map((i: any) => i.name).join(' · ')}
-                          {ci.menuBoisson && <span style={{ color: p.accent }}> · {ci.menuBoisson}</span>}
-                          {ci.menuAccomp && <span style={{ color: p.accent }}> · {ci.menuAccomp}</span>}
-                          {ci.extraPrice > 0 && <span style={{ color: p.accent }}> +{price(ci.extraPrice)}€</span>}
+                          {ci.quantity}× {Object.values(ci.selectedOptions || {}).flat().map((o: any) => o.name).join(' · ')}
+                          {ci.menuBoisson && ` · ${ci.menuBoisson}`}
+                          {ci.menuAccomp && ` · ${ci.menuAccomp}`}
                         </span>
-                        <span className="cn-step" style={{ borderColor: 'transparent' }}>
-                          <button onClick={() => removeFromCart(ci.cartKey)} style={{ width: 30, height: 30, color: p.doughDim }} aria-label="Retirer">−</button>
-                          <span className="cn-step__n" style={{ fontSize: 13, minWidth: 18 }}>{ci.quantity}</span>
-                          <button onClick={() => handleAddToCart(product)} style={{ width: 30, height: 30 }} aria-label="Ajouter">+</button>
+                        <span className="cn-step">
+                          <button onClick={() => removeFromCart(ci.cartKey)} aria-label="Retirer un article">−</button>
+                          <span className="cn-step__n">{ci.quantity}</span>
+                          <button onClick={() => handleAddToCart(product)} aria-label="Ajouter un article">+</button>
                         </span>
                       </div>
                     ))}
                   </div>
-                )
-
-                // ── La vedette : première ligne illustrée de la catégorie ──
-                if (isStar) return (
-                  <article key={product.id} className={`cn-star${unavailable ? ' cn-item--out' : ''}`}>
-                    <div className="cn-star__media">
-                      <div className="cn-arch cn-star__frame">
-                        <img src={product.image_url} alt={product.name} style={unavailable ? { filter: 'grayscale(1) brightness(.55)' } : undefined} />
-                      </div>
-                      {unavailable && <span className="cn-sold">Victime de son succès</span>}
-                      <span className="cn-star__sticker">{price(product.price)}€</span>
-                    </div>
-                    <div className="cn-star__txt">
-                      <p className="cn-star__kicker">
-                        <span>N°{String(idx + 1).padStart(2, '0')}</span>
-                        {!unavailable && hasFormule && <b>Formule disponible</b>}
-                      </p>
-                      <h3 className="cn-display cn-star__name">{product.name}</h3>
-                      {product.description && <p className="cn-star__desc">{product.description}</p>}
-                      <div className="cn-star__foot">{foot}</div>
-                      {picked}
-                    </div>
-                  </article>
-                )
-
-                // ── La ligne de carte ──
-                return (
-                  <article key={product.id} className={`cn-item${unavailable ? ' cn-item--out' : ''}`}>
-                    <div className="cn-item__body">
-                      <div className="cn-item__head">
-                        <span className="cn-num">{String(idx + 1).padStart(2, '0')}</span>
-                        <h3 className="cn-ed cn-item__name">{product.name}</h3>
-                      </div>
-                      {product.description && <p className="cn-item__desc">{product.description}</p>}
-                      {!unavailable && hasFormule && (
-                        <p className="cn-mono" style={{ fontSize: 9, color: p.accent, margin: '9px 0 0' }}>Formule disponible</p>
-                      )}
-                      <div className="cn-item__foot">
-                        <span className="cn-price">{price(product.price)}€</span>
-                        <span className="cn-leader" />
-                        {foot}
-                      </div>
-                      {picked}
-                    </div>
-
-                    {product.image_url && (
-                      <div className="cn-item__media">
-                        <div className="cn-arch" style={{ background: p.charUp }}>
-                          <img src={product.image_url} alt={product.name} />
-                        </div>
-                        {unavailable && <span className="cn-sold">Épuisé</span>}
-                      </div>
-                    )}
-                  </article>
                 )
               })}
             </section>
@@ -780,22 +834,39 @@ export default function RestaurantPage() {
         })}
       </main>
 
-      {/* ── LE TICKET ── */}
+      {/* ══ INFOS PRATIQUES ══ */}
+      <footer className="cn-foot" data-reveal>
+        <div className="cn-foot__grid">
+          <div>
+            <p className="cn-foot__k">Le retrait</p>
+            <p className="cn-foot__v">{restaurant.address || 'Adresse à venir'}</p>
+          </div>
+          {restaurant.phone && (
+            <div>
+              <p className="cn-foot__k">Une question</p>
+              <p className="cn-foot__v"><a href={`tel:${restaurant.phone}`}>{restaurant.phone}</a></p>
+            </div>
+          )}
+          <div>
+            <p className="cn-foot__k">Le paiement</p>
+            <p className="cn-foot__v">Sur place au comptoir, au moment du retrait.</p>
+          </div>
+        </div>
+      </footer>
+
+      {/* ══ LE PANIER ══ */}
       {cartCount > 0 && (
         <button
-          className={`cn-ticket${cartBounce ? ' cn-ticket--punch' : ''}`}
+          className={`cn-cart${cartBounce ? ' cn-cart--punch' : ''}`}
           onClick={() => router.push(`/restaurant/${slug}/checkout`)}
         >
-          <span className="cn-ticket__notch" style={perforation(p.ink, 'top')} />
-          <span className="cn-ticket__body">
-            <span className="cn-ticket__label" style={{ display: 'block' }}>{cartCount} article{cartCount > 1 ? 's' : ''} · à retirer sur place</span>
-            <span className="cn-ticket__total" style={{ display: 'block' }}>{price(total)}€</span>
-          </span>
-          <span className="cn-ticket__go">Commander →</span>
+          <span className="cn-cart__n">{cartCount}</span>
+          <span className="cn-cart__t">Voir ma commande</span>
+          <span className="cn-cart__p">{price(total)}€</span>
         </button>
       )}
 
-      {/* ── LA FEUILLE : personnaliser un plat ── */}
+      {/* ══ PERSONNALISER UN PLAT ══ */}
       {optionsModal && (() => {
         const prod = optionsModal.product
         const menuPrice = Number((prod as any).menu_extra_price || 0)
@@ -809,110 +880,98 @@ export default function RestaurantPage() {
         const accompExtra = wantsMenu && selectedAccomp ? Number(selectedAccomp.price) : 0
         const boissonExtra = wantsMenu && selectedBoisson ? Number((selectedBoisson as any).menu_supplement || 0) : 0
         const totalItem = Number(prod.price) + optExtra + menuExtra + accompExtra + boissonExtra
-        const valid = optionsValid()
 
         return (
           <div className="cn-sheet-wrap" onClick={(e) => { if (e.target === e.currentTarget) setOptionsModal(null) }}>
-            <div className="cn-sheet">
-              <span className="cn-sheet__notch" style={perforation(p.ink, 'top')} />
-              <button className="cn-sheet__close" onClick={() => setOptionsModal(null)} aria-label="Fermer">✕</button>
-
-              <p className="cn-mono" style={{ fontSize: 9, opacity: .55, margin: '0 0 8px' }}>Votre composition</p>
-              <h3 className="cn-display cn-sheet__title">{prod.name}</h3>
-
-              {menuPrice > 0 && (
-                <div style={{ marginTop: 22 }}>
-                  <div className="cn-group__head" style={{ marginTop: 0 }}>
-                    <span>La formule</span>
-                    <span className="cn-group__rule" />
-                  </div>
-                  <div className="cn-formule">
-                    <button type="button" className={!wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(false)}>
-                      <div className="cn-formule__t">Plat seul</div>
-                      <div className="cn-formule__p">{price(prod.price)}€</div>
-                    </button>
-                    <button type="button" className={wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(true)}>
-                      <div className="cn-formule__t">En menu</div>
-                      <div className="cn-formule__p">+{price(Math.max(0, menuPrice - Number(prod.price)))}€</div>
-                    </button>
-                  </div>
-                  {menuLabel && <p className="cn-mono" style={{ fontSize: 9, opacity: .6, margin: '8px 0 0' }}>{menuLabel}</p>}
-                </div>
-              )}
-
-              {optionsModal.groups.map(group => (
-                <div key={group.id}>
-                  <div className="cn-group__head">
-                    <span>{group.name}</span>
-                    <span className="cn-group__rule" />
-                    <span className={group.min_choices > 0 ? 'cn-group__req' : ''}>
-                      {group.max_choices === 1 ? '1 choix' : `jusqu'à ${group.max_choices}`}{group.min_choices > 0 ? ' · requis' : ''}
-                    </span>
-                  </div>
-                  {group.items.map(item => (
-                    <OptRow
-                      key={item.id}
-                      label={item.name}
-                      single={group.max_choices === 1}
-                      on={(selectedOptions[group.id] || []).some(i => i.id === item.id)}
-                      disabled={item.is_available === false}
-                      extra={Number(item.extra_price) > 0 ? `+${price(item.extra_price)}€` : undefined}
-                      onClick={() => toggleOption(group, item)}
-                    />
-                  ))}
-                </div>
-              ))}
-
-              {wantsMenu && wantsAccomp && accomps.length > 0 && (
+            <div className="cn-sheet" role="dialog" aria-label={prod.name}>
+              <div className="cn-sheet__head">
                 <div>
-                  <div className="cn-group__head">
-                    <span>L&apos;accompagnement</span>
-                    <span className="cn-group__rule" />
-                    <span className="cn-group__req">requis</span>
-                  </div>
-                  {accomps.map(a => (
-                    <OptRow
-                      key={a.id}
-                      label={a.name}
-                      single
-                      on={selectedAccomp?.id === a.id}
-                      extra={Number(a.price) === 0 ? 'inclus' : `+${price(a.price)}€`}
-                      onClick={() => setSelectedAccomp(a)}
-                    />
-                  ))}
+                  <p className="cn-eyebrow" style={{ margin: '0 0 3px' }}>Votre plat</p>
+                  <h3 className="cn-sheet__title">{prod.name}</h3>
                 </div>
-              )}
+                <button className="cn-sheet__close" onClick={() => setOptionsModal(null)} aria-label="Fermer">✕</button>
+              </div>
 
-              {wantsMenu && boissons.length > 0 && (
-                <div>
-                  <div className="cn-group__head">
-                    <span>La boisson</span>
-                    <span className="cn-group__rule" />
-                    <span className="cn-group__req">requis</span>
+              <div className="cn-sheet__body">
+                {menuPrice > 0 && (
+                  <div className="cn-group">
+                    <div className="cn-group__head"><span className="cn-group__name">La formule</span></div>
+                    <div className="cn-formule">
+                      <button type="button" className={!wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(false)}>
+                        <div className="cn-formule__t">Plat seul</div>
+                        <div className="cn-formule__p">{price(prod.price)}€</div>
+                      </button>
+                      <button type="button" className={wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(true)}>
+                        <div className="cn-formule__t">En formule</div>
+                        <div className="cn-formule__p">+{price(Math.max(0, menuPrice - Number(prod.price)))}€</div>
+                        {menuLabel && <div className="cn-formule__n">{menuLabel}</div>}
+                      </button>
+                    </div>
                   </div>
-                  {boissons.map(b => (
-                    <OptRow
-                      key={b.id}
-                      label={b.name}
-                      single
-                      on={selectedBoisson?.id === b.id}
-                      extra={Number((b as any).menu_supplement) > 0 ? `+${price((b as any).menu_supplement)}€` : 'incluse'}
-                      onClick={() => setSelectedBoisson(b)}
-                    />
-                  ))}
-                </div>
-              )}
+                )}
 
-              <button className="cn-confirm" onClick={confirmOptions} disabled={!valid}>
-                <span>Mettre au panier</span>
-                <b>{price(totalItem)}€</b>
-              </button>
+                {optionsModal.groups.map(group => (
+                  <div key={group.id} className="cn-group">
+                    <div className="cn-group__head">
+                      <span className="cn-group__name">{group.name}</span>
+                      {group.min_choices > 0
+                        ? <span className="cn-group__req">Obligatoire</span>
+                        : <span className="cn-group__opt">{group.max_choices === 1 ? 'Au choix' : `Jusqu'à ${group.max_choices}`}</span>}
+                    </div>
+                    {group.items.map(item => (
+                      <OptRow
+                        key={item.id}
+                        label={item.name}
+                        single={group.max_choices === 1}
+                        on={(selectedOptions[group.id] || []).some(i => i.id === item.id)}
+                        disabled={item.is_available === false}
+                        extra={Number(item.extra_price) > 0 ? `+${price(item.extra_price)}€` : undefined}
+                        onClick={() => toggleOption(group, item)}
+                      />
+                    ))}
+                  </div>
+                ))}
+
+                {wantsMenu && wantsAccomp && accomps.length > 0 && (
+                  <div className="cn-group">
+                    <div className="cn-group__head">
+                      <span className="cn-group__name">L&apos;accompagnement</span>
+                      <span className="cn-group__req">Obligatoire</span>
+                    </div>
+                    {accomps.map(a => (
+                      <OptRow key={a.id} label={a.name} single on={selectedAccomp?.id === a.id}
+                        extra={Number(a.price) === 0 ? 'Inclus' : `+${price(a.price)}€`}
+                        onClick={() => setSelectedAccomp(a)} />
+                    ))}
+                  </div>
+                )}
+
+                {wantsMenu && boissons.length > 0 && (
+                  <div className="cn-group">
+                    <div className="cn-group__head">
+                      <span className="cn-group__name">La boisson</span>
+                      <span className="cn-group__req">Obligatoire</span>
+                    </div>
+                    {boissons.map(b => (
+                      <OptRow key={b.id} label={b.name} single on={selectedBoisson?.id === b.id}
+                        extra={Number((b as any).menu_supplement) > 0 ? `+${price((b as any).menu_supplement)}€` : 'Incluse'}
+                        onClick={() => setSelectedBoisson(b)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="cn-sheet__foot">
+                <button className="cn-btn cn-btn--block" onClick={confirmOptions} disabled={!optionsValid()}>
+                  Ajouter · {price(totalItem)}€
+                </button>
+              </div>
             </div>
           </div>
         )
       })()}
 
-      {/* ── LA FEUILLE : plat seul ou en menu (produits sans options) ── */}
+      {/* ══ SEUL OU EN FORMULE (plats sans options) ══ */}
       {menuOnlyModal && (() => {
         const prod = menuOnlyModal
         const menuPrice = Number((prod as any).menu_extra_price || 0)
@@ -920,9 +979,7 @@ export default function RestaurantPage() {
         const accomps = products.filter(a => a.category === 'Accompagnements' && a.is_available !== false)
         const boissons = products.filter(b => b.category === 'Boissons' && b.is_available !== false)
         const wantsAccomp = (prod as any).has_accompagnement !== false
-        const needsAccomp = wantsMenu && wantsAccomp && accomps.length > 0 && !selectedAccomp
-        const needsBoisson = wantsMenu && boissons.length > 0 && !selectedBoisson
-        const blocked = needsAccomp || needsBoisson
+        const blocked = wantsMenu && ((wantsAccomp && accomps.length > 0 && !selectedAccomp) || (boissons.length > 0 && !selectedBoisson))
 
         const accompExtra = wantsMenu && selectedAccomp ? Number(selectedAccomp.price) : 0
         const boissonExtra = wantsMenu && selectedBoisson ? Number((selectedBoisson as any).menu_supplement || 0) : 0
@@ -930,84 +987,78 @@ export default function RestaurantPage() {
 
         return (
           <div className="cn-sheet-wrap" onClick={(e) => { if (e.target === e.currentTarget) setMenuOnlyModal(null) }}>
-            <div className="cn-sheet">
-              <span className="cn-sheet__notch" style={perforation(p.ink, 'top')} />
-              <button className="cn-sheet__close" onClick={() => setMenuOnlyModal(null)} aria-label="Fermer">✕</button>
-
-              <p className="cn-mono" style={{ fontSize: 9, opacity: .55, margin: '0 0 8px' }}>Seul ou en formule</p>
-              <h3 className="cn-display cn-sheet__title">{prod.name}</h3>
-              {prod.description && <p className="cn-ed" style={{ fontSize: 14.5, lineHeight: 1.55, opacity: .7, margin: '12px 0 0' }}>{prod.description}</p>}
-
-              <div style={{ marginTop: 22 }}>
-                <div className="cn-formule">
-                  <button type="button" className={!wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(false)}>
-                    <div className="cn-formule__t">Plat seul</div>
-                    <div className="cn-formule__p">{price(prod.price)}€</div>
-                  </button>
-                  <button type="button" className={wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(true)}>
-                    <div className="cn-formule__t">En menu</div>
-                    <div className="cn-formule__p">+{price(Math.max(0, menuPrice - Number(prod.price)))}€</div>
-                  </button>
+            <div className="cn-sheet" role="dialog" aria-label={prod.name}>
+              <div className="cn-sheet__head">
+                <div>
+                  <p className="cn-eyebrow" style={{ margin: '0 0 3px' }}>Seul ou en formule</p>
+                  <h3 className="cn-sheet__title">{prod.name}</h3>
                 </div>
-                {menuLabel && <p className="cn-mono" style={{ fontSize: 9, opacity: .6, margin: '8px 0 0' }}>{menuLabel}</p>}
+                <button className="cn-sheet__close" onClick={() => setMenuOnlyModal(null)} aria-label="Fermer">✕</button>
               </div>
 
-              {wantsMenu && wantsAccomp && accomps.length > 0 && (
-                <div>
-                  <div className="cn-group__head">
-                    <span>L&apos;accompagnement</span>
-                    <span className="cn-group__rule" />
-                    <span className="cn-group__req">requis</span>
-                  </div>
-                  {accomps.map(a => (
-                    <OptRow
-                      key={a.id}
-                      label={a.name}
-                      single
-                      on={selectedAccomp?.id === a.id}
-                      extra={Number(a.price) === 0 ? 'inclus' : `+${price(a.price)}€`}
-                      onClick={() => setSelectedAccomp(a)}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className="cn-sheet__body">
+                {prod.description && <p style={{ color: p.dim, fontSize: 15, margin: '14px 0 0' }}>{prod.description}</p>}
 
-              {wantsMenu && boissons.length > 0 && (
-                <div>
-                  <div className="cn-group__head">
-                    <span>La boisson</span>
-                    <span className="cn-group__rule" />
-                    <span className="cn-group__req">requis</span>
+                <div className="cn-group">
+                  <div className="cn-formule">
+                    <button type="button" className={!wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(false)}>
+                      <div className="cn-formule__t">Plat seul</div>
+                      <div className="cn-formule__p">{price(prod.price)}€</div>
+                    </button>
+                    <button type="button" className={wantsMenu ? 'on' : ''} onClick={() => setWantsMenu(true)}>
+                      <div className="cn-formule__t">En formule</div>
+                      <div className="cn-formule__p">+{price(Math.max(0, menuPrice - Number(prod.price)))}€</div>
+                      {menuLabel && <div className="cn-formule__n">{menuLabel}</div>}
+                    </button>
                   </div>
-                  {boissons.map(b => (
-                    <OptRow
-                      key={b.id}
-                      label={b.name}
-                      single
-                      on={selectedBoisson?.id === b.id}
-                      extra={Number((b as any).menu_supplement) > 0 ? `+${price((b as any).menu_supplement)}€` : 'incluse'}
-                      onClick={() => setSelectedBoisson(b)}
-                    />
-                  ))}
                 </div>
-              )}
 
-              <button
-                className="cn-confirm"
-                disabled={blocked}
-                onClick={() => {
-                  if (blocked) return
-                  const menuExtra = wantsMenu ? Math.max(0, menuPrice - Number(prod.price)) : 0
-                  addToCart(prod, {}, [], menuExtra + accompExtra + boissonExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined, wantsMenu && selectedAccomp ? selectedAccomp.name : undefined)
-                  setMenuOnlyModal(null)
-                  setWantsMenu(false)
-                  setSelectedBoisson(null)
-                  setSelectedAccomp(null)
-                }}
-              >
-                <span>Mettre au panier</span>
-                <b>{price(totalItem)}€</b>
-              </button>
+                {wantsMenu && wantsAccomp && accomps.length > 0 && (
+                  <div className="cn-group">
+                    <div className="cn-group__head">
+                      <span className="cn-group__name">L&apos;accompagnement</span>
+                      <span className="cn-group__req">Obligatoire</span>
+                    </div>
+                    {accomps.map(a => (
+                      <OptRow key={a.id} label={a.name} single on={selectedAccomp?.id === a.id}
+                        extra={Number(a.price) === 0 ? 'Inclus' : `+${price(a.price)}€`}
+                        onClick={() => setSelectedAccomp(a)} />
+                    ))}
+                  </div>
+                )}
+
+                {wantsMenu && boissons.length > 0 && (
+                  <div className="cn-group">
+                    <div className="cn-group__head">
+                      <span className="cn-group__name">La boisson</span>
+                      <span className="cn-group__req">Obligatoire</span>
+                    </div>
+                    {boissons.map(b => (
+                      <OptRow key={b.id} label={b.name} single on={selectedBoisson?.id === b.id}
+                        extra={Number((b as any).menu_supplement) > 0 ? `+${price((b as any).menu_supplement)}€` : 'Incluse'}
+                        onClick={() => setSelectedBoisson(b)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="cn-sheet__foot">
+                <button
+                  className="cn-btn cn-btn--block"
+                  disabled={blocked}
+                  onClick={() => {
+                    if (blocked) return
+                    const menuExtra = wantsMenu ? Math.max(0, menuPrice - Number(prod.price)) : 0
+                    addToCart(prod, {}, [], menuExtra + accompExtra + boissonExtra, wantsMenu && selectedBoisson ? selectedBoisson.name : undefined, wantsMenu && selectedAccomp ? selectedAccomp.name : undefined)
+                    setMenuOnlyModal(null)
+                    setWantsMenu(false)
+                    setSelectedBoisson(null)
+                    setSelectedAccomp(null)
+                  }}
+                >
+                  Ajouter · {price(totalItem)}€
+                </button>
+              </div>
             </div>
           </div>
         )
@@ -1016,7 +1067,7 @@ export default function RestaurantPage() {
   )
 }
 
-/** Une case à cocher de bon de commande : on croise la case à l'encre. */
+/** Une ligne de choix : grande cible, état évident, prix aligné à droite. */
 function OptRow({ label, on, extra, disabled, single, onClick }: {
   label: string
   on: boolean
@@ -1033,8 +1084,8 @@ function OptRow({ label, on, extra, disabled, single, onClick }: {
       className={`cn-opt${on ? ' cn-opt--on' : ''}${disabled ? ' cn-opt--off' : ''}`}
     >
       <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-        <span className="cn-opt__box" style={{ borderRadius: single ? '50%' : 2 }}>{on ? '✕' : ''}</span>
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+        <span className="cn-opt__box" style={{ borderRadius: single ? '50%' : 6 }}>{on ? '✓' : ''}</span>
+        <span className="cn-opt__name" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
       </span>
       {extra && <span className="cn-opt__extra">{extra}</span>}
     </button>

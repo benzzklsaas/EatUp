@@ -1,19 +1,17 @@
-import { Anton, Fraunces, DM_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Instrument_Sans, DM_Mono } from "next/font/google";
 
 /**
  * Même système typographique que la carte — le suivi de commande fait partie
  * de la même expérience de marque.
  */
-const anton = Anton({
-  variable: "--font-anton",
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
-  weight: "400",
 });
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const instrument = Instrument_Sans({
+  variable: "--font-instrument",
   subsets: ["latin"],
-  style: ["normal", "italic"],
 });
 
 const dmMono = DM_Mono({
@@ -29,7 +27,7 @@ export default function SuiviLayout({
 }>) {
   return (
     <div
-      className={`${anton.variable} ${fraunces.variable} ${dmMono.variable}`}
+      className={`${bricolage.variable} ${instrument.variable} ${dmMono.variable}`}
       style={{ display: "flex", flexDirection: "column", flex: 1 }}
     >
       {children}

@@ -2,7 +2,7 @@
 
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { getBrand, FONT, perforation } from '@/lib/brand'
+import { getBrand, paletteVars, FONT } from '@/lib/brand'
 import { brandCss } from '@/lib/brand-styles'
 
 export default function OrderSuccessPage() {
@@ -31,24 +31,12 @@ export default function OrderSuccessPage() {
 
   const brand = getBrand(slug)
   const p = brand.palette
-  const cssVars = {
-    '--cn-ink': p.ink, '--cn-char': p.char, '--cn-char-up': p.charUp, '--cn-line': p.line,
-    '--cn-dough': p.dough, '--cn-dough-dim': p.doughDim, '--cn-paper': p.paper,
-    '--cn-paper-ink': p.paperInk, '--cn-hot': p.hot, '--cn-accent': p.accent,
-    '--cn-accent-ink': p.accentInk, '--cn-fresh': p.fresh,
-  } as React.CSSProperties
+  const cssVars = paletteVars(p) as React.CSSProperties
 
   const CSS = brandCss() + `
-    .cn-done { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 14px; }
-    .cn-sheetpaper {
-      position: relative; background: var(--cn-paper); color: var(--cn-paper-ink);
-      padding: 34px 22px 34px;
-    }
-    .cn-sheetpaper__top, .cn-sheetpaper__bot { position: absolute; left: 0; right: 0; height: 12px; }
-    .cn-sheetpaper__top { top: 0; }
-    .cn-sheetpaper__bot { bottom: 0; }
-    .cn-kicker { font-family: ${FONT.mono}; font-size: 9px; letter-spacing: .2em; text-transform: uppercase; opacity: .55; margin: 0 0 7px; }
-    .cn-done__num { font-family: ${FONT.display}; font-size: clamp(30px, 10vw, 52px); margin: 12px 0 0; }
+    .cn-done { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+    .cn-card { background: var(--cn-surface); border: 1px solid var(--cn-line); border-radius: 12px; padding: 26px 20px; }
+    .cn-done__num { font-family: ${FONT.mono}; font-size: clamp(26px, 8vw, 34px); margin: 8px 0 0; }
   `
 
   return (
@@ -56,37 +44,24 @@ export default function OrderSuccessPage() {
       <style>{CSS}</style>
       <div className="cn-done">
         <div style={{ width: '100%', maxWidth: 420 }}>
+          <div className="cn-card">
+            <span className="cn-pill cn-pill--open"><span className="cn-pill__dot" />Paiement confirmé</span>
 
-          <div className="cn-sheetpaper">
-            <span className="cn-sheetpaper__top" style={perforation(p.ink, 'top')} />
+            <p className="cn-eyebrow" style={{ margin: '20px 0 0' }}>Votre numéro</p>
+            <p className="cn-done__num">{orderNumber}</p>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14 }}>
-              <p className="cn-kicker" style={{ margin: 0 }}>Commande payée</p>
-              <span className="cn-stamp" style={{ color: p.fresh, flexShrink: 0, marginTop: -4 }}>Réglé</span>
-            </div>
-            <p className="cn-display cn-done__num">{orderNumber}</p>
-
-            <p className="cn-ed" style={{ fontSize: 15, lineHeight: 1.6, margin: '24px 0 0', opacity: .75 }}>
-              Votre commande est partie en cuisine. Un email de confirmation vient d&apos;arriver dans votre boîte.
+            <p style={{ fontSize: 15, color: p.dim, margin: '20px 0 0', lineHeight: 1.55 }}>
+              Votre commande est partie en cuisine. Un email de confirmation vient d&apos;arriver —
+              présentez ce numéro au comptoir pour le retrait.
             </p>
-            <p className="cn-mono" style={{ fontSize: 9.5, letterSpacing: '.14em', margin: '16px 0 0', opacity: .55, lineHeight: 1.8 }}>
-              Présentez ce numéro au comptoir
-            </p>
-
-            <span className="cn-sheetpaper__bot" style={perforation(p.ink, 'bottom')} />
           </div>
 
           {orderNumber && (
-            <button className="cn-confirm" style={{ marginTop: 14 }} onClick={() => router.push(`/suivi/${orderNumber}`)}>
-              <span>Suivre ma commande</span>
-              <span>→</span>
+            <button className="cn-btn cn-btn--block" style={{ marginTop: 14 }} onClick={() => router.push(`/suivi/${orderNumber}`)}>
+              Suivre ma commande
             </button>
           )}
-          <button
-            onClick={() => router.push(`/restaurant/${slug}`)}
-            className="cn-mono"
-            style={{ width: '100%', marginTop: 10, padding: '14px', background: 'transparent', border: `1px solid ${p.line}`, color: p.doughDim, fontSize: 10, cursor: 'pointer' }}
-          >
+          <button className="cn-btn cn-btn--ghost cn-btn--block" style={{ marginTop: 10 }} onClick={() => router.push(`/restaurant/${slug}`)}>
             Retour à la carte
           </button>
         </div>
