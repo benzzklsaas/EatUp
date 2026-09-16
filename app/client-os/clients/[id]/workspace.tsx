@@ -104,6 +104,7 @@ export function ClientWorkspace({ id }: { id: string }) {
   const progress = progressOf(client)
   const delivered = isStepDone(client, 'livraison')
   const status = DOSSIER_STATUS[client.status]
+  const phase = phaseLabelOf(client)
   const contactName = [client.contact.firstName, client.contact.lastName].filter(Boolean).join(' ')
   const solutions = client.analysis.solutionTypes.map((type) => SOLUTION_TYPES[type])
 
@@ -140,7 +141,8 @@ export function ClientWorkspace({ id }: { id: string }) {
                 <Pill tone={status.tone} dot pulse={client.status === 'production'}>
                   {status.label}
                 </Pill>
-                <Pill tone="neutral">{phaseLabelOf(client)}</Pill>
+                {/* Sur un dossier livré, la phase répète le statut — on l'omet. */}
+                {phase !== status.label ? <Pill tone="neutral">{phase}</Pill> : null}
                 {solutions.slice(0, 2).map((label) => (
                   <span key={label} className="cos-tag" style={{ fontSize: 11.5, padding: '3px 9px' }}>
                     {label}
