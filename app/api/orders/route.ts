@@ -1,14 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { NextRequest, NextResponse, after } from 'next/server'
+import { randomBytes } from 'node:crypto'
 import { Resend } from 'resend'
+import { adminClient } from '@/lib/eatup/server/supabase'
+import { loadRestaurantData } from '@/lib/eatup/server/data'
+import { buildOrderEmails, esc, type EmailItem } from '@/lib/eatup/server/order-emails'
+import { generateOrderNumber, parseOrderRequest } from '@/lib/eatup/order-request'
+import { issueMessage, priceSelection } from '@/lib/eatup/pricing'
+import { isValidPickupSlot } from '@/lib/eatup/schedule'
+import { round2 } from '@/lib/eatup/money'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Création d'une commande click & collect (paiement sur place).
+// Tout ce qui engage le restaurant est recalculé ici à partir de la base :
+// produits et options disponibles, règles de choix, prix, créneau de retrait.
+// Statut, mode et état de paiement sont fixés par le serveur, jamais par le navigateur.
 
 async function checkRateLimit(ip: string, route: string): Promise<boolean> {
+  const supabase = adminClient()
   const now = new Date()
   const resetAt = new Date(now.getTime() + 3600_000).toISOString()
 
@@ -28,200 +35,163 @@ async function checkRateLimit(ip: string, route: string): Promise<boolean> {
   return true
 }
 
+function fail(status: number, error: string, extra: Record<string, unknown> = {}) {
+  return NextResponse.json({ error, ...extra }, { status })
+}
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
   if (!await checkRateLimit(ip, 'orders')) {
-    return NextResponse.json({ error: 'Trop de commandes. Réessayez dans une heure.' }, { status: 429 })
-  }
-  const { order, items, emailData } = await req.json()
-
-  if (!order?.restaurant_id || !items?.length) {
-    return NextResponse.json({ error: 'Données manquantes' }, { status: 400 })
+    return fail(429, 'Trop de commandes. Réessayez dans une heure.')
   }
 
-  const { data: resto } = await supabase
-    .from('restaurants')
-    .select('id')
-    .eq('id', order.restaurant_id)
-    .single()
-  if (!resto) {
-    return NextResponse.json({ error: 'Restaurant introuvable' }, { status: 403 })
+  let body: unknown
+  try { body = await req.json() } catch { return fail(400, 'Requête invalide.') }
+
+  // Ancien format (page ouverte avant la mise à jour) : les prix venaient du navigateur.
+  if (body && typeof body === 'object' && 'order' in body) {
+    return fail(409, 'La carte a été mise à jour. Rechargez la page pour finaliser votre commande.', { code: 'OUTDATED_CLIENT' })
   }
 
-  // Recalcul des prix côté serveur — les prix client ne sont pas acceptés tels quels
-  const productIds = [...new Set(items.map((i: any) => i.product_id))]
-  const { data: products } = await supabase
-    .from('products')
-    .select('id, price')
-    .in('id', productIds)
-    .eq('restaurant_id', order.restaurant_id)
+  const supabase = adminClient()
+  const parsed = parseOrderRequest(body)
+  if (!parsed.ok) return fail(400, parsed.error, { code: 'INVALID', field: parsed.field })
+  const request = parsed.value
+  const now = new Date()
 
-  if (!products || products.length !== productIds.length) {
-    return NextResponse.json({ error: 'Produit introuvable' }, { status: 400 })
+  const { data: restaurantRow, error: restaurantError } = await supabase.from('restaurants').select('*').eq('id', request.restaurantId).maybeSingle()
+  if (restaurantError && restaurantError.code !== '22P02') { // 22P02 : identifiant mal formé → introuvable
+    console.error('[orders] lecture du restaurant impossible', restaurantError.code, restaurantError.message)
+    return fail(503, 'Le restaurant est momentanément injoignable. Réessayez dans un instant.')
+  }
+  if (!restaurantRow) return fail(404, 'Restaurant introuvable.')
+
+  let data
+  try {
+    data = await loadRestaurantData(supabase, restaurantRow, now)
+  } catch (e) {
+    console.error('[orders] lecture de la carte impossible', (e as Error).message)
+    return fail(503, 'Le restaurant est momentanément injoignable. Réessayez dans un instant.')
   }
 
-  const priceMap: Record<string, number> = {}
-  for (const p of products) priceMap[p.id] = Number(p.price)
-
-  const verifiedItems = items.map((i: any) => {
-    const basePrice = priceMap[i.product_id]
-    if (basePrice === undefined) throw new Error('Produit invalide')
-    const extraPrice = Math.max(0, Math.min(Number(i.price) - basePrice, 50)) // extra option max 50€
-    const unitPrice = basePrice + extraPrice
-    return { ...i, price: unitPrice }
-  })
-
-  const recalculatedTotal = verifiedItems.reduce(
-    (sum: number, i: any) => sum + i.price * Number(i.quantity), 0
-  )
-
-  const { data, error } = await supabase
-    .from('orders')
-    .insert({ ...order, total_price: recalculatedTotal })
-    .select()
-    .single()
-
-  if (error || !data) {
-    return NextResponse.json({ error: error?.message || 'Erreur' }, { status: 500 })
+  // ── Articles : disponibilité, règles de choix et prix relus en base ──
+  const problems: { productId: string; message: string }[] = []
+  const lines: (EmailItem & { product_id: string })[] = []
+  for (const item of request.items) {
+    const product = data.products.find(p => p.id === item.productId)
+    if (!product) {
+      problems.push({ productId: item.productId, message: 'Ce produit n’est plus proposé.' })
+      continue
+    }
+    const groups = data.groupsByProduct[product.id] || []
+    const priced = priceSelection(product, groups, item.selection, data.products)
+    if (!priced.ok) {
+      problems.push({ productId: product.id, message: issueMessage(priced.issues[0], groups) })
+      continue
+    }
+    lines.push({
+      product_id: product.id,
+      product_name: product.name,
+      quantity: item.quantity,
+      price: priced.unitPrice,
+      options: priced.optionsText,
+    })
   }
+  if (problems.length) {
+    return fail(409, 'Certains articles de votre panier ont changé. Vérifiez-les avant de commander.', { code: 'ITEMS_INVALID', items: problems })
+  }
+
+  // ── Créneau : doit correspondre aux horaires réels (fermetures comprises) ──
+  if (!isValidPickupSlot(request.pickupTime, data.schedules, data.closures, now)) {
+    return fail(409, 'Ce créneau de retrait n’est plus disponible. Choisissez-en un autre.', { code: 'SLOT_UNAVAILABLE' })
+  }
+
+  const total = round2(lines.reduce((s, l) => s + l.price * l.quantity, 0))
+  const pickupTime = new Date(request.pickupTime).toISOString()
+  const baseOrder = {
+    restaurant_id: data.restaurant.id,
+    first_name: request.customer.firstName,
+    last_name: request.customer.lastName,
+    phone: request.customer.phone,
+    email: request.customer.email,
+    total_price: total,
+    pickup_time: pickupTime,
+    payment_method: 'cash',
+    payment_status: 'unpaid',
+    status: 'pending',
+  }
+
+  // ── Insertion idempotente : un renvoi du même numéro (réseau coupé) ne crée pas de doublon ──
+  let orderNumber = request.orderNumber
+  let created: { id: string; order_number: string } | null = null
+  for (let attempt = 0; attempt < 3 && !created; attempt++) {
+    const { data: row, error } = await supabase
+      .from('orders')
+      .insert({ ...baseOrder, order_number: orderNumber })
+      .select('id, order_number')
+      .single()
+    if (row) { created = row; break }
+    if (error?.code !== '23505') {
+      console.error('[orders] insertion impossible', error?.code, error?.message)
+      return fail(500, 'La commande n’a pas pu être enregistrée. Aucun montant n’a été débité : réessayez.')
+    }
+    const { data: existing } = await supabase
+      .from('orders')
+      .select('id, order_number, restaurant_id, email, total_price, pickup_time')
+      .eq('order_number', orderNumber)
+      .maybeSingle()
+    if (existing && existing.restaurant_id === baseOrder.restaurant_id && existing.email === baseOrder.email
+      && Math.abs(Number(existing.total_price) - total) < 0.01) {
+      return NextResponse.json({ order: { order_number: existing.order_number, pickup_time: existing.pickup_time, total_price: Number(existing.total_price), status: 'pending' }, duplicate: true })
+    }
+    orderNumber = generateOrderNumber(n => randomBytes(n))
+  }
+  if (!created) return fail(500, 'La commande n’a pas pu être enregistrée. Réessayez.')
 
   const { error: itemsError } = await supabase.from('order_items').insert(
-    verifiedItems.map((i: any) => ({ ...i, order_id: data.id }))
+    lines.map(l => ({ order_id: created.id, product_id: l.product_id, product_name: l.product_name, quantity: l.quantity, price: l.price, options: l.options })),
   )
-
   if (itemsError) {
-    return NextResponse.json({ error: itemsError.message }, { status: 500 })
+    // Pas de commande « fantôme » sans articles dans le tableau de bord du restaurant.
+    await supabase.from('orders').delete().eq('id', created.id)
+    console.error('[orders] insertion des articles impossible', itemsError.code, itemsError.message)
+    return fail(500, 'La commande n’a pas pu être enregistrée. Réessayez.')
   }
 
-  // Récupération des emails depuis la DB — jamais depuis le client
-  const { data: restoFull } = await supabase
-    .from('restaurants')
-    .select('email, name')
-    .eq('id', order.restaurant_id)
-    .single()
+  // ── Emails envoyés après la réponse : la confirmation s'affiche sans attendre Resend ──
+  const restaurantEmail: string | null = restaurantRow.email || null
+  after(async () => {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr'
+    const pickupFormatted = new Date(pickupTime).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })
+    const customerName = esc(`${baseOrder.first_name} ${baseOrder.last_name}`)
+    const restaurantName = esc(data.restaurant.name)
+    const safeNumber = esc(created.order_number)
+    const { customerHtml, restaurantHtml } = buildOrderEmails({
+      appUrl, customerName, restaurantName, orderNumber: safeNumber, pickupFormatted, totalStr: total.toFixed(2), items: lines,
+    })
+    const sends = [
+      resend.emails.send({
+        from: 'EatUp <noreply@eatup-app.fr>',
+        to: baseOrder.email,
+        subject: `✅ Commande #${safeNumber} confirmée — ${restaurantName}`,
+        html: customerHtml,
+      }),
+    ]
+    if (restaurantEmail) {
+      sends.push(resend.emails.send({
+        from: 'EatUp <noreply@eatup-app.fr>',
+        to: restaurantEmail,
+        subject: `🔔 Nouvelle commande #${safeNumber} — ${customerName} (${restaurantName})`,
+        html: restaurantHtml,
+      }))
+    }
+    const results = await Promise.allSettled(sends)
+    for (const r of results) {
+      const err = r.status === 'rejected' ? r.reason : r.value.error
+      if (err) console.error('[orders] email non envoyé', created.order_number, (err as { name?: string })?.name || 'erreur')
+    }
+  })
 
-  if (restoFull?.email && emailData?.customerEmail) {
-    try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://eatup-app.fr'
-      const esc = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-      const pickupFormatted = new Date(order.pickup_time).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })
-      const totalStr = recalculatedTotal.toFixed(2)
-      const customerName = esc(`${order.first_name} ${order.last_name}`)
-      const restaurantName = esc(restoFull.name)
-      const orderNumber = esc(order.order_number)
-
-      const itemsHtml = verifiedItems.map((i: any) => `
-        <tr>
-          <td style="padding:8px 0;color:#cbd5e1;font-size:14px">${esc(i.product_name)} <span style="color:#475569">×${i.quantity}</span>${i.options ? `<br><span style="color:#475569;font-size:12px">${esc(i.options)}</span>` : ''}</td>
-          <td style="padding:8px 0;text-align:right;color:#94a3b8;font-size:14px">${(i.price * i.quantity).toFixed(2)}€</td>
-        </tr>
-      `).join('')
-
-      const customerHtml = `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px">
-    <tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-      <tr><td style="padding-bottom:28px;text-align:center">
-        <span style="font-size:22px;font-weight:800;color:#0f172a">EatUp</span>
-      </td></tr>
-      <tr><td style="background:#0f172a;border-radius:20px 20px 0 0;padding:40px 36px 32px;text-align:center">
-        <div style="font-size:48px;margin-bottom:16px">✅</div>
-        <h1 style="color:#ffffff;font-size:26px;font-weight:800;margin:0 0 8px;letter-spacing:-0.5px">Commande confirmée !</h1>
-        <p style="color:#94a3b8;font-size:15px;margin:0">Bonjour <strong style="color:#e2e8f0">${customerName}</strong>, votre commande chez <strong style="color:#60a5fa">${restaurantName}</strong> est bien enregistrée.</p>
-      </td></tr>
-      <tr><td style="background:#1e293b;padding:24px 36px;text-align:center;border-top:1px solid #334155">
-        <p style="color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 6px;font-weight:600">Numéro de commande</p>
-        <p style="color:#3b82f6;font-size:32px;font-weight:900;margin:0;letter-spacing:-1px">#${orderNumber}</p>
-      </td></tr>
-      <tr><td style="background:#1e293b;padding:0 36px 24px;border-top:1px solid #334155">
-        <div style="background:#0f172a;border-radius:14px;padding:20px 24px">
-          <p style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin:0 0 16px">Détail de votre commande</p>
-          <table width="100%" cellpadding="0" cellspacing="0">
-            ${itemsHtml}
-            <tr><td colspan="2" style="padding-top:14px;border-top:1px solid #334155"></td></tr>
-            <tr><td style="color:#ffffff;font-weight:700;font-size:16px;padding-top:4px">Total</td><td style="color:#3b82f6;font-weight:800;font-size:16px;text-align:right;padding-top:4px">${totalStr}€</td></tr>
-          </table>
-        </div>
-      </td></tr>
-      <tr><td style="background:#1e293b;padding:0 36px 32px">
-        <div style="background:linear-gradient(135deg,#1d4ed8,#4338ca);border-radius:14px;padding:20px 24px">
-          <p style="color:#bfdbfe;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin:0 0 6px">Heure de retrait</p>
-          <p style="color:#ffffff;font-size:18px;font-weight:700;margin:0;text-transform:capitalize">🕐 ${pickupFormatted}</p>
-        </div>
-      </td></tr>
-      <tr><td style="background:#1e293b;padding:0 36px 32px;border-top:1px solid #334155;text-align:center">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/suivi/${orderNumber}" style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#ffffff;font-weight:700;font-size:14px;padding:13px 28px;border-radius:12px;text-decoration:none">
-          📍 Suivre ma commande en temps réel
-        </a>
-      </td></tr>
-      <tr><td style="background:#0f172a;border-radius:0 0 20px 20px;padding:24px 36px;text-align:center;border-top:1px solid #334155">
-        <p style="color:#475569;font-size:13px;margin:0 0 4px">Des questions ? Contactez directement le restaurant.</p>
-        <p style="color:#334155;font-size:11px;margin:0">© 2026 EatUp · Click &amp; Collect pour restaurants</p>
-      </td></tr>
-    </table></td></tr>
-  </table>
-</body></html>`
-
-      const restaurantHtml = `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px">
-    <tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-      <tr><td style="padding-bottom:28px;text-align:center">
-        <span style="font-size:22px;font-weight:800;color:#0f172a">EatUp</span>
-      </td></tr>
-      <tr><td style="background:#0f172a;border-radius:20px 20px 0 0;padding:36px;text-align:center">
-        <div style="font-size:48px;margin-bottom:12px">🔔</div>
-        <h1 style="color:#ffffff;font-size:24px;font-weight:800;margin:0 0 8px">Nouvelle commande !</h1>
-        <p style="color:#94a3b8;font-size:15px;margin:0">Client : <strong style="color:#e2e8f0">${customerName}</strong></p>
-      </td></tr>
-      <tr><td style="background:#1e293b;padding:24px 36px;text-align:center;border-top:1px solid #334155">
-        <p style="color:#64748b;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 6px;font-weight:600">Numéro de commande</p>
-        <p style="color:#3b82f6;font-size:32px;font-weight:900;margin:0">#${orderNumber}</p>
-      </td></tr>
-      <tr><td style="background:#1e293b;padding:0 36px 24px">
-        <div style="background:#0f172a;border-radius:14px;padding:20px 24px">
-          <p style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin:0 0 16px">Articles commandés</p>
-          <table width="100%" cellpadding="0" cellspacing="0">
-            ${itemsHtml}
-            <tr><td colspan="2" style="padding-top:14px;border-top:1px solid #334155"></td></tr>
-            <tr><td style="color:#ffffff;font-weight:700;font-size:16px;padding-top:4px">Total</td><td style="color:#10b981;font-weight:800;font-size:16px;text-align:right;padding-top:4px">${totalStr}€</td></tr>
-          </table>
-        </div>
-      </td></tr>
-      <tr><td style="background:#1e293b;padding:0 36px 24px">
-        <div style="background:linear-gradient(135deg,#065f46,#047857);border-radius:14px;padding:20px 24px">
-          <p style="color:#6ee7b7;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin:0 0 6px">Retrait prévu</p>
-          <p style="color:#ffffff;font-size:18px;font-weight:700;margin:0;text-transform:capitalize">🕐 ${pickupFormatted}</p>
-        </div>
-      </td></tr>
-      <tr><td style="background:#1e293b;padding:0 36px 32px;text-align:center">
-        <a href="${appUrl}/dashboard/orders" style="display:inline-block;background:#3b82f6;color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:12px;text-decoration:none">Voir dans le dashboard →</a>
-      </td></tr>
-      <tr><td style="background:#0f172a;border-radius:0 0 20px 20px;padding:24px 36px;text-align:center;border-top:1px solid #334155">
-        <p style="color:#334155;font-size:11px;margin:0">© 2026 EatUp · Plateforme Click &amp; Collect</p>
-      </td></tr>
-    </table></td></tr>
-  </table>
-</body></html>`
-
-      await Promise.all([
-        resend.emails.send({
-          from: 'EatUp <noreply@eatup-app.fr>',
-          to: emailData.customerEmail,
-          subject: `✅ Commande #${orderNumber} confirmée — ${restaurantName}`,
-          html: customerHtml,
-        }),
-        resend.emails.send({
-          from: 'EatUp <noreply@eatup-app.fr>',
-          to: restoFull.email,
-          subject: `🔔 Nouvelle commande #${orderNumber} — ${customerName} (${restaurantName})`,
-          html: restaurantHtml,
-        }),
-      ])
-    } catch (_) {}
-  }
-
-  return NextResponse.json({ order: data })
+  return NextResponse.json({ order: { order_number: created.order_number, pickup_time: pickupTime, total_price: total, status: 'pending' } })
 }

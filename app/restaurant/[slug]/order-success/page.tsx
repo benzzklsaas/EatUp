@@ -1,67 +1,66 @@
 'use client'
 
-import { useParams, useSearchParams, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
+import { Suspense, useEffect } from 'react'
+import { useParams, useSearchParams } from 'next/navigation'
+import { ReceiptIcon } from '@/components/eatup/icons'
 
-export default function OrderSuccessPage() {
+// Retour de Stripe Checkout (flux de paiement en ligne, non activé dans le checkout actuel).
+// Cette page n'affirme pas que le paiement a réussi : l'état réel (orders.payment_status,
+// mis à jour par le webhook Stripe) est affiché sur la page de suivi.
+
+function OrderSuccess() {
   const params = useParams()
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug as string
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('order')
-  const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
-    async function notify() {
-      if (!orderNumber) return
-      const sessionId = searchParams.get('session_id')
-      if (!sessionId) return
-      try {
-        await fetch('/api/email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderNumber, sessionId }),
-        })
-      } catch (_) {}
+    const sessionId = searchParams.get('session_id')
+    if (orderNumber && sessionId) {
+      // La route vérifie elle-même auprès de Stripe que la session est payée avant d'envoyer les emails.
+      fetch('/api/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderNumber, sessionId }),
+      }).catch(() => {})
     }
-    notify()
-    localStorage.removeItem(`cart_${slug}`)
-  }, [orderNumber])
+    try {
+      window.localStorage.removeItem(`cart_${slug}`)
+      window.localStorage.removeItem(`eatup_cart_v2_${slug}`)
+    } catch { /* stockage indisponible */ }
+  }, [orderNumber, searchParams, slug])
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#050810', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-      <div style={{ position: 'fixed', top: '30%', left: '50%', transform: 'translateX(-50%)', width: 500, height: 500, background: 'radial-gradient(circle, rgba(74,222,128,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-      <div style={{ width: '100%', maxWidth: 420, textAlign: 'center' }}>
-        {/* Icône succès */}
-        <div style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, background: 'rgba(74,222,128,0.1)', border: '2px solid rgba(74,222,128,0.3)' }}>
-          ✅
+    <div className="eu-app grid place-items-center px-6 py-16">
+      <div className="flex w-full max-w-sm flex-col items-center text-center">
+        <span className="grid size-20 place-items-center rounded-full bg-brand text-brand-ink" style={{ animation: 'eu-pop-in .5s var(--eu-ease-spring) both' }}>
+          <ReceiptIcon size={34} />
+        </span>
+        <h1 className="mt-6 font-display text-[28px] leading-tight font-extrabold tracking-[-0.02em]">Commande enregistrée</h1>
+        <p className="mt-2 text-[15px] text-muted">Nous vérifions la confirmation de paiement. Le statut à jour est visible sur la page de suivi.</p>
+        {orderNumber && (
+          <p className="eu-num mt-6 rounded-2xl bg-white px-5 py-3 font-mono text-[22px] font-bold tracking-[0.06em] shadow-[var(--eu-shadow-card)]">{orderNumber}</p>
+        )}
+        <div className="mt-7 flex w-full flex-col gap-2">
+          {orderNumber && (
+            <Link href={`/suivi/${encodeURIComponent(orderNumber)}`} className="eu-press flex h-12 items-center justify-center rounded-2xl bg-brand text-[15px] font-semibold text-brand-ink">
+              Suivre ma commande
+            </Link>
+          )}
+          <Link href={`/restaurant/${slug}`} className="eu-press flex h-12 items-center justify-center rounded-2xl text-[15px] font-semibold">
+            Retour à la carte
+          </Link>
         </div>
-
-        <h1 style={{ fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', margin: '0 0 10px' }}>Paiement confirmé !</h1>
-        <p style={{ fontSize: 15, color: '#4b5563', margin: '0 0 32px', lineHeight: 1.6 }}>
-          Votre commande a été reçue et payée avec succès.
-        </p>
-
-        {/* Numéro de commande */}
-        <div style={{ borderRadius: 20, padding: '24px', background: 'linear-gradient(145deg, #0f172a, #111827)', border: '1px solid rgba(74,222,128,0.2)', marginBottom: 24 }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Numéro de commande</p>
-          <p style={{ fontSize: 32, fontWeight: 900, color: '#4ade80', letterSpacing: '-1px', margin: 0 }}>{orderNumber}</p>
-        </div>
-
-        <div style={{ borderRadius: 16, padding: '16px 20px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', marginBottom: 32, textAlign: 'left' }}>
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
-            📧 Un email de confirmation a été envoyé.<br />
-            🛍️ Présentez ce numéro lors du retrait de votre commande.
-          </p>
-        </div>
-
-        <button onClick={() => router.push(`/restaurant/${slug}`)} style={{ width: '100%', padding: '15px', borderRadius: 16, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: 'white', fontWeight: 700, fontSize: 15, boxShadow: '0 8px 30px rgba(99,102,241,0.3)' }}>
-          Retour au menu
-        </button>
       </div>
     </div>
+  )
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<div className="eu-app" />}>
+      <OrderSuccess />
+    </Suspense>
   )
 }
