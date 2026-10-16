@@ -134,9 +134,9 @@ Paramètres du tableau de bord.
 
 ## 7. Tests
 
-- `npm test` : 33 tests unitaires (Node, sans dépendance) sur les prix/formules/options, les créneaux et le
-  statut d'ouverture en heure de Paris (été/hiver, fermetures), le panier (fusion, reprise de l'ancien format)
-  et la validation des requêtes de commande.
+- `npm test` : 38 tests unitaires (Node, sans dépendance) sur les prix/formules/options, les créneaux et le
+  statut d'ouverture en heure de Paris (été/hiver, fermetures), le panier (fusion, reprise de l'ancien format),
+  la validation des requêtes de commande et le message WhatsApp envoyé à l'équipe.
 - Tests de bout en bout réalisés (scripts hors dépôt) avec Chromium mobile sur le build de production et un faux
   Supabase : parcours complet, états fermé / sans créneau / rupture / panne / 320 px / desktop / mouvement réduit,
   16 tentatives d'abus de l'API, audit Lighthouse (menu : accessibilité 100, bonnes pratiques 100).
@@ -146,6 +146,7 @@ Paramètres du tableau de bord.
 - Paiement en ligne : le flux Stripe commande existe mais n'était pas activé ; l'activer est une décision métier.
 - Comptes clients, historique, favoris, « recommander » : aucun compte client dans le modèle de données.
 - Badges « nouveau » / « best-seller » : aucune donnée fiable aujourd'hui (nécessiterait une vue agrégée des ventes).
-- Notifications SMS/push : seul l'email est intégré.
+- Notifications SMS/push au client : seul l'email est intégré. L'équipe du restaurant peut en revanche être
+  prévenue sur WhatsApp à chaque commande (API officielle, messages privés) : voir `docs/NOTIFICATIONS-WHATSAPP.md`.
 - Capacité par créneau : aucune donnée de capacité ; les créneaux reflètent les horaires réels uniquement.
 - Restyle du tableau de bord : hors périmètre (palette proche mais non alignée : `#f97316` / `#FFFBF5`).

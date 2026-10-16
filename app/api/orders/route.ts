@@ -4,6 +4,7 @@ import { Resend } from 'resend'
 import { adminClient } from '@/lib/eatup/server/supabase'
 import { loadRestaurantData } from '@/lib/eatup/server/data'
 import { buildOrderEmails, esc, type EmailItem } from '@/lib/eatup/server/order-emails'
+import { sendOrderToTeam } from '@/lib/eatup/server/whatsapp'
 import { generateOrderNumber, parseOrderRequest } from '@/lib/eatup/order-request'
 import { issueMessage, priceSelection } from '@/lib/eatup/pricing'
 import { isValidPickupSlot } from '@/lib/eatup/schedule'
@@ -192,6 +193,18 @@ export async function POST(req: NextRequest) {
       if (err) console.error('[orders] email non envoyé', created.order_number, (err as { name?: string })?.name || 'erreur')
     }
   })
+
+  // ── Équipe du restaurant prévenue sur WhatsApp (si configuré pour ce restaurant) ──
+  after(() => sendOrderToTeam(data.restaurant.slug, {
+    restaurantName: data.restaurant.name,
+    orderNumber: created.order_number,
+    firstName: baseOrder.first_name,
+    lastName: baseOrder.last_name,
+    pickupTime,
+    items: lines,
+    total,
+    paymentLabel: 'à régler sur place',
+  }))
 
   return NextResponse.json({ order: { order_number: created.order_number, pickup_time: pickupTime, total_price: total, status: 'pending' } })
 }
