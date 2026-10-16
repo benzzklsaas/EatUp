@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Photos produits/couvertures hébergées sur Supabase Storage : redimensionnées et converties
+  // (AVIF/WebP) par next/image. Les autres URL restent servies telles quelles (voir FoodImage).
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.supabase.co', pathname: '/storage/v1/object/public/**' },
+    ],
+    qualities: [75],
+    formats: ['image/avif', 'image/webp'],
+  },
   async headers() {
     return [
       {

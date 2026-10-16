@@ -3,13 +3,50 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* ── Système de design EatUp (commun à tous les restaurants) ───────────── */
+  --eu-ink: #171717;          /* noir charbon : texte, contrastes, écrans de marque */
+  --eu-cream: #F7F4EE;        /* crème chaud : fond de navigation et du menu */
+  --eu-sand: #E5E0D7;         /* beige minéral : surfaces secondaires, séparateurs */
+  --eu-white: #FFFFFF;
+  --eu-orange: #FF6B35;       /* orange gourmand : actions principales (texte charbon dessus, 6,3:1) */
+  --eu-orange-ink: #C2410C;   /* orange lisible en texte sur fond clair (4,7:1 sur crème) */
+  --eu-muted: #6B645B;        /* texte secondaire (5,3:1 sur crème) */
+  --eu-line: rgba(23, 23, 23, 0.09);
+  --eu-success: #1E7A4C;
+  --eu-danger: #B42318;
+  --eu-warning: #9A5B00;
+
+  /* Accent du restaurant : surchargé par restaurant via style inline (voir lib/eatup/brand.ts). */
+  --brand: var(--eu-orange);
+  --brand-ink: var(--eu-ink);       /* couleur de texte lisible sur --brand */
+  --brand-text: var(--eu-orange-ink); /* --brand utilisable en texte sur fond clair */
+
+  --eu-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --eu-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --eu-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --eu-shadow-card: 0 1px 2px rgba(23, 23, 23, 0.04), 0 8px 24px -12px rgba(23, 23, 23, 0.16);
+  --eu-shadow-float: 0 2px 6px rgba(23, 23, 23, 0.08), 0 18px 40px -16px rgba(23, 23, 23, 0.35);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-ink: var(--eu-ink);
+  --color-cream: var(--eu-cream);
+  --color-sand: var(--eu-sand);
+  --color-muted: var(--eu-muted);
+  --color-line: var(--eu-line);
+  --color-orange-ink: var(--eu-orange-ink);
+  --color-success: var(--eu-success);
+  --color-danger: var(--eu-danger);
+  --color-warning: var(--eu-warning);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-text: var(--brand-text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-eatup-display), var(--font-geist-sans);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +59,194 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* ── Parcours client ─────────────────────────────────────────────────────── */
+
+/* Les pages client sont toujours claires, y compris l'arrière-plan visible au rebond iOS. */
+html:has(.eu-app),
+html:has(.eu-app) body {
+  background: var(--eu-cream);
+  color-scheme: light;
+}
+
+.eu-app {
+  background: var(--eu-cream);
+  color: var(--eu-ink);
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  font-feature-settings: "ss01", "cv11";
+}
+
+.eu-app :focus-visible {
+  outline: 2.5px solid var(--eu-ink);
+  outline-offset: 2px;
+}
+
+.eu-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.eu-no-scrollbar {
+  scrollbar-width: none;
+}
+.eu-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Apparitions progressives (transform/opacity uniquement) */
+@keyframes eu-fade-up {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes eu-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes eu-sheet-in {
+  from { transform: translate3d(0, 100%, 0); }
+  to { transform: none; }
+}
+@keyframes eu-sheet-out {
+  from { transform: none; }
+  to { transform: translate3d(0, 100%, 0); }
+}
+@keyframes eu-dialog-in {
+  from { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes eu-dialog-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translate3d(0, 16px, 0) scale(0.98); }
+}
+@keyframes eu-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes eu-bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.045); }
+  70% { transform: scale(0.99); }
+  100% { transform: scale(1); }
+}
+@keyframes eu-badge-pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+@keyframes eu-shake {
+  0%, 100% { transform: none; }
+  20% { transform: translate3d(-6px, 0, 0); }
+  40% { transform: translate3d(5px, 0, 0); }
+  60% { transform: translate3d(-3px, 0, 0); }
+  80% { transform: translate3d(2px, 0, 0); }
+}
+@keyframes eu-shimmer {
+  from { transform: translate3d(-100%, 0, 0); }
+  to { transform: translate3d(100%, 0, 0); }
+}
+@keyframes eu-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes eu-live {
+  0% { transform: scale(1); opacity: 0.55; }
+  80%, 100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes eu-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes eu-ring {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes eu-pop-in {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes eu-particle {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  100% { transform: translate3d(var(--dx), var(--dy), 0) scale(0.4); opacity: 0; }
+}
+
+.eu-reveal {
+  animation: eu-fade-up 0.5s var(--eu-ease-out) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+.eu-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--eu-sand);
+  border-radius: 12px;
+}
+.eu-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: eu-shimmer 1.3s ease-in-out infinite;
+}
+
+/* Feuilles (fiche produit, panier) : bas d'écran sur mobile, fenêtre centrée sur grand écran */
+.eu-backdrop {
+  animation: eu-fade-in 0.28s ease both;
+}
+.eu-backdrop[data-state="closing"] {
+  animation: eu-fade-out 0.22s ease both;
+}
+.eu-sheet {
+  animation: eu-sheet-in 0.42s var(--eu-ease-out) both;
+}
+.eu-sheet[data-state="closing"] {
+  animation: eu-sheet-out 0.24s var(--eu-ease-in-out) both;
+}
+@media (min-width: 640px) {
+  .eu-sheet {
+    animation-name: eu-dialog-in;
+    animation-duration: 0.32s;
+  }
+  .eu-sheet[data-state="closing"] {
+    animation-name: eu-dialog-out;
+    animation-duration: 0.2s;
+  }
+}
+
+.eu-bump { animation: eu-bump 0.42s var(--eu-ease-out); }
+.eu-badge-pop { animation: eu-badge-pop 0.38s var(--eu-ease-spring); }
+.eu-shake { animation: eu-shake 0.42s ease; }
+.eu-spin { animation: eu-spin 0.8s linear infinite; }
+
+.eu-img {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.eu-img[data-loaded="true"] {
+  opacity: 1;
+}
+
+.eu-press {
+  transition: transform 0.16s var(--eu-ease-out), background-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.eu-press:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eu-app *,
+  .eu-app *::before,
+  .eu-app *::after,
+  .eu-portal *,
+  .eu-portal *::before,
+  .eu-portal *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .eu-skeleton::after {
+    display: none;
+  }
 }
