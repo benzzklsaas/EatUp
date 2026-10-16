@@ -219,7 +219,7 @@ export function OrderTracker({ initial, serverNow }: Props) {
           <h2 id="pickup-title" className="text-[13px] font-semibold tracking-[0.08em] text-muted uppercase">Retrait</h2>
           <p className="mt-1 font-display text-[24px] leading-tight font-bold tracking-[-0.01em]">{formatPickup(order.pickup_time, now)}</p>
           <ul className="mt-4 flex flex-col gap-2.5 text-[14.5px]">
-            <li className="flex gap-3"><BagIcon size={18} className="mt-0.5 shrink-0 text-brand-text" />Présentez le numéro <strong className="eu-num font-mono">{order.order_number}</strong> au comptoir.</li>
+            <li className="flex gap-3"><BagIcon size={18} className="mt-0.5 shrink-0 text-brand-text" /><span>Présentez le numéro <strong className="eu-num font-mono">{order.order_number}</strong> au comptoir.</span></li>
             <li className="flex gap-3"><ReceiptIcon size={18} className="mt-0.5 shrink-0 text-brand-text" />{paymentLabel}</li>
           </ul>
           {(restaurant.address || restaurant.phone) && (
