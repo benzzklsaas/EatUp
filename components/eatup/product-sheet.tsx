@@ -95,9 +95,10 @@ function ProductSheetBody({
   const blocking = priced.issues.find(i => i.kind === 'product-unavailable' || i.kind === 'menu-unavailable' || i.kind === 'option-unavailable' || i.kind === 'option-unknown')
 
   const media = product.image_url ? (
-    <div className="relative aspect-[4/3] max-h-[44vh] w-full overflow-hidden bg-sand sm:aspect-[16/10]">
-      <FoodImage src={product.image_url} alt={product.name} sizes="(min-width: 640px) 540px, 100vw" preload />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-ink/30 to-transparent" />
+    // Proportion toujours comprise entre 1:1 et 16:10 (jamais plus étirée) : le plat reste entier.
+    // Ni dégradé ni filtre par-dessus la photo.
+    <div className="relative aspect-[4/3] w-full overflow-hidden bg-sand sm:aspect-[16/10]">
+      <FoodImage src={product.image_url} alt={product.name} sizes="(min-width: 640px) 540px, 100vw" slot="large" preload />
     </div>
   ) : null
 

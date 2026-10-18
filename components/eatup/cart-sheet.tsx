@@ -152,7 +152,7 @@ function CartRowItem({ row, groups, onQuantity, onEdit }: { row: CartRow; groups
       <div className="flex gap-3">
         {image && (
           <div className="relative size-[60px] shrink-0 overflow-hidden rounded-[14px] bg-sand">
-            <FoodImage src={image} alt="" sizes="60px" grayscale={row.status === 'missing'} />
+            <FoodImage src={image} alt="" sizes="60px" />
           </div>
         )}
         <div className="min-w-0 flex-1">

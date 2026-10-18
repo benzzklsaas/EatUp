@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test lib/eatup/*.test.ts"
+    "test": "node --test lib/eatup/*.test.ts scripts/lib/*.test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",

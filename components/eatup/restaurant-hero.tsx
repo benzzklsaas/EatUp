@@ -39,7 +39,7 @@ export function RestaurantHero({ restaurant, status, pickup }: HeroProps) {
     <header className="relative">
       <div className="relative h-[220px] overflow-hidden bg-ink sm:h-[320px]">
         {restaurant.cover_image_url
-          ? <FoodImage src={restaurant.cover_image_url} alt="" sizes="100vw" preload className="scale-[1.02]" />
+          ? <FoodImage src={restaurant.cover_image_url} alt="" sizes="100vw" slot="large" preload className="scale-[1.02]" />
           : <BrandBackdrop name={restaurant.name} />}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ink/45 via-ink/0 to-ink/25" />
         <div className="absolute inset-x-0 top-0 mx-auto flex max-w-3xl items-center justify-between px-4 pt-[max(14px,env(safe-area-inset-top))]">

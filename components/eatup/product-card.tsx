@@ -38,7 +38,7 @@ export function ProductCard({ product, offer, available, configurable, inCart, i
       ) : (
         <div className="flex w-full items-stretch gap-4 p-3.5">
           <CardText product={product} offer={null} inCart={0} hasImage={Boolean(image)} soldOut />
-          {image && <CardImage src={image} alt="" grayscale />}
+          {image && <CardImage src={image} alt="" />}
         </div>
       )}
 
@@ -78,10 +78,10 @@ function CardText({ product, offer, inCart, hasImage, soldOut }: { product: Prod
   )
 }
 
-function CardImage({ src, alt, grayscale }: { src: string; alt: string; grayscale?: boolean }) {
+function CardImage({ src, alt }: { src: string; alt: string }) {
   return (
     <div className="relative size-[112px] shrink-0 self-center overflow-hidden rounded-[18px] bg-sand sm:size-[124px]">
-      <FoodImage src={src} alt={alt} sizes="124px" grayscale={grayscale} />
+      <FoodImage src={src} alt={alt} sizes="124px" />
     </div>
   )
 }
