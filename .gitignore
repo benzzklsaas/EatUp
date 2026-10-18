@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# sauvegardes du script d’import de photos (anciennes URL)
+photo-import-sauvegarde-*.json

@@ -46,7 +46,9 @@ export function ProductCard({ product, offer, available, configurable, inCart, i
         <button
           type="button"
           onClick={e => onQuickAdd(product, e.currentTarget)}
-          className={`eu-press absolute grid size-11 place-items-center rounded-full bg-brand text-brand-ink shadow-[0_6px_16px_-6px_rgba(23,23,23,0.45)] ring-4 ring-white ${image ? 'right-2 bottom-2' : 'right-3.5 bottom-3.5'}`}
+          // À côté du prix, jamais sur la vignette (décalage = marge 14 + vignette 112/124 + espace 16 px) :
+          // la photo du plat reste entièrement visible.
+          className={`eu-press absolute bottom-3.5 grid size-11 place-items-center rounded-full bg-brand text-brand-ink shadow-[0_6px_16px_-6px_rgba(23,23,23,0.45)] ring-4 ring-white ${image ? 'right-[142px] sm:right-[154px]' : 'right-3.5'}`}
           aria-label={configurable ? `Personnaliser ${product.name}` : `Ajouter ${product.name} au panier`}
         >
           <PlusIcon size={22} strokeWidth={2.2} />
@@ -68,7 +70,7 @@ function CardText({ product, offer, inCart, hasImage, soldOut }: { product: Prod
       {product.description && (
         <p className="mt-1 line-clamp-2 text-[14px] leading-snug text-muted">{product.description}</p>
       )}
-      <div className="mt-auto flex flex-wrap items-center gap-x-2.5 gap-y-1.5 pt-2.5">
+      <div className={`mt-auto flex flex-wrap items-center gap-x-2.5 gap-y-1.5 pt-2.5 ${hasImage && !soldOut ? 'min-h-[54px] pr-14' : ''}`}>
         <span className={`eu-num text-[16px] font-semibold ${soldOut ? 'text-muted line-through' : ''}`}>{formatPrice(product.price)}</span>
         {soldOut && <Tag tone="danger">Victime de son succès</Tag>}
         {offer?.available && <Tag>Formule {formatPrice(offer.price)}</Tag>}

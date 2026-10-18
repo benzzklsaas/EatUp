@@ -1,0 +1,442 @@
+[
+  {
+    "eatup": "Crousty M (sauce au choix)",
+    "id": "crousty-m",
+    "famille": "crousty",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/crousty-m.jpg",
+      "borne-petit": "borne-petit/crousty-m.jpg",
+      "web": "web/crousty-m.jpg"
+    }
+  },
+  {
+    "eatup": "Crousty L (sauce au choix)",
+    "id": "crousty-l",
+    "famille": "crousty",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/crousty-l.jpg",
+      "borne-petit": "borne-petit/crousty-l.jpg",
+      "web": "web/crousty-l.jpg"
+    }
+  },
+  {
+    "eatup": "Smash",
+    "id": "smash",
+    "famille": "burgers",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/smash.jpg",
+      "borne-petit": "borne-petit/smash.jpg",
+      "web": "web/smash.jpg"
+    }
+  },
+  {
+    "eatup": "Double Smash",
+    "id": "double-smash",
+    "famille": "burgers",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/double-smash.jpg",
+      "borne-petit": "borne-petit/double-smash.jpg",
+      "web": "web/double-smash.jpg"
+    }
+  },
+  {
+    "eatup": "Smash Mountain",
+    "id": "smash-mountain",
+    "famille": "burgers",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/smash-mountain.jpg",
+      "borne-petit": "borne-petit/smash-mountain.jpg",
+      "web": "web/smash-mountain.jpg"
+    }
+  },
+  {
+    "eatup": "Big BK",
+    "id": "big-bk",
+    "famille": "burgers",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/big-bk.jpg",
+      "borne-petit": "borne-petit/big-bk.jpg",
+      "web": "web/big-bk.jpg"
+    }
+  },
+  {
+    "eatup": "Sandwich Cheese Naan",
+    "id": "sandwich-cheese-naan",
+    "famille": "naans",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/sandwich-cheese-naan.jpg",
+      "borne-petit": "borne-petit/sandwich-cheese-naan.jpg",
+      "web": "web/sandwich-cheese-naan.jpg"
+    }
+  },
+  {
+    "eatup": "Sandwich Galette",
+    "id": "sandwich-galette",
+    "famille": "naans",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/sandwich-galette.jpg",
+      "borne-petit": "borne-petit/sandwich-galette.jpg",
+      "web": "web/sandwich-galette.jpg"
+    }
+  },
+  {
+    "eatup": "Sandwich Classic",
+    "id": "sandwich-classic",
+    "famille": "naans",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/sandwich-classic.jpg",
+      "borne-petit": "borne-petit/sandwich-classic.jpg",
+      "web": "web/sandwich-classic.jpg"
+    }
+  },
+  {
+    "eatup": "Tacos M",
+    "id": "tacos-m",
+    "famille": "tacos",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/tacos-m.jpg",
+      "borne-petit": "borne-petit/tacos-m.jpg",
+      "web": "web/tacos-m.jpg"
+    }
+  },
+  {
+    "eatup": "Tacos L",
+    "id": "tacos-l",
+    "famille": "tacos",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/tacos-l.jpg",
+      "borne-petit": "borne-petit/tacos-l.jpg",
+      "web": "web/tacos-l.jpg"
+    }
+  },
+  {
+    "eatup": "Tacos XL",
+    "id": "tacos-xl",
+    "famille": "tacos",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/tacos-xl.jpg",
+      "borne-petit": "borne-petit/tacos-xl.jpg",
+      "web": "web/tacos-xl.jpg"
+    }
+  },
+  {
+    "eatup": "Frites Cheddar Bacon Oignons frits",
+    "id": "frites-cheddar-bacon",
+    "famille": "sides",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/frites-cheddar-bacon.jpg",
+      "borne-petit": "borne-petit/frites-cheddar-bacon.jpg",
+      "web": "web/frites-cheddar-bacon.jpg"
+    }
+  },
+  {
+    "eatup": "Frites Cheddar",
+    "id": "frites-cheddar",
+    "famille": "sides",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/frites-cheddar.jpg",
+      "borne-petit": "borne-petit/frites-cheddar.jpg",
+      "web": "web/frites-cheddar.jpg"
+    }
+  },
+  {
+    "eatup": "Frite",
+    "id": "frites",
+    "famille": "sides",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/frites.jpg",
+      "borne-petit": "borne-petit/frites.jpg",
+      "web": "web/frites.jpg"
+    }
+  },
+  {
+    "eatup": "Tenders maison X4",
+    "id": "tenders",
+    "famille": "sides",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/tenders.jpg",
+      "borne-petit": "borne-petit/tenders.jpg",
+      "web": "web/tenders.jpg"
+    }
+  },
+  {
+    "eatup": "Salade Ranch",
+    "id": "salade-ranch",
+    "famille": "salades",
+    "photo_en_carte": true,
+    "fichiers": {
+      "borne": "borne/salade-ranch.jpg",
+      "borne-petit": "borne-petit/salade-ranch.jpg",
+      "web": "web/salade-ranch.jpg"
+    }
+  },
+  {
+    "eatup": "Salade East Side",
+    "id": "salade-east-side",
+    "famille": "salades",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/salade-east-side.jpg",
+      "borne-petit": "borne-petit/salade-east-side.jpg",
+      "web": "web/salade-east-side.jpg"
+    }
+  },
+  {
+    "eatup": "Salade Veggie",
+    "id": "salade-veggie",
+    "famille": "salades",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/salade-veggie.jpg",
+      "borne-petit": "borne-petit/salade-veggie.jpg",
+      "web": "web/salade-veggie.jpg"
+    }
+  },
+  {
+    "eatup": "Tarte au Daim",
+    "id": "tarte-daim",
+    "famille": "desserts",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/tarte-daim.jpg",
+      "borne-petit": "borne-petit/tarte-daim.jpg",
+      "web": "web/tarte-daim.jpg"
+    }
+  },
+  {
+    "eatup": "Cristaline 50cl",
+    "id": "cristaline",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/cristaline.jpg",
+      "borne-petit": "borne-petit/cristaline.jpg",
+      "web": "web/cristaline.jpg"
+    }
+  },
+  {
+    "eatup": "CapriSun",
+    "id": "capri-sun",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/capri-sun.jpg",
+      "borne-petit": "borne-petit/capri-sun.jpg",
+      "web": "web/capri-sun.jpg"
+    }
+  },
+  {
+    "eatup": "Smash Burger",
+    "id": "smash-burger",
+    "famille": "burgers",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/smash-burger.jpg",
+      "borne-petit": "borne-petit/smash-burger.jpg",
+      "web": "web/smash-burger.jpg"
+    }
+  },
+  {
+    "eatup": "Coca-Cola",
+    "id": "coca-cola",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/coca-cola.jpg",
+      "borne-petit": "borne-petit/coca-cola.jpg",
+      "web": "web/coca-cola.jpg"
+    }
+  },
+  {
+    "eatup": "Coca-Cola Zéro",
+    "id": "coca-zero",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/coca-zero.jpg",
+      "borne-petit": "borne-petit/coca-zero.jpg",
+      "web": "web/coca-zero.jpg"
+    }
+  },
+  {
+    "eatup": "Coca-Cola Cherry",
+    "id": "coca-cherry",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/coca-cherry.jpg",
+      "borne-petit": "borne-petit/coca-cherry.jpg",
+      "web": "web/coca-cherry.jpg"
+    }
+  },
+  {
+    "eatup": "Oasis Tropical",
+    "id": "oasis-tropical",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/oasis-tropical.jpg",
+      "borne-petit": "borne-petit/oasis-tropical.jpg",
+      "web": "web/oasis-tropical.jpg"
+    }
+  },
+  {
+    "eatup": "Oasis Pomme Poire",
+    "id": "oasis-pomme-poire",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/oasis-pomme-poire.jpg",
+      "borne-petit": "borne-petit/oasis-pomme-poire.jpg",
+      "web": "web/oasis-pomme-poire.jpg"
+    }
+  },
+  {
+    "eatup": "Oasis Pomme Cassis Framboise",
+    "id": "oasis-pomme-cassis-framboise",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/oasis-pomme-cassis-framboise.jpg",
+      "borne-petit": "borne-petit/oasis-pomme-cassis-framboise.jpg",
+      "web": "web/oasis-pomme-cassis-framboise.jpg"
+    }
+  },
+  {
+    "eatup": "Oasis Fraise Framboise",
+    "id": "oasis-fraise-framboise",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/oasis-fraise-framboise.jpg",
+      "borne-petit": "borne-petit/oasis-fraise-framboise.jpg",
+      "web": "web/oasis-fraise-framboise.jpg"
+    }
+  },
+  {
+    "eatup": "Fanta Orange",
+    "id": "fanta-orange",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/fanta-orange.jpg",
+      "borne-petit": "borne-petit/fanta-orange.jpg",
+      "web": "web/fanta-orange.jpg"
+    }
+  },
+  {
+    "eatup": "Fanta Tropical",
+    "id": "fanta-tropical",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/fanta-tropical.jpg",
+      "borne-petit": "borne-petit/fanta-tropical.jpg",
+      "web": "web/fanta-tropical.jpg"
+    }
+  },
+  {
+    "eatup": "Fanta Mangue Dragon",
+    "id": "fanta-mangue-dragon",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/fanta-mangue-dragon.jpg",
+      "borne-petit": "borne-petit/fanta-mangue-dragon.jpg",
+      "web": "web/fanta-mangue-dragon.jpg"
+    }
+  },
+  {
+    "eatup": "Orangina",
+    "id": "orangina",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/orangina.jpg",
+      "borne-petit": "borne-petit/orangina.jpg",
+      "web": "web/orangina.jpg"
+    }
+  },
+  {
+    "eatup": "Dr Pepper Original",
+    "id": "dr-pepper",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/dr-pepper.jpg",
+      "borne-petit": "borne-petit/dr-pepper.jpg",
+      "web": "web/dr-pepper.jpg"
+    }
+  },
+  {
+    "eatup": "Lipton Ice Tea Pêche",
+    "id": "lipton-peche",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/lipton-peche.jpg",
+      "borne-petit": "borne-petit/lipton-peche.jpg",
+      "web": "web/lipton-peche.jpg"
+    }
+  },
+  {
+    "eatup": "Lipton Ice Tea Framboise",
+    "id": "lipton-framboise",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/lipton-framboise.jpg",
+      "borne-petit": "borne-petit/lipton-framboise.jpg",
+      "web": "web/lipton-framboise.jpg"
+    }
+  },
+  {
+    "eatup": "Lipton Ice Tea Pastèque Menthe",
+    "id": "lipton-pasteque-menthe",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/lipton-pasteque-menthe.jpg",
+      "borne-petit": "borne-petit/lipton-pasteque-menthe.jpg",
+      "web": "web/lipton-pasteque-menthe.jpg"
+    }
+  },
+  {
+    "eatup": "Fuze Tea",
+    "id": "fuze-tea",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/fuze-tea.jpg",
+      "borne-petit": "borne-petit/fuze-tea.jpg",
+      "web": "web/fuze-tea.jpg"
+    }
+  },
+  {
+    "eatup": "Perrier",
+    "id": "perrier",
+    "famille": "boissons",
+    "photo_en_carte": false,
+    "fichiers": {
+      "borne": "borne/perrier.jpg",
+      "borne-petit": "borne-petit/perrier.jpg",
+      "web": "web/perrier.jpg"
+    }
+  }
+]
