@@ -1,0 +1,24 @@
+# Visuels de la carte EatUp : associations plat -> accompagnement -> boissons -> badge NEW.
+#
+# Pour ajouter un plat plus tard : déposez sa photo dans plats/, ajoutez un bloc
+# sous « visuels: » puis relancez le script de génération.
+# Le fichier exporté est nommé d'après « nom » (minuscules, tirets) :
+#   « Burger Classique » -> export/burger-classique.jpg et .webp
+
+# Dimensions réelles, pour que les boissons aient une taille crédible à côté du
+# plat (une canette 33 cl mesure environ 11,5 cm de haut).
+dimensions:
+  plats: # largeur réelle en cm (assiette, boîte, burger…), par fichier de plats/
+    # burger-classique.jpg: 12
+    # frites.jpg: 10
+  boissons: # hauteur réelle en cm, par fichier de boissons/
+    # coca-33cl.jpg: 11.5
+    # eau-50cl.jpg: 21
+
+visuels: []
+  # Exemple (à recopier sans le « # » en début de ligne) :
+  # - nom: Burger Classique
+  #   plat: burger-classique.jpg     # photo du plat principal, au centre, en grand
+  #   accompagnement: frites.jpg     # facultatif, en arrière-plan à gauche
+  #   boissons: [coca-33cl.jpg]      # 0, 1 ou 2 boissons, à droite, en retrait
+  #   nouveau: false                 # true = badge « NEW » en haut à gauche
