@@ -9,6 +9,7 @@ previews/
   variants/              essai 2 — les trois mises en scène photographiques (1350 × 1080)
   comparisons/           chaque scène à côté de l'original, fidélité du plat, simulations borne et mobile
   final/                 scène recommandée : maîtresse 5:4 (site) + carré (borne)
+  phase2/                toute la carte dans la scène A : site, borne, contrôle, correspondance, déploiement
   essai-1-fonds-unis/    essai 1 (fonds unis A/B/C), conservé pour mémoire — direction abandonnée
   outils/                scripts de la chaîne (reproductible pour la phase 2) + mesures de contraste
 ```
@@ -111,28 +112,61 @@ de toute la carte (`outils/mesures-contraste-carte.jsonl`) restent valables pour
 | Panier / récapitulatif | 60 px / 48 px | 1:1 | |
 | Indisponible | vignette 1:1 | — | passée en niveaux de gris |
 
-## Inventaire préliminaire (pour la phase 2 — rien n'a été traité)
+## Phase 2 — toute la carte dans la scène A (validée)
 
-41 produits avec photo, 2 sans photo (**Naan Miel**, **Cheese Naan (seul)**). Anomalies relevées :
+**40 photos produites**, couvrant **37 lignes produits prêtes à publier** sur 46 en base (les 3 lignes
+« Accompagnements » des formules réutilisent les photos de frites). Tout est dans `phase2/` :
 
-- **Tenders maison X4** : la photo montre 6–7 morceaux (promesse visuelle fausse) et le produit ne fait que
-  ~420 px de large → nouvelle photo nécessaire.
-- **Sandwich Cheese Naan** : photo très basse résolution, ressemble à une image de banque d'images
-  (wrap salade/tomate) → à vérifier contre le produit réel.
-- **Smash** et **Smash Burger** : fichiers strictement identiques ; **Tacos M / L / XL** : même photo pour trois tailles.
-- **Smash** : source floue (image agrandie avant le montage pop) → nouvelle photo souhaitable.
-- **Boissons** : le produit n'occupe que 3 à 16 % de l'image → il faudra des visuels plus grands (packshots
-  fabricants en haute définition) pour qu'elles soient lisibles en vignette.
-- **Naan Nutella** : ancienne photo (`1783261327105.png`, 540 × 360) hors charte pop.
+| Dossier / fichier | Contenu |
+|---|---|
+| `phase2/site/` | 40 images 1350 × 1080 (5:4, format et noms de la production) — à envoyer dans Supabase |
+| `phase2/borne/` | les mêmes en carré 1080 × 1080 — pour la borne |
+| `phase2/controle/carte-complete.jpg` | les 43 produits de la carte publique, par catégorie |
+| `phase2/controle/avant-apres-carte.jpg` | chaque photo actuelle à côté de sa nouvelle version |
+| `phase2/controle/simulation-borne-*.jpg`, `simulation-mobile-carte.jpg` | borne et menu mobile, actuel vs nouveau |
+| `phase2/correspondance.csv` | produit → statut → photo actuelle → nouvelle photo (identifiants inclus) |
+| `phase2/deploiement/` | mode d'emploi, SQL de mise à jour (avec sauvegarde) et SQL de retour arrière |
 
-## Phase 2 — méthode prévue (après validation uniquement)
+### Méthode (homogénéité de la carte)
 
-1. Inventaire produit → photo actuelle → nouveau fichier (table de correspondance).
-2. Même chaîne pour chaque plat (`outils/`) : détourage, retouches locales listées, scène retenue (table et
-   lumière identiques, accessoires adaptés au produit), contrôle visuel individuel à 100 % et en vignette.
-3. Envoi des nouvelles photos **sous un nouveau nom** dans le bucket `products` ; seule `products.image_url`
-   change (identifiants, prix, catégories, options, formules intacts). Retour arrière = restaurer l'ancienne URL,
-   les anciens fichiers restant en place.
+- **Un seul décor pour toute la carte** : la table en noyer, la serviette en lin sauge (même tissu simulé,
+  mis en cache), la même fenêtre à gauche. Trois angles de prise de vue selon la photo du produit :
+  plongée 43° (bols, salades, frites, tacos, dessert — fourchette pour les plats qui se mangent à la
+  fourchette), vue 25° (sandwichs, tenders), vue rasante 10° avec mur flou au fond (burgers, boissons).
+- **Ombres physiques par produit** : objet fantôme à la taille du produit (bol, cylindre, ou empreinte exacte
+  de la silhouette pour les produits plats ou irréguliers) ; seule son ombre est calculée, le décor est commun.
+- **Cadrage** : produit centré, 61–68 % de la largeur pour les plats et burgers, 59–68 % de la hauteur pour
+  les boissons (objets étroits).
+- **Contrôle individuel** à taille réduite puis à 100 % sur les bords ; corrections faites et relancées :
+  pied des canettes, liseré résiduel (bord resserré d'1 px partout), tache blanche des tenders, bords de
+  boîtes de frites et culot de la Cristaline restaurés (emballages uniquement, jamais la nourriture).
+
+### Statuts (voir `correspondance.csv`)
+
+| Statut | Produits | Dans le SQL |
+|---|---|---|
+| **prête** (37 lignes) | tous les autres | oui |
+| **à vérifier** | Smash Burger (photo identique à Smash) ; Tacos M, L, XL (une photo pour trois tailles) ; Sandwich Cheese Naan (photo basse définition qui ressemble à une image de banque) | commentée |
+| **non conforme** | Tenders maison X4 : la photo montre 6–7 tenders | commentée — nouvelle photo de 4 tenders nécessaire |
+| **sans nouvelle photo** | Naan Nutella : source 540 × 360 px, produit ~240 px, image d'apparence générée | — nouvelle photo nécessaire |
+| **sans photo** | Naan Miel, Cheese Naan (seul) | — aucune photo existante |
+
+### Limites
+
+- **Boissons et tenders agrandis** (au plus × 1,6) : sources de 360 à 560 px de haut. Lisibles en vignette et
+  sur borne ; un peu douces en plein écran mobile. Des packshots fabricants en haute définition feraient mieux.
+- **Salade Ranch** : agrandie × 1,2 (bol photographié plus petit que les autres) ; détourée par IA (ISNet) car
+  la photo d'origine n'avait jamais été détourée.
+- **Smash Mountain** : le pain présente un léger moiré présent dans la source, non corrigeable sans l'inventer.
+- **Perspective** : les photos d'origine ont des angles variés ; elles sont regroupées en trois angles de vue,
+  l'écart restant (quelques degrés) n'est pas perceptible en vignette.
+- **Borne** : les images carrées sont prêtes, mais leur import dépend du back-office de la borne (Tabesto ?).
+
+### Déploiement (rien n'a été modifié en production)
+
+Voir `phase2/deploiement/LISEZMOI.md` : envoi de `phase2/site/` dans `products/crousty-naan/scene/`, puis
+`1-mise-a-jour.sql` (sauvegarde + 37 mises à jour gardées par l'ancienne URL). Retour arrière :
+`2-retour-arriere.sql`. Les anciens fichiers ne sont jamais supprimés.
 
 ## Reproduire
 
@@ -142,6 +176,10 @@ bash previews/outils/build_phase1.sh <scratch> previews        # essai 1 + déto
 uv venv -p python3.11 <scratch>/bvenv && uv pip install -p <scratch>/bvenv/bin/python bpy   # Blender (hors projet)
 bash previews/outils/render_all.sh <scratch> 128               # rendus des scènes A, B, C
 bash previews/outils/build_scenes.sh <scratch> previews A      # pose du plat, exports, planches, simulations
+# phase 2 (détourages dans <scratch>/p2/cut, modèle ISNet dans <scratch>/models)
+python3 -I previews/outils/phase2.py <scratch> render           # plateaux + ombres par produit
+python3 -I previews/outils/phase2.py <scratch> compose          # poses, recadrages, exports
+python3 -I previews/outils/build_mapping.py <scratch>/p2/produits.json previews/phase2
 ```
 
 Outils : Python 3 + Pillow + NumPy, ImageMagick, Chromium + Playwright (préinstallés), Blender 5 (module
