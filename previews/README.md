@@ -5,95 +5,94 @@ remplacée ni modifiée (Supabase et base de données en lecture seule).
 
 ```
 previews/
-  original/      copie intacte de la photo de production (SHA-256 identique au fichier Supabase)
-  variants/      les trois pistes de fond sur le même détourage
-  comparisons/   planche des pistes, avant/après, simulations borne et mobile, vignettes à taille réelle
-  final/         version recommandée : image maîtresse, carré borne, détourage réutilisable
-  outils/        scripts de la chaîne (reproductible pour la phase 2) + mesures de contraste
+  original/              copie intacte de la photo de production (SHA-256 identique au fichier Supabase)
+  variants/              essai 2 — les trois mises en scène photographiques (1350 × 1080)
+  comparisons/           chaque scène à côté de l'original, fidélité du plat, simulations borne et mobile
+  final/                 scène recommandée : maîtresse 5:4 (site) + carré (borne)
+  essai-1-fonds-unis/    essai 1 (fonds unis A/B/C), conservé pour mémoire — direction abandonnée
+  outils/                scripts de la chaîne (reproductible pour la phase 2) + mesures de contraste
 ```
 
-## Phase 1 — résultat sur le plat test : Crousty M
+## Essai 2 — vraies scènes de photographie culinaire (direction corrigée)
 
-**Plat choisi : Crousty M (sauce au choix)** — produit signature de l'enseigne, silhouette très
-reconnaissable (bol en bambou), et meilleure photo source de la carte (vraie photo nette, bien exposée).
+Plat test : **Crousty M (sauce au choix)**. Chaque proposition est une scène complète — table, accessoires,
+lumière de fenêtre, profondeur de champ — construite autour de la vraie photo du plat.
 
-### Constat sur les photos actuelles
+### Méthode
 
-Les 41 photos de la carte (`products/crousty-naan/pop/*@1350.jpg`, 1350 × 1080, JPEG q86) sont des montages
-« pop » : produit détouré avec un liseré blanc façon sticker, posé sur un aplat saturé couvert de typographie
-géante (« CROUSTY CROUSTY », « FRAIS FRAIS »…). En vignette de 112 px, la typographie concurrence le produit
-et les fonds changent de couleur à chaque catégorie : la carte n'est pas homogène.
+Aucun outil de génération d'images par IA n'est disponible (pas de clé d'API, Hugging Face inaccessible, rien
+dans le projet). L'outil le plus puissant disponible est **Blender 5 / Cycles** (rendu physique), installé hors
+du projet. C'est aussi la méthode la plus fidèle : **aucun pixel de nourriture n'est inventé**.
 
-### Les trois pistes (même détourage, même cadrage, même lumière sur le plat)
+1. **Scène 3D réaliste** : table et accessoires modélisés à l'échelle réelle, matières physiques (veinage et
+   pores du bois, tissage du lin, papier froissé, béton, terrazzo, inox), serviette en lin obtenue par
+   **simulation de tissu** (plis naturels), éclairage de fenêtre latérale + réflecteur, rebonds de lumière.
+2. **Bol fantôme** : un bol invisible aux dimensions du vrai (Ø 17 cm, hauteur 6,5 cm, déduites de l'ellipse
+   du rebord : caméra inclinée à 42,6°) projette ses **ombres de contact et portées physiquement exactes**.
+3. **La vraie photo du plat** (détourage de l'essai 1) est posée exactement sur le bol fantôme : même
+   perspective, même échelle (1:1, aucun agrandissement), pied aligné sur la base, lumière latérale raccordée.
+4. **Profondeur de champ type « focus stacking »** : plat et table proche nets, arrière-plan adouci selon la
+   distance réelle de chaque point de la table.
 
-| Piste | Rendu | Lisibilité mesurée sur **toute** la carte* |
+### Les trois scènes
+
+| Scène | Mise en scène | Lecture |
 |---|---|---|
-| A — Pierre calcaire claire | chaleureux, artisanal ; grain minéral fin | **15 à 25 / 39** produits bien contrastés : fond de luminosité moyenne-claire qui « mange » les produits clairs (frites, Crousty, galette, Cristaline) |
-| B — Anthracite gastronomique | le plus spectaculaire, très premium | **34 / 39** — mais les salades (bols noirs), Coca Cherry, Dr Pepper et Perrier y perdent leur silhouette |
-| C — Crème minimaliste | net, lumineux, moderne ; ombres douces | **34 / 39** — les produits très clairs (frites cheddar, Cristaline) restent lisibles grâce à l'ombre de contact |
+| **A — Table en noyer, lin et fourchette** ★ | planches de noyer, serviette en lin sauge, fourchette inox, fenêtre à gauche | chaleureuse, naturelle ; le bol clair et la panure dorée éclatent sur le bois sombre ; accessoires en bordure |
+| B — Béton ciré et papier sulfurisé | béton ciré gris chaud, papier sulfurisé froissé sous le bol, lin naturel | moderne, « street food » ; plus froide, papier très présent |
+| C — Plateau noir sur terrazzo | plateau noir mat, papier ingraissable, fourchette bois, serviette papier, table terrazzo | le plus « fast-food premium » ; vignette plus chargée (éclats du terrazzo, cadre du plateau) |
 
-\* Mesure de la luminance (L\*) du bord de chaque produit sur les 40 photos actuelles, comparée à celle du fond
-(écart ≥ 20 L\*). Détail : `outils/mesures-contraste-carte.jsonl`. Les tons moyens (L\* 50–78) sont les pires
-pour cette carte : une 4ᵉ piste dans ces tons serait objectivement moins bonne, elle n'a donc pas été retenue.
+### Recommandation : scène A pour la borne et le click & collect
 
-### Recommandation : piste C — Crème minimaliste (borne + click & collect)
+- **La plus lisible en vignette** (112 px mobile, tuile de borne) : contraste net bol / table, rien ne parasite
+  la silhouette, les accessoires restent dans les marges et disparaissent presque dans le carré de la borne.
+- **La plus appétissante** : bois chaud + lin sauge (couleur complémentaire de la panure) font ressortir le doré.
+- **Déclinable sur toute la carte** : la même table et la même lumière conviennent aux burgers, tacos, frites,
+  tenders et naans ; seuls les accessoires changent selon le produit (papier pour un burger, etc.).
 
-- **Fonctionne sur la carte complète** : 34/39 produits nettement contrastés ; les 5 autres sont des produits
-  clairs que l'ombre de contact suffit à détacher (solution naturelle). Avec B, les 5 cas difficiles sont des
-  objets noirs sur fond noir, qu'on ne peut sauver qu'avec un éclairage de contour artificiel.
-- **S'intègre à l'interface réelle** : le click & collect est crème (`#F7F4EE`) et blanc ; la vignette crème se
-  lit comme un cadre doux dans la carte blanche, et la photo de la fiche se fond dans la feuille crème.
-  Les vignettes anthracite font des blocs lourds sur une page claire.
-- **Produit héros** : rien ne concurrence le plat, la couleur dorée de la panure ressort, le bambou reste chaud.
-- **Plus léger** : 209 Ko contre 304 Ko pour la photo actuelle (−31 %).
+La scène C est une bonne alternative si vous voulez un signal « fast-food » explicite (plateau).
 
-La piste B reste une alternative valable si vous voulez une identité « dark premium » : il faudrait alors
-traiter spécifiquement les boissons sombres et les salades en bol noir.
+### Fidélité au produit
 
-## Fichiers livrés
+- Le plat est **la photo d'origine** : ingrédients, quantité, sauce, herbes, bol et taille de portion
+  identiques (voir `comparisons/fidelite-plat-100pct.jpg`). Retouches, toutes hors nourriture :
+  1. détourage : retrait du liseré blanc « sticker » et du fond pop, bord décontaminé (pas de halo) ;
+  2. flanc gauche du bol : suppression d'un fragment de l'ancien arrière-plan (bosse de 3–4 px, deux points blancs) ;
+  3. paroi bas-droite du bol : contour convexe restauré là où le premier détourage avait entamé la paroi ;
+  4. léger dégradé de lumière côté fenêtre (±10 %) pour raccorder le plat à l'éclairage de la scène.
+- **Aucun aliment ajouté** dans les scènes (ni pot de sauce, ni frites, ni boisson) pour ne rien promettre de
+  plus que ce qui est servi. La fourchette inox (A) est un accessoire de mise en scène : si vous servez des
+  couverts en bois, je peux l'adapter.
+- Cadrage : le plat occupe 64 % de la largeur de l'image 5:4 et 80 % du carré de la borne.
+
+### Fichiers de l'essai 2
 
 | Fichier | Usage |
 |---|---|
-| `final/crousty-m@1350.jpg` | image maîtresse 1350 × 1080 (5:4, **même format et même convention de nom que la production**) — click & collect |
-| `final/crousty-m_carre@1080.jpg` | carré 1080 × 1080 recadré dans la maîtresse — borne (vignettes carrées) |
-| `final/crousty-m_detoure.png` | plat détouré sur transparence, retouché — réutilisable sur n'importe quel fond |
-| `variants/crousty-m_{A,B,C}_*.jpg` | les trois pistes, 1350 × 1080 |
-| `comparisons/pistes_crousty-m.jpg` | actuel + A + B + C |
-| `comparisons/avant-apres_crousty-m.jpg` | avant / après (piste C) |
-| `comparisons/simulation-mobile-liste.jpg` | menu mobile 390 px (vignette 112 px réelle, bouton « + »), 4 versions |
-| `comparisons/simulation-mobile-fiche.jpg` | fiche produit mobile (photo 4:3, dégradé haut, bouton fermer), 4 versions |
-| `comparisons/simulation-borne.jpg` | borne portrait 1080 × 1920 (grille de 9 produits), 4 versions — vue réduite = lecture à distance |
-| `comparisons/vignette-mobile-taille-reelle-retina.jpg` / `tuile-borne-taille-reelle.jpg` | contrôle au pixel près |
+| `final/crousty-m@1350.jpg` | scène A, 1350 × 1080 (même format et convention de nom que la production) — click & collect |
+| `final/crousty-m_carre@1080.jpg` | carré 1080 × 1080 recadré dans la même image — borne |
+| `variants/crousty-m_{A,B,C}_*.jpg` | les trois scènes |
+| `comparisons/scenes_crousty-m.jpg` | original + A + B + C |
+| `comparisons/original-vs-*.jpg` | chaque scène à côté de la photo originale |
+| `comparisons/fidelite-plat-100pct.jpg` | même zone du plat à 100 % : original / scène retenue |
+| `comparisons/simulation-*.jpg`, `vignette-*`, `tuile-*` | menu mobile, fiche produit, borne, contrôle à taille réelle |
 
-Dans les simulations, seul le Crousty M change : les autres produits gardent leur photo actuelle.
+### Limites techniques
 
-## Retouches réalisées (liste exhaustive)
+- **Résolution** : la seule source est le visuel pop de 1350 px (bol de 868 px) ; le plat n'est pas agrandi.
+  Avec la photo d'origine du photographe, les scènes pourraient être rendues plus grandes.
+- **Lumière du plat** : la photo d'origine est éclairée de face ; le raccord avec la fenêtre latérale est
+  corrigé en douceur, mais une prise de vue réelle dans le décor resterait la référence absolue.
+- **Matières** : à 100 %, les matières 3D sont un peu plus lisses qu'une vraie photo ; aux tailles d'affichage
+  (borne, mobile) la différence n'est pas perceptible.
+- **Temps** : ~6 min de rendu par scène et par plat sur cet environnement.
+- **Borne** : aucune interface de borne dans ce dépôt (Tabesto ?) ; simulation générique.
 
-Fidélité : ingrédients, quantité de poulet, sauce, riz, herbes, taille de la portion et bol **inchangés**.
+## Essai 1 — fonds unis (abandonné)
 
-1. **Détourage** : retrait du liseré blanc « sticker » et du fond pop ; bord décontaminé (pas de halo blanc).
-2. **Flanc gauche du bol** : suppression d'un fragment de l'ancien arrière-plan (bosse de 3–4 px, deux points
-   blancs) laissé par le premier détourage.
-3. **Paroi bas-droite du bol** : le premier détourage avait entamé la paroi (encoche en marches) ; contour
-   convexe restauré, pixels ajoutés recopiés par symétrie de la paroi voisine. Zone : paroi extérieure uniquement.
-4. **Étalonnage léger** : balance des blancs un peu plus chaude, contraste +4 %, saturation +5 %, netteté
-   modérée (aucun halo) — le plat garde ses couleurs naturelles.
-5. **Fond reconstruit** : surface en perspective (caméra ~45°, comme la photo), profondeur de champ douce vers
-   le fond, lumière douce haut-gauche cohérente avec l'éclairage du plat, ombre de contact + ombre ambiante.
-6. **Cadrage** : plat centré dans le carré central (80 % de sa largeur), légèrement sous le centre — il reste
-   entier dans la vignette carrée, la fiche 4:3 et la fiche 16:10, et le bouton « + » ne masque que le pied du bol.
-   **Aucun agrandissement** : le plat reste à sa résolution d'origine (868 × 686 px).
-
-## Limites techniques
-
-- **Résolution source** : la seule source disponible est le visuel pop de 1350 px ; le bol y mesure 868 px.
-  Suffisant pour la borne et le mobile (`next/image` sert au plus ~1 200 px), mais pas pour une impression ou un
-  très grand écran. Avec la photo d'origine du photographe, le même traitement donnerait un fichier plus grand.
-- **Borne** : aucune interface de borne n'existe dans ce dépôt. Si c'est une borne Tabesto, elle utilise
-  probablement son propre catalogue de photos : il faudra y importer `final/crousty-m_carre@1080.jpg` (ou la
-  maîtresse) selon le format qu'elle demande. La simulation de borne est générique (interface non contractuelle).
-- **Contour d'origine** : de très petites irrégularités (1–2 px) du premier détourage subsistent au pied du bol,
-  invisibles à la taille d'affichage.
+Détourage du plat posé sur trois fonds (pierre claire, anthracite, crème). Direction écartée : rendu
+« fiche produit », sans table ni mise en scène. Fichiers dans `essai-1-fonds-unis/`. Les mesures de contraste
+de toute la carte (`outils/mesures-contraste-carte.jsonl`) restent valables pour choisir les tables.
 
 ## Analyse technique des supports (inchangée)
 
@@ -129,18 +128,21 @@ Fidélité : ingrédients, quantité de poulet, sauce, riz, herbes, taille de la
 ## Phase 2 — méthode prévue (après validation uniquement)
 
 1. Inventaire produit → photo actuelle → nouveau fichier (table de correspondance).
-2. Même chaîne pour chaque plat (`outils/`) : détourage, retouches locales listées, fond C, contrôle visuel
-   individuel à 100 % et en vignette.
+2. Même chaîne pour chaque plat (`outils/`) : détourage, retouches locales listées, scène retenue (table et
+   lumière identiques, accessoires adaptés au produit), contrôle visuel individuel à 100 % et en vignette.
 3. Envoi des nouvelles photos **sous un nouveau nom** dans le bucket `products` ; seule `products.image_url`
    change (identifiants, prix, catégories, options, formules intacts). Retour arrière = restaurer l'ancienne URL,
    les anciens fichiers restant en place.
 
-## Reproduire la phase 1
+## Reproduire
 
 ```bash
 # photos actuelles dans <scratch>/orig, scripts dans <scratch>/tools (copie de previews/outils)
-bash previews/outils/build_phase1.sh <scratch> previews
+bash previews/outils/build_phase1.sh <scratch> previews        # essai 1 + détourage retouché
+uv venv -p python3.11 <scratch>/bvenv && uv pip install -p <scratch>/bvenv/bin/python bpy   # Blender (hors projet)
+bash previews/outils/render_all.sh <scratch> 128               # rendus des scènes A, B, C
+bash previews/outils/build_scenes.sh <scratch> previews A      # pose du plat, exports, planches, simulations
 ```
 
-Outils : Python 3 + Pillow + NumPy, ImageMagick, Chromium + Playwright (préinstallés) — aucune dépendance
-ajoutée au projet.
+Outils : Python 3 + Pillow + NumPy, ImageMagick, Chromium + Playwright (préinstallés), Blender 5 (module
+`bpy`, environnement isolé) — aucune dépendance ajoutée au projet.
